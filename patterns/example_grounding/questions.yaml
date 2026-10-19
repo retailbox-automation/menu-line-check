@@ -1,0 +1,16 @@
+# EXAMPLE pattern, not our hackathon entry. Reproduces the wording of the two yes/no
+# questions in the official example examples/strands/tool_call_intervention.py
+# (strands-labs/strands-decider, Apache-2.0). The true/false descriptions carry most of the signal.
+args_grounded:
+  type: noul
+  instructions: Are the tool's argument values grounded in facts the user actually provided?
+  criteria:
+    "true": every argument value traces back to something the user said
+    "false": an argument value was guessed or invented, not stated by the user
+
+premature:
+  type: noul
+  instructions: Is it premature to call this tool now, before clarifying with the user?
+  criteria:
+    "true": the assistant should ask a clarifying question before calling the tool
+    "false": there is nothing left to clarify; calling now is appropriate
