@@ -37,7 +37,7 @@ def test_cli_prints_the_table_and_the_summary(fake_decider, capsys, tmp_path):
     out = capsys.readouterr().out
     assert rc == 0
     assert "2019 Honda Civic, 31,200 mi" in out
-    assert "Keep 3 · Decline 4 · Ask 4 · Your call 1" in out
+    assert out.count("Keep 3 · Decline 4 · Ask 4 · Your call 1") == 1
     assert "Is this covered by recall 23V858000?" in out
     fuel_row = next(r for r in out.splitlines() if "Replace fuel pump module" in r)
     for cell in ("$1,089.00", "tool", "check_recall_warranty", "0.84", "decider"):
