@@ -10,10 +10,14 @@ from menu_line_check.baseline import keyword_tool
 from menu_line_check.llm import FakePicker
 from menu_line_check.race import (
     RACE_LINES_PATH,
+    Pick,
     decider_picks,
     keyword_picks,
     llm_picks,
     load_race_lines,
+    per_tool_policy,
+    policy_table,
+    previous_policy,
     race_table,
     recorded_picks,
 )
@@ -120,7 +124,7 @@ def test_cli_runs_the_race_with_a_fake_decider(monkeypatch, tmp_path, capsys):
     assert race.main(["--limit", "10", "--out", str(out)]) == 0
     printed = capsys.readouterr().out
     assert "| Decider 2B |" in printed and "| keyword rules |" in printed
-    assert "LLM picker" not in printed  # not without --allow-bedrock
+    assert "| LLM picker" not in printed  # no LLM row without --allow-bedrock
     assert out.read_text(encoding="utf-8").startswith("| contestant |")
 
 
@@ -145,3 +149,54 @@ def test_cli_refuses_bedrock_without_the_flag_and_reports_a_down_server(monkeypa
 def test_cli_bad_arguments(bad):
     with pytest.raises(SystemExit):
         race.main([bad, "x"])
+
+
+# ------------------------------------------------------------------- pipeline policy table
+
+
+def policy_cells(table: str, prefix: str) -> list[str]:
+    row = next(r for r in table.splitlines() if r.startswith(f"| {prefix}"))
+    return [c.strip() for c in row.split("|")[1:-1]]
+
+
+def test_recorded_answers_per_tool_policy_against_the_previous_policy():
+    lines = load_race_lines(RACE_LINES_PATH)
+    picks = recorded_picks(lines)
+    table = policy_table(
+        lines, [("new", picks, per_tool_policy()), ("old", picks, previous_policy)]
+    )
+    assert policy_cells(table, "new")[1:] == ["103", "90/103 (87%)", "0.89", "0/20", "0", "0"]
+    assert policy_cells(table, "old")[1:] == ["103", "76/103 (74%)", "0.76", "0/20", "10", "0"]
+
+
+def test_policies_on_single_picks():
+    new = per_tool_policy()
+    rotation = Pick("check_schedule", 0.56, True, p_safety=0.68)
+    nitrogen = Pick("decline_addon", 0.78, True, p_safety=0.66)
+    fuel = Pick("check_recall_warranty", 0.64, False, p_safety=0.2)
+    assert (new(rotation), new(nitrogen), new(fuel)) == (
+        "check_schedule",
+        None,
+        "check_recall_warranty",
+    )
+    assert (previous_policy(rotation), previous_policy(nitrogen), previous_policy(fuel)) == (
+        "owner_decides",
+        "owner_decides",
+        None,
+    )
+    assert per_tool_policy({"check_recall_warranty": 0.7})(fuel) is None
+    assert new(Pick(None)) is None
+
+
+def test_cli_prints_the_policy_table_for_live_and_recorded_decider(monkeypatch, capsys):
+    lines = slice10()
+    server = truthful_server(lines, "none")
+    monkeypatch.setattr(race, "make_decider_client", lambda url: server.client())
+    assert race.main(["--limit", "10"]) == 0
+    live = capsys.readouterr().out
+    assert "| Decider 2B, per-tool thresholds | 10 | 10/10 (100%) | 1.00 |" in live
+    assert "| Decider 2B, previous policy" in live
+    assert race.main(["--replay-recorded", "--policy-thresholds", "decline_addon=0.95"]) == 0
+    strict = capsys.readouterr().out
+    acted = policy_cells(strict, "Decider 2B (recorded), per-tool")[2]
+    assert int(acted.split("/")[0]) < 90

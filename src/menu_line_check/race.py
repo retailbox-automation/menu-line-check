@@ -12,7 +12,10 @@ Contestants:
 * The Strands LLM picker on Bedrock, alone (no Decider gate), only with ``--allow-bedrock``.
 
 Output: a markdown table with tool-choice accuracy, accuracy and coverage at confidence
-thresholds, safety lines missed, p50/p90 latency per line and cost per 1,000 lines.
+thresholds, safety lines missed, p50/p90 latency per line and cost per 1,000 lines. For Decider
+a second table shows what the pipeline would do with those answers (the pattern's per-tool
+policy, and the previous policy for comparison): lines acted on without the LLM, accuracy on
+them, safety lines auto-declined, false "your call" and wrong declines.
 """
 
 from __future__ import annotations
@@ -29,7 +32,13 @@ from typing import Any
 
 from decider_kit import ChoiceAnswer, DeciderClient, DeciderError, DeciderUnavailable, NoulAnswer
 from decider_kit.bench import percentile
-from menu_line_tool_selection import load_pattern_questions, ocr_state
+from menu_line_tool_selection import (
+    decide_line,
+    load_pattern_questions,
+    ocr_state,
+    parse_thresholds,
+    resolve_thresholds,
+)
 
 from .baseline import keyword_tool
 from .models import MenuLine
@@ -67,6 +76,8 @@ class Pick:
     ms: float | None = None
     input_tokens: int = 0
     output_tokens: int = 0
+    p_safety: float | None = None
+    """Decider's P(safety), for the pipeline-policy table."""
 
 
 Contestant = tuple[str, list[Pick], str | None]
@@ -123,7 +134,15 @@ def decider_picks(lines: Sequence[RaceLine], client: DeciderClient) -> list[Pick
         if not (isinstance(tool, ChoiceAnswer) and isinstance(safety, NoulAnswer)):
             picks.append(Pick(None))  # wrong answer types: scored as wrong
             continue
-        picks.append(Pick(tool.choice, tool.confidence, safety.verdict, response.client_ms))
+        picks.append(
+            Pick(
+                tool.choice,
+                tool.confidence,
+                safety.verdict,
+                response.client_ms,
+                p_safety=safety.probability,
+            )
+        )
     return picks
 
 
@@ -135,7 +154,13 @@ def recorded_picks(lines: Sequence[RaceLine]) -> list[Pick]:
         if not rec:
             raise ValueError(f"line {line.id} has no recorded answers")
         picks.append(
-            Pick(rec["tool"], float(rec["tool_conf"]), rec["p_safety"] >= 0.5, rec["client_ms"])
+            Pick(
+                rec["tool"],
+                float(rec["tool_conf"]),
+                rec["p_safety"] >= 0.5,
+                rec["client_ms"],
+                p_safety=float(rec["p_safety"]),
+            )
         )
     return picks
 
@@ -239,11 +264,88 @@ def race_table(
     return "\n".join("| " + " | ".join(r) + " |" for r in rows)
 
 
+# ------------------------------------------------------------------------- pipeline policies
+
+Policy = Callable[[Pick], str | None]
+"""Pick -> the tool the pipeline acts on without the LLM picker, or None (goes to the LLM)."""
+
+
+def per_tool_policy(thresholds: dict[str, float] | None = None) -> Policy:
+    """The pattern's ``decide_line`` (race lines are all readable, so P(readable) = 1)."""
+    limits = resolve_thresholds(thresholds)
+
+    def route(pick: Pick) -> str | None:
+        if pick.tool is None or pick.confidence is None or pick.p_safety is None:
+            return None
+        decision = decide_line(
+            {
+                "readable": NoulAnswer(1.0),
+                "safety": NoulAnswer(pick.p_safety),
+                "tool": ChoiceAnswer(pick.tool, {pick.tool: pick.confidence}, pick.confidence),
+            },
+            limits,
+        )
+        return decision.tool if decision.route in ("tool", "owner_decides") else None
+
+    return route
+
+
+def previous_policy(pick: Pick) -> str | None:
+    """The policy before the live run of 2026-10-20, kept for comparison: P(safety) >= 0.5 or
+    tool owner_decides -> owner_decides; otherwise act at confidence >= 0.8 for every tool."""
+    if pick.tool is None or pick.confidence is None or pick.p_safety is None:
+        return None
+    if pick.p_safety >= 0.5 or pick.tool == "owner_decides":
+        return "owner_decides"
+    return pick.tool if pick.confidence >= 0.8 else None
+
+
+def policy_row(name: str, lines: Sequence[RaceLine], picks: Sequence[Pick], policy: Policy):
+    n = len(lines)
+    acted = [(ln, t) for ln, p in zip(lines, picks, strict=True) if (t := policy(p)) is not None]
+    right = sum(t == ln.tool for ln, t in acted)
+    safety = sum(ln.safety for ln in lines)
+    return [
+        name,
+        str(n),
+        f"{len(acted)}/{n} ({len(acted) / n:.0%})" if n else "n/a",
+        f"{right / len(acted):.2f}" if acted else "n/a",
+        f"{sum(1 for ln, t in acted if ln.safety and t == 'decline_addon')}/{safety}",
+        str(sum(1 for ln, t in acted if t == "owner_decides" and ln.tool != "owner_decides")),
+        str(sum(1 for ln, t in acted if t == "decline_addon" and ln.tool != "decline_addon")),
+    ]
+
+
+def policy_table(
+    lines: Sequence[RaceLine], rows: Sequence[tuple[str, Sequence[Pick], Policy]]
+) -> str:
+    head = [
+        "pipeline policy",
+        "lines",
+        "acted (coverage)",
+        "accuracy on acted",
+        "safety lines auto-declined",
+        'false "your call"',
+        "wrong declines",
+    ]
+    out = [head, ["---"] * len(head)]
+    out += [policy_row(name, lines, picks, policy) for name, picks, policy in rows]
+    return "\n".join("| " + " | ".join(r) + " |" for r in out)
+
+
+POLICY_NOTES = """\
+acted: lines the pipeline acts on from Decider's answers alone (a tool runs, or owner decides);
+  the rest go to the LLM picker (or "ask the advisor" without one).
+safety lines auto-declined: labelled safety lines the pipeline would decline.
+false "your call": lines sent to the owner whose label is not owner_decides.
+wrong declines: lines declined whose label is not decline_addon."""
+
+
 NOTES = """\
 accuracy: share of lines where the chosen tool equals the label.
 >= t acc (kept): accuracy on the lines whose confidence is at least t (lines kept / all lines).
 safety lines missed: labelled safety lines where neither the safety answer was yes nor the tool
-  was owner_decides (the pipeline's safety route).
+  was owner_decides (raw answers; the policy table below shows what the pipeline does).
 latency: wall clock per line (for recorded answers: as recorded in the spike).
 Decider runs on our own machine: no per-call API price. The keyword rules cost nothing."""
 
@@ -265,6 +367,13 @@ def _thresholds(text: str) -> tuple[float, ...]:
     return values
 
 
+def _policy_thresholds(text: str) -> dict[str, float]:
+    try:
+        return parse_thresholds(text)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(str(exc)) from exc
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="menu-race", description=__doc__.split("\n\n")[0])
     p.add_argument("--lines", default=str(RACE_LINES_PATH), help="labelled lines, JSONL")
@@ -278,6 +387,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--allow-bedrock", action="store_true", help="also race the LLM picker (paid)")
     p.add_argument("--limit", type=int, help="only the first N lines")
     p.add_argument("--thresholds", type=_thresholds, default=THRESHOLDS)
+    p.add_argument(
+        "--policy-thresholds",
+        type=_policy_thresholds,
+        default={},
+        help="per-tool act thresholds for the pipeline-policy table, e.g. decline_addon=0.8",
+    )
     p.add_argument("--out", help="also write the table to this markdown file")
     return p
 
@@ -306,12 +421,19 @@ def main(argv: Sequence[str] | None = None) -> int:
 
         picker = StrandsPicker(allow_bedrock=True)
         contestants.append((f"LLM picker ({picker.model_id})", llm_picks(lines, picker), None))
-    table = race_table(lines, contestants, args.thresholds)
-    print(table)
-    print()
-    print(NOTES)
+    name, decider, _ = contestants[0]
+    policies = policy_table(
+        lines,
+        [
+            (f"{name}, per-tool thresholds", decider, per_tool_policy(args.policy_thresholds)),
+            (f"{name}, previous policy (safety OR owner, all >= 0.8)", decider, previous_policy),
+        ],
+    )
+    text = "\n\n".join([race_table(lines, contestants, args.thresholds), NOTES, policies])
+    text += "\n\n" + POLICY_NOTES
+    print(text)
     if args.out:
-        Path(args.out).write_text(table + "\n\n" + NOTES + "\n", encoding="utf-8")
+        Path(args.out).write_text(text + "\n", encoding="utf-8")
     return 0
 
 
