@@ -1,12 +1,20 @@
 # decider-agent
 
-> SKELETON. Concept not chosen yet: every section marked **TBD** is filled in after the concept is picked.
-> What exists today is `decider_kit`, a concept-agnostic toolkit that any concept plugs into.
-> Entry for the AWS Builder Center "Agent Experience Hackathon: Strands Decider" (deadline 23.10.2026 23:59 PT).
+> Entry **N2 Menu Line Check** for the AWS Builder Center "Agent Experience Hackathon: Strands Decider"
+> (deadline 23.10.2026 23:59 PT). Sections still marked **TBD** are filled in before submission.
+> `decider_kit` is the concept-agnostic toolkit, `menu_line_check` is the agent, and
+> `patterns/menu_line_tool_selection/` is the reusable decision pattern.
 
 ## What it does
 
-TBD (one paragraph: the agent, who uses it, the wow moment in the first 60 seconds).
+A car owner stands at a dealer's service counter with a printed service menu and takes one photo. The agent
+splits the menu into lines and, for each line, Strands Decider 2B decides which tool fits: decline an optional
+add-on, check the maintenance schedule against the odometer, look up recalls for this car (public NHTSA API),
+ask about a fee, or leave a safety part (brakes, tires, alignment, steering) to the owner. Lines Decider is not
+sure about go to a general model on Amazon Bedrock; Bedrock also writes one plain question for the service
+advisor per flagged line and the summary ("Keep 3 · Decline 4 · Ask 4 · Your call 1"). On the demo menu the
+line "Replace fuel pump module $1,089.00" goes to the recall lookup, which finds recall campaign 23V858000 for a
+2019 Civic: "Is this covered by recall 23V858000?"
 
 ## The decision handed to Decider 2B
 
@@ -14,11 +22,11 @@ TBD. Fill in: the one repeated decision, the workflow it lives in, what the agen
 
 | | |
 |---|---|
-| Decision | TBD |
-| Question type(s) | TBD (`noul` / `choice` / `score`) |
-| Option set | TBD |
-| Where in the loop | TBD (`before_tool_call` by default) |
-| Plain-code policy | TBD |
+| Decision | which tool fits one line of a printed service menu |
+| Question type(s) | `readable` (noul), `safety` (noul), `tool` (choice) |
+| Option set | `decline_addon`, `check_schedule`, `check_recall_warranty`, `ask_about_fee`, `owner_decides` |
+| Where in the loop | per line before any tool runs; plus a `before_tool_call` gate on the LLM picker's `decline_addon` |
+| Plain-code policy | unreadable -> retake; P(safety) >= 0.5 or tool owner_decides -> owner decides; tool confidence >= 0.8 -> run it; else LLM picker |
 
 ## How it works
 
@@ -42,7 +50,8 @@ The model classifies, plain code decides. If the Decider server is unreachable t
 
 ## The reusable decision pattern
 
-TBD. The pattern lives in `patterns/<name>/{questions.yaml, handler.py, README.md}`; see `patterns/README.md`.
+`patterns/menu_line_tool_selection/` (`questions.yaml`, `handler.py`, `README.md`, measured numbers included);
+see `patterns/README.md`.
 `patterns/example_grounding/` is only a labelled example reproducing the official weather example's two yes/no questions.
 
 Using a pattern in another agent is meant to be one line:
@@ -109,6 +118,20 @@ ruff check .
 The real Decider model runs on another machine; this code only talks HTTP.
 
 ```bash
+# the menu check on the demo menu (hand-made Textract JSON), NHTSA served from the recorded response
+menu-check --ocr-json tests/fixtures/textract_menu.json --vehicle "2019 Honda Civic 31200" \
+  --decider-url http://127.0.0.1:8099 --nhtsa-recorded tests/fixtures/nhtsa_recalls_civic_2019.json \
+  --ledger out/ledger.jsonl --json out/report.json
+# Decider vs keyword rules on the 103 labelled spike lines: recorded answers (no server) or live
+menu-race --replay-recorded
+menu-race --decider-url http://127.0.0.1:8099 --out out/race.md
+```
+
+Nothing calls Bedrock without `--allow-bedrock` (paid; model ids from `N2_PICKER_MODEL` / `N2_WRITER_MODEL`,
+default `us.amazon.nova-lite-v1:0`). Without it the advisor questions come from templates and low-confidence
+lines become "ask the advisor".
+
+```bash
 # on the Decider host (not here)
 strands-decider serve StrandsAgents/strands-decider-2B-qwen3.5-v1-2610 --port 8099
 # replay labelled cases against it
@@ -122,10 +145,13 @@ Case file, one JSON object per line: `{"id": "c1", "state": "...", "questions": 
 Layout:
 
 ```
-src/decider_kit/  client.py  questions.py  policy.py  intervention.py  ledger.py  bench.py
-patterns/         README.md  example_grounding/
-tests/            fake-server tests, real Strands actions, real Agent loop with a scripted model
-docs/             STRANDS-INTERVENTIONS-NOTES.md
+src/decider_kit/       client.py  questions.py  policy.py  intervention.py  ledger.py  bench.py
+src/menu_line_check/  models.py  ocr.py  nhtsa.py  schedule.py  tools.py  baseline.py  pipeline.py  llm.py
+                      cli.py  race.py  data/ (illustrative maintenance schedule, 103 labelled race lines)
+patterns/             README.md  menu_line_tool_selection/  example_grounding/
+scripts/              build_race_lines.py (race lines from the spike output)
+tests/                fake-server tests, real Strands actions, real Agent loop with a scripted model
+docs/                 STRANDS-INTERVENTIONS-NOTES.md
 ```
 
 ## Licence

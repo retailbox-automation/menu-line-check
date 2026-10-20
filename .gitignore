@@ -8,3 +8,4 @@ build/
 dist/
 ledger*.jsonl
 .env
+out/

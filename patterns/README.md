@@ -1,10 +1,13 @@
 # patterns/
 
-PLACEHOLDER. The hackathon requires at least one reusable, clearly labelled decision pattern: typed
+Our entry's pattern is **`menu_line_tool_selection/`**: Decider 2B picks the tool for one line of a
+printed car-service menu (three typed questions, plain-code routing, a `before_tool_call` safety gate).
+
+The hackathon requires at least one reusable, clearly labelled decision pattern: typed
 question(s) with their option set, the wiring (here a Strands `InterventionHandler` via
 `decider_kit.DeciderGate`), and a short note on what it does and how to use it.
 
-Our pattern(s) will live here as:
+Each pattern lives here as:
 
 ```
 patterns/<name>/
