@@ -1,6 +1,6 @@
 """``menu-check``: check a service menu from its OCR JSON and print one row per line.
 
-    menu-check --ocr-json menu.json --vehicle "2019 Honda Civic 31200" \\
+    menu-check --ocr-json menu.json --vehicle "<year> <make> <model> <odometer>" \\
         [--decider-url URL] [--act-threshold 0.8] [--image menu.jpg] \\
         [--nhtsa-recorded recalls.json | --nhtsa-cache DIR] [--allow-bedrock] \\
         [--ledger out/ledger.jsonl] [--json out/report.json]
@@ -100,7 +100,9 @@ def render(report: MenuReport, header: str) -> str:
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="menu-check", description=__doc__.split("\n\n")[0])
     p.add_argument("--ocr-json", required=True, help="Textract DetectDocumentText response")
-    p.add_argument("--vehicle", required=True, type=_vehicle, help='"2019 Honda Civic 31200"')
+    p.add_argument(
+        "--vehicle", required=True, type=_vehicle, help='"<year> <make> <model> <odometer mi>"'
+    )
     p.add_argument("--decider-url", default=os.environ.get("STRANDS_DECIDER_URL", DEFAULT_URL))
     p.add_argument("--act-threshold", type=float, default=DEFAULT_ACT_THRESHOLD)
     p.add_argument("--image", help="the menu photo the OCR JSON came from (adds line crops)")

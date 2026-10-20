@@ -50,7 +50,11 @@ class Vehicle:
 
     @classmethod
     def parse(cls, text: str) -> Vehicle:
-        """Parse ``"2019 Honda Civic 31200"``: year, one-word make, model, odometer (``mi`` ok)."""
+        """Parse ``"<year> <make> <model> <odometer>"``.
+
+        The make is one word, the model is everything between it and the odometer, and a
+        trailing ``mi`` is allowed.
+        """
         tokens = text.split()
         if tokens and tokens[-1].lower() in ("mi", "miles"):
             tokens.pop()
