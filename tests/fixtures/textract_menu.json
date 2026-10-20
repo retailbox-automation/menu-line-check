@@ -1,0 +1,3893 @@
+{
+ "DocumentMetadata": {
+  "Pages": 1
+ },
+ "Blocks": [
+  {
+   "BlockType": "PAGE",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 1.0,
+     "Height": 1.0,
+     "Left": 0.0,
+     "Top": 0.0
+    },
+    "Polygon": [
+     {
+      "X": 0.0,
+      "Y": 0.0
+     },
+     {
+      "X": 1.0,
+      "Y": 0.0
+     },
+     {
+      "X": 1.0,
+      "Y": 1.0
+     },
+     {
+      "X": 0.0,
+      "Y": 1.0
+     }
+    ]
+   },
+   "Id": "ae064d96-1f76-541b-bb8b-874c1e08218b",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "15694fca-b761-586c-be64-af64ac1170de",
+      "fb4535ce-4041-560e-bc2e-d3154ca5c6b3",
+      "7133652e-ebfc-5a4b-8cf6-771ad01def29",
+      "a6343cbf-c624-503f-88cd-d6b7a1eaf280",
+      "a8392e45-7716-50ad-b0b0-60cb0c7ea3b7",
+      "60d1b9b9-e552-5e1d-a0e1-1bdf82c3a076",
+      "3d083643-0b4f-5b33-8f3e-2f9f11370124",
+      "8162ca4d-4bdd-5122-8055-c9a357e11d79",
+      "3099e8c5-6cdd-5699-af3b-f0da8e1d6266",
+      "5a8c24db-755e-5f20-9187-a1d5581d4822",
+      "4524ef9a-0b3c-5a2e-9e74-cb500d79bada",
+      "22deb8a2-0014-5a93-ab9a-439555f998a9",
+      "8c61be2c-e6b7-5cf7-b76a-5087f0db127a",
+      "8a010338-6a10-58d3-a95f-e50ce5668d95",
+      "ab9db500-3d93-56ea-8a65-2d5b4bc608b8",
+      "cfaeb4a4-feb0-5540-8d7d-ba91f8cfae2a",
+      "3571c5f7-084c-56f7-9012-54b80c8651e3",
+      "548aa56f-c4bd-52f5-a9ce-41467fb161e1",
+      "9e57c66f-ce63-51ea-b9c9-7664c3d675e0",
+      "cd189838-3e71-541a-ac9c-c2133341d5d6",
+      "7ad73fd5-bc08-5dfd-bd2f-683af8f295f8",
+      "64369e5b-1bcf-5607-80ed-6383638be37a",
+      "c9481aea-30d4-590c-832c-6a2228359c94",
+      "5aaa93e4-aeb7-591a-8b2e-88ee4bbbf18f",
+      "ddf27f9c-cfec-5a49-8a62-310cbb26f159",
+      "368313dc-258f-54e1-ad93-1ab18f55c1f8",
+      "866fe384-b72a-5027-9244-4ac50c3fbce1",
+      "ccc968f0-4635-52ea-9e18-927fc3da9ab6",
+      "edac0436-4ebd-54a3-a26b-cf4b66cd4c4b",
+      "55f7be56-f93c-5182-bfb1-adc10c983d78",
+      "7bbacf45-7b53-51e9-9d58-89a4c8365f16",
+      "6355d9e4-56dd-5974-a54c-7e63795042dc",
+      "e92041bc-9d7e-5552-ac2b-4daa4fa53651",
+      "19931b5b-5905-5d06-ab43-c03cc661d527",
+      "0c6d4c3d-9bc5-5935-80c0-7e4347f8dffc"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 99.71,
+   "Text": "Recommended service — 30,000 mi",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.462933,
+     "Height": 0.032,
+     "Left": 0.08,
+     "Top": 0.05
+    },
+    "Polygon": [
+     {
+      "X": 0.08,
+      "Y": 0.05
+     },
+     {
+      "X": 0.542933,
+      "Y": 0.05
+     },
+     {
+      "X": 0.542933,
+      "Y": 0.082
+     },
+     {
+      "X": 0.08,
+      "Y": 0.082
+     }
+    ]
+   },
+   "Id": "15694fca-b761-586c-be64-af64ac1170de",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "fbd02f62-6865-509a-91a4-7fd378b38559",
+      "c3befda8-2f27-5657-ba68-4b05e56e9e26",
+      "2c2ffb0f-1bc9-51a7-b87b-026b9c6843cf",
+      "5fa9abfe-f13c-5947-b8b4-ef6d950cd8ab",
+      "d086eb8e-9880-5089-a882-f5615ae651ce"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 99.9,
+   "Text": "Oil & filter change, full synthetic",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.392,
+     "Height": 0.024,
+     "Left": 0.08,
+     "Top": 0.125
+    },
+    "Polygon": [
+     {
+      "X": 0.08,
+      "Y": 0.125
+     },
+     {
+      "X": 0.472,
+      "Y": 0.125
+     },
+     {
+      "X": 0.472,
+      "Y": 0.149
+     },
+     {
+      "X": 0.08,
+      "Y": 0.149
+     }
+    ]
+   },
+   "Id": "fb4535ce-4041-560e-bc2e-d3154ca5c6b3",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "f795e72c-3635-5dc1-b21f-a88bc2275e71",
+      "32833f6a-7d81-5580-8413-66d058f54344",
+      "a7774dd7-a4a1-58a3-9cb7-c7f23006f665",
+      "ad55886e-57b2-52f8-a152-9faff0dfc077",
+      "4e5c43da-6af3-5122-bc4d-ce29e5630dee",
+      "9ad226d7-f299-5cff-b51e-2a8cae8d7a16"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 88.4,
+   "Text": "...............................................",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.3568,
+     "Height": 0.0168,
+     "Left": 0.484,
+     "Top": 0.129
+    },
+    "Polygon": [
+     {
+      "X": 0.484,
+      "Y": 0.129
+     },
+     {
+      "X": 0.8408,
+      "Y": 0.129
+     },
+     {
+      "X": 0.8408,
+      "Y": 0.1458
+     },
+     {
+      "X": 0.484,
+      "Y": 0.1458
+     }
+    ]
+   },
+   "Id": "7133652e-ebfc-5a4b-8cf6-771ad01def29",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "1986006e-5bbb-5cab-b747-26ac3d01e8c4"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 99.9,
+   "Text": "$89.95",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0672,
+     "Height": 0.024,
+     "Left": 0.8528,
+     "Top": 0.1258
+    },
+    "Polygon": [
+     {
+      "X": 0.8528,
+      "Y": 0.1258
+     },
+     {
+      "X": 0.92,
+      "Y": 0.1258
+     },
+     {
+      "X": 0.92,
+      "Y": 0.1498
+     },
+     {
+      "X": 0.8528,
+      "Y": 0.1498
+     }
+    ]
+   },
+   "Id": "a6343cbf-c624-503f-88cd-d6b7a1eaf280",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "ccc2fd05-0315-56b7-8892-b8947addf995"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 99.79,
+   "Text": "Engine oil conditioner",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.2464,
+     "Height": 0.024,
+     "Left": 0.08,
+     "Top": 0.1905
+    },
+    "Polygon": [
+     {
+      "X": 0.08,
+      "Y": 0.1905
+     },
+     {
+      "X": 0.3264,
+      "Y": 0.1905
+     },
+     {
+      "X": 0.3264,
+      "Y": 0.2145
+     },
+     {
+      "X": 0.08,
+      "Y": 0.2145
+     }
+    ]
+   },
+   "Id": "a8392e45-7716-50ad-b0b0-60cb0c7ea3b7",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "44ce4b30-8fe5-52b8-bb6e-202a1e95bb1f",
+      "5c0d74a4-1aaa-5fb4-83a2-6939a9f3b806",
+      "4a6c6510-1d97-511e-8db7-af493ae97110"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 88.4,
+   "Text": "..................................................................",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.5024,
+     "Height": 0.0168,
+     "Left": 0.3384,
+     "Top": 0.1945
+    },
+    "Polygon": [
+     {
+      "X": 0.3384,
+      "Y": 0.1945
+     },
+     {
+      "X": 0.8408,
+      "Y": 0.1945
+     },
+     {
+      "X": 0.8408,
+      "Y": 0.2113
+     },
+     {
+      "X": 0.3384,
+      "Y": 0.2113
+     }
+    ]
+   },
+   "Id": "60d1b9b9-e552-5e1d-a0e1-1bdf82c3a076",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "6e0378ad-2460-5553-baf8-a13b2079b9f8"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 99.79,
+   "Text": "$39.00",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0672,
+     "Height": 0.024,
+     "Left": 0.8528,
+     "Top": 0.1913
+    },
+    "Polygon": [
+     {
+      "X": 0.8528,
+      "Y": 0.1913
+     },
+     {
+      "X": 0.92,
+      "Y": 0.1913
+     },
+     {
+      "X": 0.92,
+      "Y": 0.2153
+     },
+     {
+      "X": 0.8528,
+      "Y": 0.2153
+     }
+    ]
+   },
+   "Id": "3d083643-0b4f-5b33-8f3e-2f9f11370124",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "c24a5902-7ed7-5176-b1e7-b97b5ef7c6e0"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 99.68,
+   "Text": "Fuel injection cleaning",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.2576,
+     "Height": 0.024,
+     "Left": 0.08,
+     "Top": 0.256
+    },
+    "Polygon": [
+     {
+      "X": 0.08,
+      "Y": 0.256
+     },
+     {
+      "X": 0.3376,
+      "Y": 0.256
+     },
+     {
+      "X": 0.3376,
+      "Y": 0.28
+     },
+     {
+      "X": 0.08,
+      "Y": 0.28
+     }
+    ]
+   },
+   "Id": "8162ca4d-4bdd-5122-8055-c9a357e11d79",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "5e4dca2a-9f53-5fd9-8b1c-e3353b9575fe",
+      "26cd7bbc-0983-5f34-bf20-7b9f7582a090",
+      "b8455e2e-2a72-55bb-95d3-aab3f65fde1b"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 88.4,
+   "Text": "................................................................",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.48,
+     "Height": 0.0168,
+     "Left": 0.3496,
+     "Top": 0.26
+    },
+    "Polygon": [
+     {
+      "X": 0.3496,
+      "Y": 0.26
+     },
+     {
+      "X": 0.8296,
+      "Y": 0.26
+     },
+     {
+      "X": 0.8296,
+      "Y": 0.2768
+     },
+     {
+      "X": 0.3496,
+      "Y": 0.2768
+     }
+    ]
+   },
+   "Id": "3099e8c5-6cdd-5699-af3b-f0da8e1d6266",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "f69294ed-cf1a-5922-9ed6-d8b65f6b29e8"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 99.68,
+   "Text": "$149.00",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0784,
+     "Height": 0.024,
+     "Left": 0.8416,
+     "Top": 0.2568
+    },
+    "Polygon": [
+     {
+      "X": 0.8416,
+      "Y": 0.2568
+     },
+     {
+      "X": 0.92,
+      "Y": 0.2568
+     },
+     {
+      "X": 0.92,
+      "Y": 0.2808
+     },
+     {
+      "X": 0.8416,
+      "Y": 0.2808
+     }
+    ]
+   },
+   "Id": "5a8c24db-755e-5f20-9187-a1d5581d4822",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "1e12582f-25e6-5d39-89e3-eac155970217"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 99.57000000000001,
+   "Text": "Tire rotation",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.1456,
+     "Height": 0.024,
+     "Left": 0.08,
+     "Top": 0.317
+    },
+    "Polygon": [
+     {
+      "X": 0.08,
+      "Y": 0.317
+     },
+     {
+      "X": 0.2256,
+      "Y": 0.317
+     },
+     {
+      "X": 0.2256,
+      "Y": 0.341
+     },
+     {
+      "X": 0.08,
+      "Y": 0.341
+     }
+    ]
+   },
+   "Id": "4524ef9a-0b3c-5a2e-9e74-cb500d79bada",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "efd0165b-55db-585c-bdab-36cc318f9307",
+      "696558b7-a735-5292-936d-7e4661923036"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 88.4,
+   "Text": "................................................................................",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.6032,
+     "Height": 0.0168,
+     "Left": 0.2376,
+     "Top": 0.321
+    },
+    "Polygon": [
+     {
+      "X": 0.2376,
+      "Y": 0.321
+     },
+     {
+      "X": 0.8408,
+      "Y": 0.321
+     },
+     {
+      "X": 0.8408,
+      "Y": 0.3378
+     },
+     {
+      "X": 0.2376,
+      "Y": 0.3378
+     }
+    ]
+   },
+   "Id": "22deb8a2-0014-5a93-ab9a-439555f998a9",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "b9d62b9f-921a-59d4-b454-f89405eeea69"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 99.57000000000001,
+   "Text": "$39.95",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0672,
+     "Height": 0.024,
+     "Left": 0.8528,
+     "Top": 0.3178
+    },
+    "Polygon": [
+     {
+      "X": 0.8528,
+      "Y": 0.3178
+     },
+     {
+      "X": 0.92,
+      "Y": 0.3178
+     },
+     {
+      "X": 0.92,
+      "Y": 0.3418
+     },
+     {
+      "X": 0.8528,
+      "Y": 0.3418
+     }
+    ]
+   },
+   "Id": "8c61be2c-e6b7-5cf7-b76a-5087f0db127a",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "f3b82b1c-5659-571d-94e0-4f2e78944ede"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 99.9,
+   "Text": "Cabin air filter",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.1792,
+     "Height": 0.024,
+     "Left": 0.08,
+     "Top": 0.3825
+    },
+    "Polygon": [
+     {
+      "X": 0.08,
+      "Y": 0.3825
+     },
+     {
+      "X": 0.2592,
+      "Y": 0.3825
+     },
+     {
+      "X": 0.2592,
+      "Y": 0.4065
+     },
+     {
+      "X": 0.08,
+      "Y": 0.4065
+     }
+    ]
+   },
+   "Id": "8a010338-6a10-58d3-a95f-e50ce5668d95",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "3b453565-3afe-585b-a576-2985551e4b5c",
+      "b5ef7a54-7738-5029-af5f-a2355c60213e",
+      "999b57df-acea-514b-8d3c-d49a57d0f0d8"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 88.4,
+   "Text": "...........................................................................",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.5696,
+     "Height": 0.0168,
+     "Left": 0.2712,
+     "Top": 0.3865
+    },
+    "Polygon": [
+     {
+      "X": 0.2712,
+      "Y": 0.3865
+     },
+     {
+      "X": 0.8408,
+      "Y": 0.3865
+     },
+     {
+      "X": 0.8408,
+      "Y": 0.4033
+     },
+     {
+      "X": 0.2712,
+      "Y": 0.4033
+     }
+    ]
+   },
+   "Id": "ab9db500-3d93-56ea-8a65-2d5b4bc608b8",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "74907348-3ad4-57e2-abca-8ef5f725ee20"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 99.9,
+   "Text": "$79.95",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0672,
+     "Height": 0.024,
+     "Left": 0.8528,
+     "Top": 0.3833
+    },
+    "Polygon": [
+     {
+      "X": 0.8528,
+      "Y": 0.3833
+     },
+     {
+      "X": 0.92,
+      "Y": 0.3833
+     },
+     {
+      "X": 0.92,
+      "Y": 0.4073
+     },
+     {
+      "X": 0.8528,
+      "Y": 0.4073
+     }
+    ]
+   },
+   "Id": "cfaeb4a4-feb0-5540-8d7d-ba91f8cfae2a",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "001fa5e4-768c-5c35-a8c1-800bb306ea79"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 99.79,
+   "Text": "Replace fuel pump module",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.2688,
+     "Height": 0.024,
+     "Left": 0.08,
+     "Top": 0.448
+    },
+    "Polygon": [
+     {
+      "X": 0.08,
+      "Y": 0.448
+     },
+     {
+      "X": 0.3488,
+      "Y": 0.448
+     },
+     {
+      "X": 0.3488,
+      "Y": 0.472
+     },
+     {
+      "X": 0.08,
+      "Y": 0.472
+     }
+    ]
+   },
+   "Id": "3571c5f7-084c-56f7-9012-54b80c8651e3",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "d7c098c7-4ba3-5132-bef5-e2e5db0a61d6",
+      "8d6199eb-d3b4-525b-895e-7c0b53661fa9",
+      "0e194e1d-4451-5ea6-a85a-c4d16808b898",
+      "ff25077e-331c-58f8-8dab-bebe94784a60"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 88.4,
+   "Text": "...........................................................",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.4464,
+     "Height": 0.0168,
+     "Left": 0.3608,
+     "Top": 0.452
+    },
+    "Polygon": [
+     {
+      "X": 0.3608,
+      "Y": 0.452
+     },
+     {
+      "X": 0.8072,
+      "Y": 0.452
+     },
+     {
+      "X": 0.8072,
+      "Y": 0.4688
+     },
+     {
+      "X": 0.3608,
+      "Y": 0.4688
+     }
+    ]
+   },
+   "Id": "548aa56f-c4bd-52f5-a9ce-41467fb161e1",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "e9d587b2-7711-54e8-94af-84fdd2c5ae98"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 99.79,
+   "Text": "$1,089.00",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.1008,
+     "Height": 0.024,
+     "Left": 0.8192,
+     "Top": 0.4488
+    },
+    "Polygon": [
+     {
+      "X": 0.8192,
+      "Y": 0.4488
+     },
+     {
+      "X": 0.92,
+      "Y": 0.4488
+     },
+     {
+      "X": 0.92,
+      "Y": 0.4728
+     },
+     {
+      "X": 0.8192,
+      "Y": 0.4728
+     }
+    ]
+   },
+   "Id": "9e57c66f-ce63-51ea-b9c9-7664c3d675e0",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "77869c64-84f3-524e-8625-85685325da58"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 99.68,
+   "Text": "Tech diagnostic",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.168,
+     "Height": 0.024,
+     "Left": 0.08,
+     "Top": 0.509
+    },
+    "Polygon": [
+     {
+      "X": 0.08,
+      "Y": 0.509
+     },
+     {
+      "X": 0.248,
+      "Y": 0.509
+     },
+     {
+      "X": 0.248,
+      "Y": 0.533
+     },
+     {
+      "X": 0.08,
+      "Y": 0.533
+     }
+    ]
+   },
+   "Id": "cd189838-3e71-541a-ac9c-c2133341d5d6",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "d6d1b36a-80ae-53fe-bce9-2d400a5e0036",
+      "4e0f17de-7c1d-550b-b163-c7adaf018534"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 88.4,
+   "Text": "...........................................................................",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.5696,
+     "Height": 0.0168,
+     "Left": 0.26,
+     "Top": 0.513
+    },
+    "Polygon": [
+     {
+      "X": 0.26,
+      "Y": 0.513
+     },
+     {
+      "X": 0.8296,
+      "Y": 0.513
+     },
+     {
+      "X": 0.8296,
+      "Y": 0.5298
+     },
+     {
+      "X": 0.26,
+      "Y": 0.5298
+     }
+    ]
+   },
+   "Id": "7ad73fd5-bc08-5dfd-bd2f-683af8f295f8",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "4fd1c1bc-f7c3-5d02-941b-06a1672ca95c"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 99.68,
+   "Text": "$189.00",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0784,
+     "Height": 0.024,
+     "Left": 0.8416,
+     "Top": 0.5098
+    },
+    "Polygon": [
+     {
+      "X": 0.8416,
+      "Y": 0.5098
+     },
+     {
+      "X": 0.92,
+      "Y": 0.5098
+     },
+     {
+      "X": 0.92,
+      "Y": 0.5338
+     },
+     {
+      "X": 0.8416,
+      "Y": 0.5338
+     }
+    ]
+   },
+   "Id": "64369e5b-1bcf-5607-80ed-6383638be37a",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "566c2eab-7161-5e42-bd8d-335f3959ad33"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 99.02,
+   "Text": "Required before any repair",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.206267,
+     "Height": 0.017,
+     "Left": 0.1,
+     "Top": 0.537
+    },
+    "Polygon": [
+     {
+      "X": 0.1,
+      "Y": 0.537
+     },
+     {
+      "X": 0.306267,
+      "Y": 0.537
+     },
+     {
+      "X": 0.306267,
+      "Y": 0.554
+     },
+     {
+      "X": 0.1,
+      "Y": 0.554
+     }
+    ]
+   },
+   "Id": "c9481aea-30d4-590c-832c-6a2228359c94",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "6d679a8c-f34a-55dd-8235-b93e2b41d7e7",
+      "2a1edd0f-f7f5-5cc7-aa24-02fa8a8bd566",
+      "6057867b-5cd4-5388-9ede-7c28d5bbbb56",
+      "c0c10056-3cbb-505c-9595-a55b2b0b5644"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 96.12,
+   "Text": "Shop supplies ................................................................................",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.7608,
+     "Height": 0.024,
+     "Left": 0.08,
+     "Top": 0.5745
+    },
+    "Polygon": [
+     {
+      "X": 0.08,
+      "Y": 0.5745
+     },
+     {
+      "X": 0.8408,
+      "Y": 0.5745
+     },
+     {
+      "X": 0.8408,
+      "Y": 0.5985
+     },
+     {
+      "X": 0.08,
+      "Y": 0.5985
+     }
+    ]
+   },
+   "Id": "5aaa93e4-aeb7-591a-8b2e-88ee4bbbf18f",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "1f11b3fd-c604-5cff-8dc2-2617bebc57aa",
+      "594e87b2-a534-502c-b1dc-989a6d06d406",
+      "5ddc2be6-f076-54e6-8015-a9f6d95b8ec4"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 99.57000000000001,
+   "Text": "$34.50",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0672,
+     "Height": 0.024,
+     "Left": 0.8528,
+     "Top": 0.5753
+    },
+    "Polygon": [
+     {
+      "X": 0.8528,
+      "Y": 0.5753
+     },
+     {
+      "X": 0.92,
+      "Y": 0.5753
+     },
+     {
+      "X": 0.92,
+      "Y": 0.5993
+     },
+     {
+      "X": 0.8528,
+      "Y": 0.5993
+     }
+    ]
+   },
+   "Id": "ddf27f9c-cfec-5a49-8a62-310cbb26f159",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "b238cf10-1350-5403-9854-87e1acb615a4"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 99.9,
+   "Text": "Front brake pads & rotors",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.28,
+     "Height": 0.024,
+     "Left": 0.08,
+     "Top": 0.64
+    },
+    "Polygon": [
+     {
+      "X": 0.08,
+      "Y": 0.64
+     },
+     {
+      "X": 0.36,
+      "Y": 0.64
+     },
+     {
+      "X": 0.36,
+      "Y": 0.664
+     },
+     {
+      "X": 0.08,
+      "Y": 0.664
+     }
+    ]
+   },
+   "Id": "368313dc-258f-54e1-ad93-1ab18f55c1f8",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "5bdfb02d-8a2c-577d-9bf7-6a44e4a93f47",
+      "55678ea2-508e-5945-a393-cae17b3b21d7",
+      "d06b7450-bb0f-54ca-bf53-c4beed9be856",
+      "3eb327b1-a8cb-5e2f-b1f6-528cb4c7a9d6",
+      "2b454786-8d99-5611-84f9-8489a4ba3ee3"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 88.4,
+   "Text": ".............................................................",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.4576,
+     "Height": 0.0168,
+     "Left": 0.372,
+     "Top": 0.644
+    },
+    "Polygon": [
+     {
+      "X": 0.372,
+      "Y": 0.644
+     },
+     {
+      "X": 0.8296,
+      "Y": 0.644
+     },
+     {
+      "X": 0.8296,
+      "Y": 0.6608
+     },
+     {
+      "X": 0.372,
+      "Y": 0.6608
+     }
+    ]
+   },
+   "Id": "866fe384-b72a-5027-9244-4ac50c3fbce1",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "4d66cb88-135b-579a-a85c-6b8d67665e54"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 99.9,
+   "Text": "$489.00",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0784,
+     "Height": 0.024,
+     "Left": 0.8416,
+     "Top": 0.6408
+    },
+    "Polygon": [
+     {
+      "X": 0.8416,
+      "Y": 0.6408
+     },
+     {
+      "X": 0.92,
+      "Y": 0.6408
+     },
+     {
+      "X": 0.92,
+      "Y": 0.6648
+     },
+     {
+      "X": 0.8416,
+      "Y": 0.6648
+     }
+    ]
+   },
+   "Id": "ccc968f0-4635-52ea-9e18-927fc3da9ab6",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "4073e6ed-c41e-592f-bd3f-05c20007ebad"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 99.79,
+   "Text": "Nitrogen tire fill",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.2016,
+     "Height": 0.024,
+     "Left": 0.08,
+     "Top": 0.701
+    },
+    "Polygon": [
+     {
+      "X": 0.08,
+      "Y": 0.701
+     },
+     {
+      "X": 0.2816,
+      "Y": 0.701
+     },
+     {
+      "X": 0.2816,
+      "Y": 0.725
+     },
+     {
+      "X": 0.08,
+      "Y": 0.725
+     }
+    ]
+   },
+   "Id": "edac0436-4ebd-54a3-a26b-cf4b66cd4c4b",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "f8b34c80-07a9-5695-ba5e-6cbd4f5354f9",
+      "b6deed30-966c-5499-b4fd-9d2b1772c9de",
+      "dcd5c66e-e99b-5e94-a65f-c083cdbf6b0d"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 88.4,
+   "Text": "........................................................................",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.5472,
+     "Height": 0.0168,
+     "Left": 0.2936,
+     "Top": 0.705
+    },
+    "Polygon": [
+     {
+      "X": 0.2936,
+      "Y": 0.705
+     },
+     {
+      "X": 0.8408,
+      "Y": 0.705
+     },
+     {
+      "X": 0.8408,
+      "Y": 0.7218
+     },
+     {
+      "X": 0.2936,
+      "Y": 0.7218
+     }
+    ]
+   },
+   "Id": "55f7be56-f93c-5182-bfb1-adc10c983d78",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "a1896485-1938-5c60-b9f6-2d0cb95c7157"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 99.79,
+   "Text": "$29.95",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0672,
+     "Height": 0.024,
+     "Left": 0.8528,
+     "Top": 0.7018
+    },
+    "Polygon": [
+     {
+      "X": 0.8528,
+      "Y": 0.7018
+     },
+     {
+      "X": 0.92,
+      "Y": 0.7018
+     },
+     {
+      "X": 0.92,
+      "Y": 0.7258
+     },
+     {
+      "X": 0.8528,
+      "Y": 0.7258
+     }
+    ]
+   },
+   "Id": "7bbacf45-7b53-51e9-9d58-89a4c8365f16",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "24443d35-7394-58fb-ab9d-ea4cc5a817b7"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 99.68,
+   "Text": "Throttle body service",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.2352,
+     "Height": 0.024,
+     "Left": 0.08,
+     "Top": 0.7665
+    },
+    "Polygon": [
+     {
+      "X": 0.08,
+      "Y": 0.7665
+     },
+     {
+      "X": 0.3152,
+      "Y": 0.7665
+     },
+     {
+      "X": 0.3152,
+      "Y": 0.7905
+     },
+     {
+      "X": 0.08,
+      "Y": 0.7905
+     }
+    ]
+   },
+   "Id": "6355d9e4-56dd-5974-a54c-7e63795042dc",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "056ff09c-ca16-561e-964e-c738066090f7",
+      "724cdad7-2fbb-57b6-8650-34c142a30356",
+      "4bf54b37-fa81-5ec7-a402-6d16f1f3d7da"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 88.4,
+   "Text": "..................................................................",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.5024,
+     "Height": 0.0168,
+     "Left": 0.3272,
+     "Top": 0.7705
+    },
+    "Polygon": [
+     {
+      "X": 0.3272,
+      "Y": 0.7705
+     },
+     {
+      "X": 0.8296,
+      "Y": 0.7705
+     },
+     {
+      "X": 0.8296,
+      "Y": 0.7873
+     },
+     {
+      "X": 0.3272,
+      "Y": 0.7873
+     }
+    ]
+   },
+   "Id": "e92041bc-9d7e-5552-ac2b-4daa4fa53651",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "4050b67e-5c7d-55e3-83ce-17af5d0478d7"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 99.68,
+   "Text": "$119.00",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0784,
+     "Height": 0.024,
+     "Left": 0.8416,
+     "Top": 0.7673
+    },
+    "Polygon": [
+     {
+      "X": 0.8416,
+      "Y": 0.7673
+     },
+     {
+      "X": 0.92,
+      "Y": 0.7673
+     },
+     {
+      "X": 0.92,
+      "Y": 0.7913
+     },
+     {
+      "X": 0.8416,
+      "Y": 0.7913
+     }
+    ]
+   },
+   "Id": "19931b5b-5905-5d06-ab43-c03cc661d527",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "bfc4f9e3-a410-565c-800d-896ed22166a9"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "LINE",
+   "Confidence": 97.84,
+   "Text": "Environmental disposal fee ............................................................. $12.95",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.84,
+     "Height": 0.024,
+     "Left": 0.08,
+     "Top": 0.832
+    },
+    "Polygon": [
+     {
+      "X": 0.08,
+      "Y": 0.832
+     },
+     {
+      "X": 0.92,
+      "Y": 0.832
+     },
+     {
+      "X": 0.92,
+      "Y": 0.856
+     },
+     {
+      "X": 0.08,
+      "Y": 0.856
+     }
+    ]
+   },
+   "Id": "0c6d4c3d-9bc5-5935-80c0-7e4347f8dffc",
+   "Relationships": [
+    {
+     "Type": "CHILD",
+     "Ids": [
+      "4d971a42-142a-5995-8cab-4d81f375e2b4",
+      "e341d634-8bb5-5b4b-a2e2-ac3270116ed4",
+      "7d06aee9-c8b1-5a80-b8a9-4358fb69d8ac",
+      "c6815ed1-1bb4-5f9f-b286-64d2850537dd",
+      "612bf73a-8748-5e8b-a079-3dfefe0f656a"
+     ]
+    }
+   ]
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.71,
+   "Text": "Recommended",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.164267,
+     "Height": 0.032,
+     "Left": 0.08,
+     "Top": 0.05
+    },
+    "Polygon": [
+     {
+      "X": 0.08,
+      "Y": 0.05
+     },
+     {
+      "X": 0.244267,
+      "Y": 0.05
+     },
+     {
+      "X": 0.244267,
+      "Y": 0.082
+     },
+     {
+      "X": 0.08,
+      "Y": 0.082
+     }
+    ]
+   },
+   "Id": "fbd02f62-6865-509a-91a4-7fd378b38559"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.71,
+   "Text": "service",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.104533,
+     "Height": 0.032,
+     "Left": 0.2592,
+     "Top": 0.05
+    },
+    "Polygon": [
+     {
+      "X": 0.2592,
+      "Y": 0.05
+     },
+     {
+      "X": 0.363733,
+      "Y": 0.05
+     },
+     {
+      "X": 0.363733,
+      "Y": 0.082
+     },
+     {
+      "X": 0.2592,
+      "Y": 0.082
+     }
+    ]
+   },
+   "Id": "c3befda8-2f27-5657-ba68-4b05e56e9e26"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.71,
+   "Text": "—",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.014933,
+     "Height": 0.032,
+     "Left": 0.378667,
+     "Top": 0.05
+    },
+    "Polygon": [
+     {
+      "X": 0.378667,
+      "Y": 0.05
+     },
+     {
+      "X": 0.3936,
+      "Y": 0.05
+     },
+     {
+      "X": 0.3936,
+      "Y": 0.082
+     },
+     {
+      "X": 0.378667,
+      "Y": 0.082
+     }
+    ]
+   },
+   "Id": "2c2ffb0f-1bc9-51a7-b87b-026b9c6843cf"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.71,
+   "Text": "30,000",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0896,
+     "Height": 0.032,
+     "Left": 0.408533,
+     "Top": 0.05
+    },
+    "Polygon": [
+     {
+      "X": 0.408533,
+      "Y": 0.05
+     },
+     {
+      "X": 0.498133,
+      "Y": 0.05
+     },
+     {
+      "X": 0.498133,
+      "Y": 0.082
+     },
+     {
+      "X": 0.408533,
+      "Y": 0.082
+     }
+    ]
+   },
+   "Id": "5fa9abfe-f13c-5947-b8b4-ef6d950cd8ab"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.71,
+   "Text": "mi",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.029867,
+     "Height": 0.032,
+     "Left": 0.513067,
+     "Top": 0.05
+    },
+    "Polygon": [
+     {
+      "X": 0.513067,
+      "Y": 0.05
+     },
+     {
+      "X": 0.542933,
+      "Y": 0.05
+     },
+     {
+      "X": 0.542933,
+      "Y": 0.082
+     },
+     {
+      "X": 0.513067,
+      "Y": 0.082
+     }
+    ]
+   },
+   "Id": "d086eb8e-9880-5089-a882-f5615ae651ce"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.9,
+   "Text": "Oil",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0336,
+     "Height": 0.024,
+     "Left": 0.08,
+     "Top": 0.125
+    },
+    "Polygon": [
+     {
+      "X": 0.08,
+      "Y": 0.125
+     },
+     {
+      "X": 0.1136,
+      "Y": 0.125
+     },
+     {
+      "X": 0.1136,
+      "Y": 0.149
+     },
+     {
+      "X": 0.08,
+      "Y": 0.149
+     }
+    ]
+   },
+   "Id": "f795e72c-3635-5dc1-b21f-a88bc2275e71"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.9,
+   "Text": "&",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0112,
+     "Height": 0.024,
+     "Left": 0.1248,
+     "Top": 0.125
+    },
+    "Polygon": [
+     {
+      "X": 0.1248,
+      "Y": 0.125
+     },
+     {
+      "X": 0.136,
+      "Y": 0.125
+     },
+     {
+      "X": 0.136,
+      "Y": 0.149
+     },
+     {
+      "X": 0.1248,
+      "Y": 0.149
+     }
+    ]
+   },
+   "Id": "32833f6a-7d81-5580-8413-66d058f54344"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.9,
+   "Text": "filter",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0672,
+     "Height": 0.024,
+     "Left": 0.1472,
+     "Top": 0.125
+    },
+    "Polygon": [
+     {
+      "X": 0.1472,
+      "Y": 0.125
+     },
+     {
+      "X": 0.2144,
+      "Y": 0.125
+     },
+     {
+      "X": 0.2144,
+      "Y": 0.149
+     },
+     {
+      "X": 0.1472,
+      "Y": 0.149
+     }
+    ]
+   },
+   "Id": "a7774dd7-a4a1-58a3-9cb7-c7f23006f665"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.9,
+   "Text": "change,",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0784,
+     "Height": 0.024,
+     "Left": 0.2256,
+     "Top": 0.125
+    },
+    "Polygon": [
+     {
+      "X": 0.2256,
+      "Y": 0.125
+     },
+     {
+      "X": 0.304,
+      "Y": 0.125
+     },
+     {
+      "X": 0.304,
+      "Y": 0.149
+     },
+     {
+      "X": 0.2256,
+      "Y": 0.149
+     }
+    ]
+   },
+   "Id": "ad55886e-57b2-52f8-a152-9faff0dfc077"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.9,
+   "Text": "full",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0448,
+     "Height": 0.024,
+     "Left": 0.3152,
+     "Top": 0.125
+    },
+    "Polygon": [
+     {
+      "X": 0.3152,
+      "Y": 0.125
+     },
+     {
+      "X": 0.36,
+      "Y": 0.125
+     },
+     {
+      "X": 0.36,
+      "Y": 0.149
+     },
+     {
+      "X": 0.3152,
+      "Y": 0.149
+     }
+    ]
+   },
+   "Id": "4e5c43da-6af3-5122-bc4d-ce29e5630dee"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.9,
+   "Text": "synthetic",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.1008,
+     "Height": 0.024,
+     "Left": 0.3712,
+     "Top": 0.125
+    },
+    "Polygon": [
+     {
+      "X": 0.3712,
+      "Y": 0.125
+     },
+     {
+      "X": 0.472,
+      "Y": 0.125
+     },
+     {
+      "X": 0.472,
+      "Y": 0.149
+     },
+     {
+      "X": 0.3712,
+      "Y": 0.149
+     }
+    ]
+   },
+   "Id": "9ad226d7-f299-5cff-b51e-2a8cae8d7a16"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 88.4,
+   "Text": "...............................................",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.3568,
+     "Height": 0.0168,
+     "Left": 0.484,
+     "Top": 0.129
+    },
+    "Polygon": [
+     {
+      "X": 0.484,
+      "Y": 0.129
+     },
+     {
+      "X": 0.8408,
+      "Y": 0.129
+     },
+     {
+      "X": 0.8408,
+      "Y": 0.1458
+     },
+     {
+      "X": 0.484,
+      "Y": 0.1458
+     }
+    ]
+   },
+   "Id": "1986006e-5bbb-5cab-b747-26ac3d01e8c4"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.9,
+   "Text": "$89.95",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0672,
+     "Height": 0.024,
+     "Left": 0.8528,
+     "Top": 0.1258
+    },
+    "Polygon": [
+     {
+      "X": 0.8528,
+      "Y": 0.1258
+     },
+     {
+      "X": 0.92,
+      "Y": 0.1258
+     },
+     {
+      "X": 0.92,
+      "Y": 0.1498
+     },
+     {
+      "X": 0.8528,
+      "Y": 0.1498
+     }
+    ]
+   },
+   "Id": "ccc2fd05-0315-56b7-8892-b8947addf995"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.79,
+   "Text": "Engine",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0672,
+     "Height": 0.024,
+     "Left": 0.08,
+     "Top": 0.1905
+    },
+    "Polygon": [
+     {
+      "X": 0.08,
+      "Y": 0.1905
+     },
+     {
+      "X": 0.1472,
+      "Y": 0.1905
+     },
+     {
+      "X": 0.1472,
+      "Y": 0.2145
+     },
+     {
+      "X": 0.08,
+      "Y": 0.2145
+     }
+    ]
+   },
+   "Id": "44ce4b30-8fe5-52b8-bb6e-202a1e95bb1f"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.79,
+   "Text": "oil",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0336,
+     "Height": 0.024,
+     "Left": 0.1584,
+     "Top": 0.1905
+    },
+    "Polygon": [
+     {
+      "X": 0.1584,
+      "Y": 0.1905
+     },
+     {
+      "X": 0.192,
+      "Y": 0.1905
+     },
+     {
+      "X": 0.192,
+      "Y": 0.2145
+     },
+     {
+      "X": 0.1584,
+      "Y": 0.2145
+     }
+    ]
+   },
+   "Id": "5c0d74a4-1aaa-5fb4-83a2-6939a9f3b806"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.79,
+   "Text": "conditioner",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.1232,
+     "Height": 0.024,
+     "Left": 0.2032,
+     "Top": 0.1905
+    },
+    "Polygon": [
+     {
+      "X": 0.2032,
+      "Y": 0.1905
+     },
+     {
+      "X": 0.3264,
+      "Y": 0.1905
+     },
+     {
+      "X": 0.3264,
+      "Y": 0.2145
+     },
+     {
+      "X": 0.2032,
+      "Y": 0.2145
+     }
+    ]
+   },
+   "Id": "4a6c6510-1d97-511e-8db7-af493ae97110"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 88.4,
+   "Text": "..................................................................",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.5024,
+     "Height": 0.0168,
+     "Left": 0.3384,
+     "Top": 0.1945
+    },
+    "Polygon": [
+     {
+      "X": 0.3384,
+      "Y": 0.1945
+     },
+     {
+      "X": 0.8408,
+      "Y": 0.1945
+     },
+     {
+      "X": 0.8408,
+      "Y": 0.2113
+     },
+     {
+      "X": 0.3384,
+      "Y": 0.2113
+     }
+    ]
+   },
+   "Id": "6e0378ad-2460-5553-baf8-a13b2079b9f8"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.79,
+   "Text": "$39.00",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0672,
+     "Height": 0.024,
+     "Left": 0.8528,
+     "Top": 0.1913
+    },
+    "Polygon": [
+     {
+      "X": 0.8528,
+      "Y": 0.1913
+     },
+     {
+      "X": 0.92,
+      "Y": 0.1913
+     },
+     {
+      "X": 0.92,
+      "Y": 0.2153
+     },
+     {
+      "X": 0.8528,
+      "Y": 0.2153
+     }
+    ]
+   },
+   "Id": "c24a5902-7ed7-5176-b1e7-b97b5ef7c6e0"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.68,
+   "Text": "Fuel",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0448,
+     "Height": 0.024,
+     "Left": 0.08,
+     "Top": 0.256
+    },
+    "Polygon": [
+     {
+      "X": 0.08,
+      "Y": 0.256
+     },
+     {
+      "X": 0.1248,
+      "Y": 0.256
+     },
+     {
+      "X": 0.1248,
+      "Y": 0.28
+     },
+     {
+      "X": 0.08,
+      "Y": 0.28
+     }
+    ]
+   },
+   "Id": "5e4dca2a-9f53-5fd9-8b1c-e3353b9575fe"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.68,
+   "Text": "injection",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.1008,
+     "Height": 0.024,
+     "Left": 0.136,
+     "Top": 0.256
+    },
+    "Polygon": [
+     {
+      "X": 0.136,
+      "Y": 0.256
+     },
+     {
+      "X": 0.2368,
+      "Y": 0.256
+     },
+     {
+      "X": 0.2368,
+      "Y": 0.28
+     },
+     {
+      "X": 0.136,
+      "Y": 0.28
+     }
+    ]
+   },
+   "Id": "26cd7bbc-0983-5f34-bf20-7b9f7582a090"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.68,
+   "Text": "cleaning",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0896,
+     "Height": 0.024,
+     "Left": 0.248,
+     "Top": 0.256
+    },
+    "Polygon": [
+     {
+      "X": 0.248,
+      "Y": 0.256
+     },
+     {
+      "X": 0.3376,
+      "Y": 0.256
+     },
+     {
+      "X": 0.3376,
+      "Y": 0.28
+     },
+     {
+      "X": 0.248,
+      "Y": 0.28
+     }
+    ]
+   },
+   "Id": "b8455e2e-2a72-55bb-95d3-aab3f65fde1b"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 88.4,
+   "Text": "................................................................",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.48,
+     "Height": 0.0168,
+     "Left": 0.3496,
+     "Top": 0.26
+    },
+    "Polygon": [
+     {
+      "X": 0.3496,
+      "Y": 0.26
+     },
+     {
+      "X": 0.8296,
+      "Y": 0.26
+     },
+     {
+      "X": 0.8296,
+      "Y": 0.2768
+     },
+     {
+      "X": 0.3496,
+      "Y": 0.2768
+     }
+    ]
+   },
+   "Id": "f69294ed-cf1a-5922-9ed6-d8b65f6b29e8"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.68,
+   "Text": "$149.00",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0784,
+     "Height": 0.024,
+     "Left": 0.8416,
+     "Top": 0.2568
+    },
+    "Polygon": [
+     {
+      "X": 0.8416,
+      "Y": 0.2568
+     },
+     {
+      "X": 0.92,
+      "Y": 0.2568
+     },
+     {
+      "X": 0.92,
+      "Y": 0.2808
+     },
+     {
+      "X": 0.8416,
+      "Y": 0.2808
+     }
+    ]
+   },
+   "Id": "1e12582f-25e6-5d39-89e3-eac155970217"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.57000000000001,
+   "Text": "Tire",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0448,
+     "Height": 0.024,
+     "Left": 0.08,
+     "Top": 0.317
+    },
+    "Polygon": [
+     {
+      "X": 0.08,
+      "Y": 0.317
+     },
+     {
+      "X": 0.1248,
+      "Y": 0.317
+     },
+     {
+      "X": 0.1248,
+      "Y": 0.341
+     },
+     {
+      "X": 0.08,
+      "Y": 0.341
+     }
+    ]
+   },
+   "Id": "efd0165b-55db-585c-bdab-36cc318f9307"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.57000000000001,
+   "Text": "rotation",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0896,
+     "Height": 0.024,
+     "Left": 0.136,
+     "Top": 0.317
+    },
+    "Polygon": [
+     {
+      "X": 0.136,
+      "Y": 0.317
+     },
+     {
+      "X": 0.2256,
+      "Y": 0.317
+     },
+     {
+      "X": 0.2256,
+      "Y": 0.341
+     },
+     {
+      "X": 0.136,
+      "Y": 0.341
+     }
+    ]
+   },
+   "Id": "696558b7-a735-5292-936d-7e4661923036"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 88.4,
+   "Text": "................................................................................",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.6032,
+     "Height": 0.0168,
+     "Left": 0.2376,
+     "Top": 0.321
+    },
+    "Polygon": [
+     {
+      "X": 0.2376,
+      "Y": 0.321
+     },
+     {
+      "X": 0.8408,
+      "Y": 0.321
+     },
+     {
+      "X": 0.8408,
+      "Y": 0.3378
+     },
+     {
+      "X": 0.2376,
+      "Y": 0.3378
+     }
+    ]
+   },
+   "Id": "b9d62b9f-921a-59d4-b454-f89405eeea69"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.57000000000001,
+   "Text": "$39.95",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0672,
+     "Height": 0.024,
+     "Left": 0.8528,
+     "Top": 0.3178
+    },
+    "Polygon": [
+     {
+      "X": 0.8528,
+      "Y": 0.3178
+     },
+     {
+      "X": 0.92,
+      "Y": 0.3178
+     },
+     {
+      "X": 0.92,
+      "Y": 0.3418
+     },
+     {
+      "X": 0.8528,
+      "Y": 0.3418
+     }
+    ]
+   },
+   "Id": "f3b82b1c-5659-571d-94e0-4f2e78944ede"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.9,
+   "Text": "Cabin",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.056,
+     "Height": 0.024,
+     "Left": 0.08,
+     "Top": 0.3825
+    },
+    "Polygon": [
+     {
+      "X": 0.08,
+      "Y": 0.3825
+     },
+     {
+      "X": 0.136,
+      "Y": 0.3825
+     },
+     {
+      "X": 0.136,
+      "Y": 0.4065
+     },
+     {
+      "X": 0.08,
+      "Y": 0.4065
+     }
+    ]
+   },
+   "Id": "3b453565-3afe-585b-a576-2985551e4b5c"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.9,
+   "Text": "air",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0336,
+     "Height": 0.024,
+     "Left": 0.1472,
+     "Top": 0.3825
+    },
+    "Polygon": [
+     {
+      "X": 0.1472,
+      "Y": 0.3825
+     },
+     {
+      "X": 0.1808,
+      "Y": 0.3825
+     },
+     {
+      "X": 0.1808,
+      "Y": 0.4065
+     },
+     {
+      "X": 0.1472,
+      "Y": 0.4065
+     }
+    ]
+   },
+   "Id": "b5ef7a54-7738-5029-af5f-a2355c60213e"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.9,
+   "Text": "filter",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0672,
+     "Height": 0.024,
+     "Left": 0.192,
+     "Top": 0.3825
+    },
+    "Polygon": [
+     {
+      "X": 0.192,
+      "Y": 0.3825
+     },
+     {
+      "X": 0.2592,
+      "Y": 0.3825
+     },
+     {
+      "X": 0.2592,
+      "Y": 0.4065
+     },
+     {
+      "X": 0.192,
+      "Y": 0.4065
+     }
+    ]
+   },
+   "Id": "999b57df-acea-514b-8d3c-d49a57d0f0d8"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 88.4,
+   "Text": "...........................................................................",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.5696,
+     "Height": 0.0168,
+     "Left": 0.2712,
+     "Top": 0.3865
+    },
+    "Polygon": [
+     {
+      "X": 0.2712,
+      "Y": 0.3865
+     },
+     {
+      "X": 0.8408,
+      "Y": 0.3865
+     },
+     {
+      "X": 0.8408,
+      "Y": 0.4033
+     },
+     {
+      "X": 0.2712,
+      "Y": 0.4033
+     }
+    ]
+   },
+   "Id": "74907348-3ad4-57e2-abca-8ef5f725ee20"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.9,
+   "Text": "$79.95",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0672,
+     "Height": 0.024,
+     "Left": 0.8528,
+     "Top": 0.3833
+    },
+    "Polygon": [
+     {
+      "X": 0.8528,
+      "Y": 0.3833
+     },
+     {
+      "X": 0.92,
+      "Y": 0.3833
+     },
+     {
+      "X": 0.92,
+      "Y": 0.4073
+     },
+     {
+      "X": 0.8528,
+      "Y": 0.4073
+     }
+    ]
+   },
+   "Id": "001fa5e4-768c-5c35-a8c1-800bb306ea79"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.79,
+   "Text": "Replace",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0784,
+     "Height": 0.024,
+     "Left": 0.08,
+     "Top": 0.448
+    },
+    "Polygon": [
+     {
+      "X": 0.08,
+      "Y": 0.448
+     },
+     {
+      "X": 0.1584,
+      "Y": 0.448
+     },
+     {
+      "X": 0.1584,
+      "Y": 0.472
+     },
+     {
+      "X": 0.08,
+      "Y": 0.472
+     }
+    ]
+   },
+   "Id": "d7c098c7-4ba3-5132-bef5-e2e5db0a61d6"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.79,
+   "Text": "fuel",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0448,
+     "Height": 0.024,
+     "Left": 0.1696,
+     "Top": 0.448
+    },
+    "Polygon": [
+     {
+      "X": 0.1696,
+      "Y": 0.448
+     },
+     {
+      "X": 0.2144,
+      "Y": 0.448
+     },
+     {
+      "X": 0.2144,
+      "Y": 0.472
+     },
+     {
+      "X": 0.1696,
+      "Y": 0.472
+     }
+    ]
+   },
+   "Id": "8d6199eb-d3b4-525b-895e-7c0b53661fa9"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.79,
+   "Text": "pump",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0448,
+     "Height": 0.024,
+     "Left": 0.2256,
+     "Top": 0.448
+    },
+    "Polygon": [
+     {
+      "X": 0.2256,
+      "Y": 0.448
+     },
+     {
+      "X": 0.2704,
+      "Y": 0.448
+     },
+     {
+      "X": 0.2704,
+      "Y": 0.472
+     },
+     {
+      "X": 0.2256,
+      "Y": 0.472
+     }
+    ]
+   },
+   "Id": "0e194e1d-4451-5ea6-a85a-c4d16808b898"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.79,
+   "Text": "module",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0672,
+     "Height": 0.024,
+     "Left": 0.2816,
+     "Top": 0.448
+    },
+    "Polygon": [
+     {
+      "X": 0.2816,
+      "Y": 0.448
+     },
+     {
+      "X": 0.3488,
+      "Y": 0.448
+     },
+     {
+      "X": 0.3488,
+      "Y": 0.472
+     },
+     {
+      "X": 0.2816,
+      "Y": 0.472
+     }
+    ]
+   },
+   "Id": "ff25077e-331c-58f8-8dab-bebe94784a60"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 88.4,
+   "Text": "...........................................................",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.4464,
+     "Height": 0.0168,
+     "Left": 0.3608,
+     "Top": 0.452
+    },
+    "Polygon": [
+     {
+      "X": 0.3608,
+      "Y": 0.452
+     },
+     {
+      "X": 0.8072,
+      "Y": 0.452
+     },
+     {
+      "X": 0.8072,
+      "Y": 0.4688
+     },
+     {
+      "X": 0.3608,
+      "Y": 0.4688
+     }
+    ]
+   },
+   "Id": "e9d587b2-7711-54e8-94af-84fdd2c5ae98"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.79,
+   "Text": "$1,089.00",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.1008,
+     "Height": 0.024,
+     "Left": 0.8192,
+     "Top": 0.4488
+    },
+    "Polygon": [
+     {
+      "X": 0.8192,
+      "Y": 0.4488
+     },
+     {
+      "X": 0.92,
+      "Y": 0.4488
+     },
+     {
+      "X": 0.92,
+      "Y": 0.4728
+     },
+     {
+      "X": 0.8192,
+      "Y": 0.4728
+     }
+    ]
+   },
+   "Id": "77869c64-84f3-524e-8625-85685325da58"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.68,
+   "Text": "Tech",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0448,
+     "Height": 0.024,
+     "Left": 0.08,
+     "Top": 0.509
+    },
+    "Polygon": [
+     {
+      "X": 0.08,
+      "Y": 0.509
+     },
+     {
+      "X": 0.1248,
+      "Y": 0.509
+     },
+     {
+      "X": 0.1248,
+      "Y": 0.533
+     },
+     {
+      "X": 0.08,
+      "Y": 0.533
+     }
+    ]
+   },
+   "Id": "d6d1b36a-80ae-53fe-bce9-2d400a5e0036"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.68,
+   "Text": "diagnostic",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.112,
+     "Height": 0.024,
+     "Left": 0.136,
+     "Top": 0.509
+    },
+    "Polygon": [
+     {
+      "X": 0.136,
+      "Y": 0.509
+     },
+     {
+      "X": 0.248,
+      "Y": 0.509
+     },
+     {
+      "X": 0.248,
+      "Y": 0.533
+     },
+     {
+      "X": 0.136,
+      "Y": 0.533
+     }
+    ]
+   },
+   "Id": "4e0f17de-7c1d-550b-b163-c7adaf018534"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 88.4,
+   "Text": "...........................................................................",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.5696,
+     "Height": 0.0168,
+     "Left": 0.26,
+     "Top": 0.513
+    },
+    "Polygon": [
+     {
+      "X": 0.26,
+      "Y": 0.513
+     },
+     {
+      "X": 0.8296,
+      "Y": 0.513
+     },
+     {
+      "X": 0.8296,
+      "Y": 0.5298
+     },
+     {
+      "X": 0.26,
+      "Y": 0.5298
+     }
+    ]
+   },
+   "Id": "4fd1c1bc-f7c3-5d02-941b-06a1672ca95c"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.68,
+   "Text": "$189.00",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0784,
+     "Height": 0.024,
+     "Left": 0.8416,
+     "Top": 0.5098
+    },
+    "Polygon": [
+     {
+      "X": 0.8416,
+      "Y": 0.5098
+     },
+     {
+      "X": 0.92,
+      "Y": 0.5098
+     },
+     {
+      "X": 0.92,
+      "Y": 0.5338
+     },
+     {
+      "X": 0.8416,
+      "Y": 0.5338
+     }
+    ]
+   },
+   "Id": "566c2eab-7161-5e42-bd8d-335f3959ad33"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.02,
+   "Text": "Required",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.063467,
+     "Height": 0.017,
+     "Left": 0.1,
+     "Top": 0.537
+    },
+    "Polygon": [
+     {
+      "X": 0.1,
+      "Y": 0.537
+     },
+     {
+      "X": 0.163467,
+      "Y": 0.537
+     },
+     {
+      "X": 0.163467,
+      "Y": 0.554
+     },
+     {
+      "X": 0.1,
+      "Y": 0.554
+     }
+    ]
+   },
+   "Id": "6d679a8c-f34a-55dd-8235-b93e2b41d7e7"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.02,
+   "Text": "before",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0476,
+     "Height": 0.017,
+     "Left": 0.1714,
+     "Top": 0.537
+    },
+    "Polygon": [
+     {
+      "X": 0.1714,
+      "Y": 0.537
+     },
+     {
+      "X": 0.219,
+      "Y": 0.537
+     },
+     {
+      "X": 0.219,
+      "Y": 0.554
+     },
+     {
+      "X": 0.1714,
+      "Y": 0.554
+     }
+    ]
+   },
+   "Id": "2a1edd0f-f7f5-5cc7-aa24-02fa8a8bd566"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.02,
+   "Text": "any",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0238,
+     "Height": 0.017,
+     "Left": 0.226933,
+     "Top": 0.537
+    },
+    "Polygon": [
+     {
+      "X": 0.226933,
+      "Y": 0.537
+     },
+     {
+      "X": 0.250733,
+      "Y": 0.537
+     },
+     {
+      "X": 0.250733,
+      "Y": 0.554
+     },
+     {
+      "X": 0.226933,
+      "Y": 0.554
+     }
+    ]
+   },
+   "Id": "6057867b-5cd4-5388-9ede-7c28d5bbbb56"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.02,
+   "Text": "repair",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0476,
+     "Height": 0.017,
+     "Left": 0.258667,
+     "Top": 0.537
+    },
+    "Polygon": [
+     {
+      "X": 0.258667,
+      "Y": 0.537
+     },
+     {
+      "X": 0.306267,
+      "Y": 0.537
+     },
+     {
+      "X": 0.306267,
+      "Y": 0.554
+     },
+     {
+      "X": 0.258667,
+      "Y": 0.554
+     }
+    ]
+   },
+   "Id": "c0c10056-3cbb-505c-9595-a55b2b0b5644"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 96.12,
+   "Text": "Shop",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.032374,
+     "Height": 0.024,
+     "Left": 0.08,
+     "Top": 0.5745
+    },
+    "Polygon": [
+     {
+      "X": 0.08,
+      "Y": 0.5745
+     },
+     {
+      "X": 0.112374,
+      "Y": 0.5745
+     },
+     {
+      "X": 0.112374,
+      "Y": 0.5985
+     },
+     {
+      "X": 0.08,
+      "Y": 0.5985
+     }
+    ]
+   },
+   "Id": "1f11b3fd-c604-5cff-8dc2-2617bebc57aa"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 96.12,
+   "Text": "supplies",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.064749,
+     "Height": 0.024,
+     "Left": 0.120468,
+     "Top": 0.5745
+    },
+    "Polygon": [
+     {
+      "X": 0.120468,
+      "Y": 0.5745
+     },
+     {
+      "X": 0.185217,
+      "Y": 0.5745
+     },
+     {
+      "X": 0.185217,
+      "Y": 0.5985
+     },
+     {
+      "X": 0.120468,
+      "Y": 0.5985
+     }
+    ]
+   },
+   "Id": "594e87b2-a534-502c-b1dc-989a6d06d406"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 96.12,
+   "Text": "................................................................................",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.647489,
+     "Height": 0.024,
+     "Left": 0.193311,
+     "Top": 0.5745
+    },
+    "Polygon": [
+     {
+      "X": 0.193311,
+      "Y": 0.5745
+     },
+     {
+      "X": 0.8408,
+      "Y": 0.5745
+     },
+     {
+      "X": 0.8408,
+      "Y": 0.5985
+     },
+     {
+      "X": 0.193311,
+      "Y": 0.5985
+     }
+    ]
+   },
+   "Id": "5ddc2be6-f076-54e6-8015-a9f6d95b8ec4"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.57000000000001,
+   "Text": "$34.50",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0672,
+     "Height": 0.024,
+     "Left": 0.8528,
+     "Top": 0.5753
+    },
+    "Polygon": [
+     {
+      "X": 0.8528,
+      "Y": 0.5753
+     },
+     {
+      "X": 0.92,
+      "Y": 0.5753
+     },
+     {
+      "X": 0.92,
+      "Y": 0.5993
+     },
+     {
+      "X": 0.8528,
+      "Y": 0.5993
+     }
+    ]
+   },
+   "Id": "b238cf10-1350-5403-9854-87e1acb615a4"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.9,
+   "Text": "Front",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.056,
+     "Height": 0.024,
+     "Left": 0.08,
+     "Top": 0.64
+    },
+    "Polygon": [
+     {
+      "X": 0.08,
+      "Y": 0.64
+     },
+     {
+      "X": 0.136,
+      "Y": 0.64
+     },
+     {
+      "X": 0.136,
+      "Y": 0.664
+     },
+     {
+      "X": 0.08,
+      "Y": 0.664
+     }
+    ]
+   },
+   "Id": "5bdfb02d-8a2c-577d-9bf7-6a44e4a93f47"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.9,
+   "Text": "brake",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.056,
+     "Height": 0.024,
+     "Left": 0.1472,
+     "Top": 0.64
+    },
+    "Polygon": [
+     {
+      "X": 0.1472,
+      "Y": 0.64
+     },
+     {
+      "X": 0.2032,
+      "Y": 0.64
+     },
+     {
+      "X": 0.2032,
+      "Y": 0.664
+     },
+     {
+      "X": 0.1472,
+      "Y": 0.664
+     }
+    ]
+   },
+   "Id": "55678ea2-508e-5945-a393-cae17b3b21d7"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.9,
+   "Text": "pads",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0448,
+     "Height": 0.024,
+     "Left": 0.2144,
+     "Top": 0.64
+    },
+    "Polygon": [
+     {
+      "X": 0.2144,
+      "Y": 0.64
+     },
+     {
+      "X": 0.2592,
+      "Y": 0.64
+     },
+     {
+      "X": 0.2592,
+      "Y": 0.664
+     },
+     {
+      "X": 0.2144,
+      "Y": 0.664
+     }
+    ]
+   },
+   "Id": "d06b7450-bb0f-54ca-bf53-c4beed9be856"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.9,
+   "Text": "&",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0112,
+     "Height": 0.024,
+     "Left": 0.2704,
+     "Top": 0.64
+    },
+    "Polygon": [
+     {
+      "X": 0.2704,
+      "Y": 0.64
+     },
+     {
+      "X": 0.2816,
+      "Y": 0.64
+     },
+     {
+      "X": 0.2816,
+      "Y": 0.664
+     },
+     {
+      "X": 0.2704,
+      "Y": 0.664
+     }
+    ]
+   },
+   "Id": "3eb327b1-a8cb-5e2f-b1f6-528cb4c7a9d6"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.9,
+   "Text": "rotors",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0672,
+     "Height": 0.024,
+     "Left": 0.2928,
+     "Top": 0.64
+    },
+    "Polygon": [
+     {
+      "X": 0.2928,
+      "Y": 0.64
+     },
+     {
+      "X": 0.36,
+      "Y": 0.64
+     },
+     {
+      "X": 0.36,
+      "Y": 0.664
+     },
+     {
+      "X": 0.2928,
+      "Y": 0.664
+     }
+    ]
+   },
+   "Id": "2b454786-8d99-5611-84f9-8489a4ba3ee3"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 88.4,
+   "Text": ".............................................................",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.4576,
+     "Height": 0.0168,
+     "Left": 0.372,
+     "Top": 0.644
+    },
+    "Polygon": [
+     {
+      "X": 0.372,
+      "Y": 0.644
+     },
+     {
+      "X": 0.8296,
+      "Y": 0.644
+     },
+     {
+      "X": 0.8296,
+      "Y": 0.6608
+     },
+     {
+      "X": 0.372,
+      "Y": 0.6608
+     }
+    ]
+   },
+   "Id": "4d66cb88-135b-579a-a85c-6b8d67665e54"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.9,
+   "Text": "$489.00",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0784,
+     "Height": 0.024,
+     "Left": 0.8416,
+     "Top": 0.6408
+    },
+    "Polygon": [
+     {
+      "X": 0.8416,
+      "Y": 0.6408
+     },
+     {
+      "X": 0.92,
+      "Y": 0.6408
+     },
+     {
+      "X": 0.92,
+      "Y": 0.6648
+     },
+     {
+      "X": 0.8416,
+      "Y": 0.6648
+     }
+    ]
+   },
+   "Id": "4073e6ed-c41e-592f-bd3f-05c20007ebad"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.79,
+   "Text": "Nitrogen",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0896,
+     "Height": 0.024,
+     "Left": 0.08,
+     "Top": 0.701
+    },
+    "Polygon": [
+     {
+      "X": 0.08,
+      "Y": 0.701
+     },
+     {
+      "X": 0.1696,
+      "Y": 0.701
+     },
+     {
+      "X": 0.1696,
+      "Y": 0.725
+     },
+     {
+      "X": 0.08,
+      "Y": 0.725
+     }
+    ]
+   },
+   "Id": "f8b34c80-07a9-5695-ba5e-6cbd4f5354f9"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.79,
+   "Text": "tire",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0448,
+     "Height": 0.024,
+     "Left": 0.1808,
+     "Top": 0.701
+    },
+    "Polygon": [
+     {
+      "X": 0.1808,
+      "Y": 0.701
+     },
+     {
+      "X": 0.2256,
+      "Y": 0.701
+     },
+     {
+      "X": 0.2256,
+      "Y": 0.725
+     },
+     {
+      "X": 0.1808,
+      "Y": 0.725
+     }
+    ]
+   },
+   "Id": "b6deed30-966c-5499-b4fd-9d2b1772c9de"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.79,
+   "Text": "fill",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0448,
+     "Height": 0.024,
+     "Left": 0.2368,
+     "Top": 0.701
+    },
+    "Polygon": [
+     {
+      "X": 0.2368,
+      "Y": 0.701
+     },
+     {
+      "X": 0.2816,
+      "Y": 0.701
+     },
+     {
+      "X": 0.2816,
+      "Y": 0.725
+     },
+     {
+      "X": 0.2368,
+      "Y": 0.725
+     }
+    ]
+   },
+   "Id": "dcd5c66e-e99b-5e94-a65f-c083cdbf6b0d"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 88.4,
+   "Text": "........................................................................",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.5472,
+     "Height": 0.0168,
+     "Left": 0.2936,
+     "Top": 0.705
+    },
+    "Polygon": [
+     {
+      "X": 0.2936,
+      "Y": 0.705
+     },
+     {
+      "X": 0.8408,
+      "Y": 0.705
+     },
+     {
+      "X": 0.8408,
+      "Y": 0.7218
+     },
+     {
+      "X": 0.2936,
+      "Y": 0.7218
+     }
+    ]
+   },
+   "Id": "a1896485-1938-5c60-b9f6-2d0cb95c7157"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.79,
+   "Text": "$29.95",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0672,
+     "Height": 0.024,
+     "Left": 0.8528,
+     "Top": 0.7018
+    },
+    "Polygon": [
+     {
+      "X": 0.8528,
+      "Y": 0.7018
+     },
+     {
+      "X": 0.92,
+      "Y": 0.7018
+     },
+     {
+      "X": 0.92,
+      "Y": 0.7258
+     },
+     {
+      "X": 0.8528,
+      "Y": 0.7258
+     }
+    ]
+   },
+   "Id": "24443d35-7394-58fb-ab9d-ea4cc5a817b7"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.68,
+   "Text": "Throttle",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0896,
+     "Height": 0.024,
+     "Left": 0.08,
+     "Top": 0.7665
+    },
+    "Polygon": [
+     {
+      "X": 0.08,
+      "Y": 0.7665
+     },
+     {
+      "X": 0.1696,
+      "Y": 0.7665
+     },
+     {
+      "X": 0.1696,
+      "Y": 0.7905
+     },
+     {
+      "X": 0.08,
+      "Y": 0.7905
+     }
+    ]
+   },
+   "Id": "056ff09c-ca16-561e-964e-c738066090f7"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.68,
+   "Text": "body",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0448,
+     "Height": 0.024,
+     "Left": 0.1808,
+     "Top": 0.7665
+    },
+    "Polygon": [
+     {
+      "X": 0.1808,
+      "Y": 0.7665
+     },
+     {
+      "X": 0.2256,
+      "Y": 0.7665
+     },
+     {
+      "X": 0.2256,
+      "Y": 0.7905
+     },
+     {
+      "X": 0.1808,
+      "Y": 0.7905
+     }
+    ]
+   },
+   "Id": "724cdad7-2fbb-57b6-8650-34c142a30356"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.68,
+   "Text": "service",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0784,
+     "Height": 0.024,
+     "Left": 0.2368,
+     "Top": 0.7665
+    },
+    "Polygon": [
+     {
+      "X": 0.2368,
+      "Y": 0.7665
+     },
+     {
+      "X": 0.3152,
+      "Y": 0.7665
+     },
+     {
+      "X": 0.3152,
+      "Y": 0.7905
+     },
+     {
+      "X": 0.2368,
+      "Y": 0.7905
+     }
+    ]
+   },
+   "Id": "4bf54b37-fa81-5ec7-a402-6d16f1f3d7da"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 88.4,
+   "Text": "..................................................................",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.5024,
+     "Height": 0.0168,
+     "Left": 0.3272,
+     "Top": 0.7705
+    },
+    "Polygon": [
+     {
+      "X": 0.3272,
+      "Y": 0.7705
+     },
+     {
+      "X": 0.8296,
+      "Y": 0.7705
+     },
+     {
+      "X": 0.8296,
+      "Y": 0.7873
+     },
+     {
+      "X": 0.3272,
+      "Y": 0.7873
+     }
+    ]
+   },
+   "Id": "4050b67e-5c7d-55e3-83ce-17af5d0478d7"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 99.68,
+   "Text": "$119.00",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.0784,
+     "Height": 0.024,
+     "Left": 0.8416,
+     "Top": 0.7673
+    },
+    "Polygon": [
+     {
+      "X": 0.8416,
+      "Y": 0.7673
+     },
+     {
+      "X": 0.92,
+      "Y": 0.7673
+     },
+     {
+      "X": 0.92,
+      "Y": 0.7913
+     },
+     {
+      "X": 0.8416,
+      "Y": 0.7913
+     }
+    ]
+   },
+   "Id": "bfc4f9e3-a410-565c-800d-896ed22166a9"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 97.84,
+   "Text": "Environmental",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.114947,
+     "Height": 0.024,
+     "Left": 0.08,
+     "Top": 0.832
+    },
+    "Polygon": [
+     {
+      "X": 0.08,
+      "Y": 0.832
+     },
+     {
+      "X": 0.194947,
+      "Y": 0.832
+     },
+     {
+      "X": 0.194947,
+      "Y": 0.856
+     },
+     {
+      "X": 0.08,
+      "Y": 0.856
+     }
+    ]
+   },
+   "Id": "4d971a42-142a-5995-8cab-4d81f375e2b4"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 97.84,
+   "Text": "disposal",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.070737,
+     "Height": 0.024,
+     "Left": 0.203789,
+     "Top": 0.832
+    },
+    "Polygon": [
+     {
+      "X": 0.203789,
+      "Y": 0.832
+     },
+     {
+      "X": 0.274526,
+      "Y": 0.832
+     },
+     {
+      "X": 0.274526,
+      "Y": 0.856
+     },
+     {
+      "X": 0.203789,
+      "Y": 0.856
+     }
+    ]
+   },
+   "Id": "e341d634-8bb5-5b4b-a2e2-ac3270116ed4"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 97.84,
+   "Text": "fee",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.026526,
+     "Height": 0.024,
+     "Left": 0.283368,
+     "Top": 0.832
+    },
+    "Polygon": [
+     {
+      "X": 0.283368,
+      "Y": 0.832
+     },
+     {
+      "X": 0.309895,
+      "Y": 0.832
+     },
+     {
+      "X": 0.309895,
+      "Y": 0.856
+     },
+     {
+      "X": 0.283368,
+      "Y": 0.856
+     }
+    ]
+   },
+   "Id": "7d06aee9-c8b1-5a80-b8a9-4358fb69d8ac"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 97.84,
+   "Text": ".............................................................",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.539368,
+     "Height": 0.024,
+     "Left": 0.318737,
+     "Top": 0.832
+    },
+    "Polygon": [
+     {
+      "X": 0.318737,
+      "Y": 0.832
+     },
+     {
+      "X": 0.858105,
+      "Y": 0.832
+     },
+     {
+      "X": 0.858105,
+      "Y": 0.856
+     },
+     {
+      "X": 0.318737,
+      "Y": 0.856
+     }
+    ]
+   },
+   "Id": "c6815ed1-1bb4-5f9f-b286-64d2850537dd"
+  },
+  {
+   "BlockType": "WORD",
+   "Confidence": 97.84,
+   "Text": "$12.95",
+   "TextType": "PRINTED",
+   "Geometry": {
+    "BoundingBox": {
+     "Width": 0.053053,
+     "Height": 0.024,
+     "Left": 0.866947,
+     "Top": 0.832
+    },
+    "Polygon": [
+     {
+      "X": 0.866947,
+      "Y": 0.832
+     },
+     {
+      "X": 0.92,
+      "Y": 0.832
+     },
+     {
+      "X": 0.92,
+      "Y": 0.856
+     },
+     {
+      "X": 0.866947,
+      "Y": 0.856
+     }
+    ]
+   },
+   "Id": "612bf73a-8748-5e8b-a079-3dfefe0f656a"
+  }
+ ],
+ "DetectDocumentTextModelVersion": "1.0"
+}
