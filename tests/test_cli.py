@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 import json
+import re
 
 import pytest
 from PIL import Image
@@ -39,6 +40,9 @@ def test_cli_prints_the_table_and_the_summary(fake_decider, capsys, tmp_path):
     assert "2019 Honda Civic, 31,200 mi" in out
     assert out.count("Keep 3 · Decline 3 · Ask 5 · Your call 1") == 1
     assert "act >= decline_addon 0.8, check_schedule 0.5" in out
+    assert "(up to 12 at a time)" in out
+    assert re.search(r"^12 lines decided in \d+ ms$", out, re.MULTILINE)
+    assert report_path.exists() and "decider_wall_ms" in report_path.read_text()
     assert "Is this covered by recall 23V858000?" in out
     fuel_row = next(r for r in out.splitlines() if "Replace fuel pump module" in r)
     for cell in ("$1,089.00", "tool", "check_recall_warranty", "0.64", "decider"):
@@ -115,3 +119,12 @@ def test_allow_bedrock_builds_the_bedrock_parts_only_with_the_flag(monkeypatch, 
     assert cli.main([*OFFLINE, "--allow-bedrock"]) == 0 and built == ["us-east-1"]
     nitrogen = next(r for r in capsys.readouterr().out.splitlines()[::-1] if "Nitrogen" in r)
     assert "ask_llm" in nitrogen and "llm" in nitrogen and "owner_decides" in nitrogen
+
+
+def test_cli_concurrency_option(fake_decider, capsys):
+    assert cli.main([*OFFLINE, "--concurrency", "4"]) == 0
+    out = capsys.readouterr().out
+    assert "(up to 4 at a time)" in out and "12 lines decided in" in out
+    for bad in ("0", "-2", "many"):
+        with pytest.raises(SystemExit):
+            cli.main([*OFFLINE, "--concurrency", bad])

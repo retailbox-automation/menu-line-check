@@ -30,7 +30,7 @@ from .llm import DEFAULT_REGION, FakeWriter
 from .models import LineOutcome, MenuLine, MenuReport, Vehicle
 from .nhtsa import NhtsaClient
 from .ocr import crop_line, parse_textract
-from .pipeline import check_menu
+from .pipeline import DEFAULT_CONCURRENCY, check_menu
 
 DEFAULT_URL = "http://127.0.0.1:8099"
 NAME_WIDTH = 36
@@ -95,6 +95,8 @@ def render(report: MenuReport, header: str) -> str:
     if report.summary_text and not report.summary_text.startswith(report.summary):
         rows.append(report.summary)
     rows.append(report.summary_text or report.summary)
+    if report.decider_wall_ms is not None:
+        rows.append(f"{len(report.outcomes)} lines decided in {report.decider_wall_ms:.0f} ms")
     return "\n".join(rows)
 
 
@@ -113,6 +115,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="per-tool act thresholds over the defaults, e.g. decline_addon=0.8,check_schedule=0.5",
     )
     limits.add_argument("--act-threshold", type=float, help="one act threshold for every tool")
+    p.add_argument(
+        "--concurrency",
+        type=_positive_int,
+        default=DEFAULT_CONCURRENCY,
+        help=f"lines asked of Decider at the same time (default {DEFAULT_CONCURRENCY})",
+    )
     p.add_argument("--image", help="the menu photo the OCR JSON came from (adds line crops)")
     nhtsa = p.add_mutually_exclusive_group()
     nhtsa.add_argument("--nhtsa-recorded", help="serve this recorded NHTSA response (offline)")
@@ -126,6 +134,16 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--ledger", help="append one JSONL row per line to this file")
     p.add_argument("--json", dest="json_out", help="also write the report as JSON")
     return p
+
+
+def _positive_int(text: str) -> int:
+    try:
+        value = int(text)
+    except ValueError:
+        value = 0
+    if value < 1:
+        raise argparse.ArgumentTypeError(f"must be a whole number of at least 1, got {text!r}")
+    return value
 
 
 def _thresholds(text: str) -> dict[str, float]:
@@ -181,6 +199,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             writer=writer,
             nhtsa=nhtsa,
             ledger=ledger,
+            concurrency=args.concurrency,
         )
     finally:
         decider.close()
@@ -189,7 +208,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     shown = ", ".join(f"{k} {v:g}" for k, v in limits.items())
     header = (
         f"Menu Line Check \u00b7 {args.vehicle.label} \u00b7 {len(lines)} lines \u00b7 "
-        f"Decider {args.decider_url} \u00b7 act >= {shown}"
+        f"Decider {args.decider_url} (up to {args.concurrency} at a time) \u00b7 act >= {shown}"
         + ("" if args.allow_bedrock else " \u00b7 offline writer, no LLM picker")
     )
     print(render(report, header))
