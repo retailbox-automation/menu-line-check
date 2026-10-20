@@ -174,6 +174,8 @@ class MenuReport:
     """The card line, computed by code."""
     summary_text: str | None = None
     """Plain-English summary from the writer, if one was given."""
+    decider_wall_ms: float | None = None
+    """Wall clock of the Decider phase (all lines, asked concurrently)."""
 
     @property
     def menu_total(self) -> float:
@@ -196,5 +198,6 @@ class MenuReport:
             "counts": dict(self.counts),
             "menu_total": self.menu_total,
             "declined_total": self.total_for("decline"),
+            "decider_wall_ms": self.decider_wall_ms,
             "outcomes": [outcome(o) for o in self.outcomes],
         }

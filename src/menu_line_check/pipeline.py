@@ -1,6 +1,7 @@
 """``check_menu``: one Decider decision per menu line, plain-code routing, tools, summary.
 
-Per line:
+Decider is asked about all lines first, concurrently (at most ``concurrency`` requests at a
+time, default 12); everything after that runs per line, in line order. Per line:
 
 1. One Decider request with the three pattern questions in the OCR-text wording. If the line
    has images, a second request asks ``readable`` in the image wording on those images.
@@ -24,10 +25,13 @@ about or decides (not for declines, not-due lines or retakes), and a plain summa
 
 from __future__ import annotations
 
+import asyncio
 import logging
-from collections.abc import Callable, Iterable
+import time
+from collections.abc import Callable, Coroutine, Iterable
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
-from typing import Protocol
+from typing import Any, Protocol
 
 from decider_kit import (
     Answer,
@@ -36,6 +40,7 @@ from decider_kit import (
     DeciderUnavailable,
     Ledger,
     NoulAnswer,
+    Question,
 )
 from menu_line_tool_selection import (
     SAFETY_YES,
@@ -85,48 +90,107 @@ def needs_advisor_question(outcome: LineOutcome) -> bool:
     return outcome.verdict in ("keep", "ask", "your_call")
 
 
-def _ask_decider(
-    line: MenuLine, decider: DeciderClient
-) -> tuple[dict[str, Answer], NoulAnswer, str, DeciderTiming]:
-    text_questions = load_pattern_questions("ocr_text")
-    first = decider.ask(ocr_state(line.text), text_questions)
-    answers = dict(first.answers)
-    client_ms, server_ms, requests = first.client_ms, first.server_ms, 1
-    if line.images:
-        second = decider.ask(
-            image_state(len(line.images)),
-            load_pattern_questions("image", names=["readable"]),
-            images=line.images,
-        )
-        readable = second.answers["readable"]
-        if not isinstance(readable, NoulAnswer):
-            raise DeciderUnavailable("bad_response", "image 'readable' answer is not noul")
-        answers["readable_image"] = readable
-        client_ms += second.client_ms
-        server_ms = (
-            None if server_ms is None or second.server_ms is None else server_ms + second.server_ms
-        )
-        requests, source = 2, "decider"
-    else:
-        readable = NoulAnswer(1.0 if line.has_name_and_price else 0.0)
-        answers["readable_code"] = readable
-        source = "code"
-    return answers, readable, source, DeciderTiming(client_ms, server_ms, requests)
+DEFAULT_CONCURRENCY = 12
+"""Lines asked at the same time. The Decider server on the mini has 24 slots."""
 
 
-def _check_line(
+@dataclass(frozen=True)
+class _Asked:
+    """Decider's answers for one line, or the error that stopped them."""
+
+    answers: dict[str, Answer] | None = None
+    readable: NoulAnswer | None = None
+    readable_source: str = "code"
+    timing: DeciderTiming | None = None
+    error: DeciderUnavailable | DeciderRequestError | None = None
+
+
+async def _aask_line(
     line: MenuLine,
-    vehicle: Vehicle,
     decider: DeciderClient,
+    text_questions: dict[str, Question],
+    image_questions: dict[str, Question],
+) -> _Asked:
+    try:
+        first = await decider.aask(ocr_state(line.text), text_questions)
+        answers = dict(first.answers)
+        client_ms, server_ms, requests = first.client_ms, first.server_ms, 1
+        if line.images:
+            second = await decider.aask(
+                image_state(len(line.images)), image_questions, images=line.images
+            )
+            readable = second.answers["readable"]
+            if not isinstance(readable, NoulAnswer):
+                raise DeciderUnavailable("bad_response", "image 'readable' answer is not noul")
+            answers["readable_image"] = readable
+            client_ms += second.client_ms
+            server_ms = (
+                None
+                if server_ms is None or second.server_ms is None
+                else server_ms + second.server_ms
+            )
+            requests, source = 2, "decider"
+        else:
+            readable = NoulAnswer(1.0 if line.has_name_and_price else 0.0)
+            answers["readable_code"] = readable
+            source = "code"
+    except (DeciderUnavailable, DeciderRequestError) as exc:
+        return _Asked(error=exc)
+    return _Asked(answers, readable, source, DeciderTiming(client_ms, server_ms, requests))
+
+
+async def _aask_all(
+    lines: list[MenuLine], decider: DeciderClient, concurrency: int
+) -> list[_Asked]:
+    text_questions = load_pattern_questions("ocr_text")
+    image_questions = load_pattern_questions("image", names=["readable"])
+    slots = asyncio.Semaphore(concurrency)
+
+    async def one(line: MenuLine) -> _Asked:
+        async with slots:
+            return await _aask_line(line, decider, text_questions, image_questions)
+
+    return list(await asyncio.gather(*(one(line) for line in lines)))
+
+
+def _run(coro: Coroutine[Any, Any, list[_Asked]]) -> list[_Asked]:
+    """``asyncio.run``, or in a worker thread when the caller already runs an event loop."""
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(coro)
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        return pool.submit(asyncio.run, coro).result()
+
+
+def ask_decider_for_all(
+    lines: list[MenuLine], decider: DeciderClient, concurrency: int = DEFAULT_CONCURRENCY
+) -> tuple[list[_Asked], float]:
+    """Ask Decider about every line, at most ``concurrency`` at a time.
+
+    Returns one result per line, in line order whatever order the answers arrive in, and the
+    wall-clock ms of the whole phase. A line Decider could not answer carries its error.
+    """
+    if concurrency < 1:
+        raise ValueError(f"concurrency must be at least 1, got {concurrency}")
+    started = time.perf_counter()
+    asked = _run(_aask_all(lines, decider, concurrency))
+    return asked, (time.perf_counter() - started) * 1000.0
+
+
+def _finish_line(
+    line: MenuLine,
+    asked: _Asked,
+    vehicle: Vehicle,
     thresholds: dict[str, float],
     llm_picker: Picker | None,
     nhtsa: NhtsaClient | None,
     ledger: Ledger | None,
 ) -> LineOutcome:
+    """Route one line from its answers, run the tool, write its ledger row."""
     state = ocr_state(line.text)
-    try:
-        answers, readable, readable_source, timing = _ask_decider(line, decider)
-    except (DeciderUnavailable, DeciderRequestError) as exc:
+    if asked.error is not None:
+        exc = asked.error
         kind = getattr(exc, "kind", None) or f"http_{getattr(exc, 'status', '4xx')}"
         outcome = LineOutcome(
             line=line,
@@ -153,11 +217,13 @@ def _check_line(
             )
         return outcome
 
+    answers, timing = asked.answers or {}, asked.timing
+    assert asked.readable is not None and timing is not None
     decision = decide_line(
-        {"readable": readable, "safety": answers["safety"], "tool": answers["tool"]},
+        {"readable": asked.readable, "safety": answers["safety"], "tool": answers["tool"]},
         thresholds,
     )
-    outcome = _resolve(line, vehicle, decision, readable_source, llm_picker, nhtsa)
+    outcome = _resolve(line, vehicle, decision, asked.readable_source, llm_picker, nhtsa)
     outcome = replace(outcome, decider_ms=timing)
     if ledger is not None:
         ledger.record(
@@ -263,15 +329,21 @@ def check_menu(
     writer: Writer | None = None,
     nhtsa: NhtsaClient | None = None,
     ledger: Ledger | None = None,
+    concurrency: int = DEFAULT_CONCURRENCY,
 ) -> MenuReport:
     """Check every line of one menu for one vehicle. Lines are checked one after another.
 
     ``thresholds`` overrides some per-tool act thresholds (defaults in the pattern);
-    ``act_threshold`` sets one threshold for every tool instead.
+    ``act_threshold`` sets one threshold for every tool instead. Decider is asked about all
+    lines first, ``concurrency`` at a time; then each line is routed, its tool run and its
+    ledger row written, in line order.
     """
     limits = resolve_thresholds(thresholds, act_threshold)
+    lines = list(lines)
+    asked, wall_ms = ask_decider_for_all(lines, decider, concurrency)
     outcomes = [
-        _check_line(line, vehicle, decider, limits, llm_picker, nhtsa, ledger) for line in lines
+        _finish_line(line, result, vehicle, limits, llm_picker, nhtsa, ledger)
+        for line, result in zip(lines, asked, strict=True)
     ]
     if writer is not None:
         outcomes = [
@@ -281,7 +353,9 @@ def check_menu(
             for o in outcomes
         ]
     counts = summary_counts(outcomes)
-    report = MenuReport(vehicle, tuple(outcomes), counts, summary_card(counts))
+    report = MenuReport(
+        vehicle, tuple(outcomes), counts, summary_card(counts), decider_wall_ms=round(wall_ms, 1)
+    )
     if writer is not None:
         report = replace(report, summary_text=writer.summary(report))
     return report
