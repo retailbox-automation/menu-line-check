@@ -1,0 +1,37 @@
+# ILLUSTRATIVE generic maintenance schedule for the N2 Menu Line Check demo.
+# It is NOT any car maker's official schedule. Real intervals depend on the maker, the engine, the
+# oil and the driving conditions: the owner's manual is the source of truth for a real car.
+#
+# every_mi: a mileage interval; every_months: a time interval; every_visit: checked each visit.
+# match: phrases looked for in the menu line name (lower case, at a word start; longest wins).
+
+note: "Illustrative generic schedule, not any maker's official one; check the owner's manual."
+
+services:
+  - service: "oil and filter"
+    every_mi: 7500
+    match: ["oil & filter", "oil and filter", "oil change", "oil filter"]
+  - service: "tire rotation"
+    every_mi: 7500
+    match: ["tire rotation", "rotate tires", "rotation"]
+  - service: "engine air filter"
+    every_mi: 30000
+    match: ["engine air filter", "air filter"]
+  - service: "cabin air filter"
+    every_mi: 15000
+    match: ["cabin air filter", "cabin filter", "pollen filter"]
+  - service: "transmission fluid"
+    every_mi: 60000
+    match: ["transmission fluid", "transmission service", "cvt fluid", "atf"]
+  - service: "coolant"
+    every_mi: 100000
+    match: ["coolant", "antifreeze"]
+  - service: "spark plugs"
+    every_mi: 100000
+    match: ["spark plug"]
+  - service: "brake fluid"
+    every_months: 36
+    match: ["brake fluid"]
+  - service: "multi-point inspection"
+    every_visit: true
+    match: ["multi-point inspection", "multipoint inspection", "multi point inspection"]
