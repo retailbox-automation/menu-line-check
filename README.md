@@ -124,8 +124,9 @@ The real Decider model runs on another machine; this code only talks HTTP.
 menu-check --ocr-json tests/fixtures/textract_menu.json --vehicle "2019 Honda Civic 31200" \
   --decider-url http://127.0.0.1:8099 --nhtsa-recorded tests/fixtures/nhtsa_recalls_civic_2019.json \
   --ledger out/ledger.jsonl --json out/report.json
-# per-tool act thresholds over the defaults (decline_addon 0.8, the others 0.5)
-menu-check ... --thresholds decline_addon=0.85,check_schedule=0.6
+# per-tool act thresholds over the defaults (decline_addon 0.8, the others 0.5); Decider is asked about
+# all lines concurrently, at most --concurrency at a time (default 12); the CLI prints "12 lines decided in N ms"
+menu-check ... --thresholds decline_addon=0.85,check_schedule=0.6 --concurrency 12
 # Decider vs keyword rules on the 103 labelled spike lines, plus what the pipeline policy does with
 # Decider's answers (per-tool thresholds vs the previous policy): recorded answers (no server) or live
 menu-race --replay-recorded
