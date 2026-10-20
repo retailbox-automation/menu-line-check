@@ -4,7 +4,8 @@ The reusable decision pattern of the N2 Menu Line Check entry.
 
 A car owner at a service counter holds a printed menu. For each line of that menu, Strands
 Decider 2B answers three typed questions, and plain code turns the answers into one of four
-routes. A general model is asked only when Decider is not sure. Safety parts are never declined
+routes. The confidence needed to act depends on what a wrong action costs. A general model is
+asked only when Decider is not sure. A line Decider flags as a safety item is never declined
 automatically.
 
 | Part | File |
@@ -36,14 +37,33 @@ The five options of `tool`:
 ## The routing code
 
 ```python
-if p_readable < 0.5:                                   route = "retake"
-elif p_safety >= 0.5 or tool.choice == "owner_decides": route = "owner_decides"   # any confidence
-elif tool.confidence >= act_threshold:                  route = "tool"            # default 0.8
-else:                                                   route = "ask_llm"
+if p_readable < 0.5:
+    route = "retake"
+elif tool.choice == "owner_decides":                    # any confidence
+    route = "owner_decides"
+elif tool.choice == "decline_addon" and p_safety >= 0.5:
+    route = "ask_llm"                                   # never declined here
+elif tool.confidence >= thresholds[tool.choice]:
+    route = "tool"
+else:
+    route = "ask_llm"
 ```
 
-`decide_line(answers, act_threshold=0.8)` returns a `LineDecision` with the route, the tool to run,
-the confidence, P(readable), P(safety) and the reason in words.
+| Tool | Act threshold (default) | Why |
+|---|---|---|
+| `decline_addon` | 0.8 | the one action the owner cannot take back |
+| `check_schedule` | 0.5 | a lookup: a wrong pick costs one wasted check |
+| `check_recall_warranty` | 0.5 | a lookup |
+| `ask_about_fee` | 0.5 | a question to the advisor |
+| `owner_decides` | none | followed at any confidence |
+
+The `safety` answer guards that one irreversible action; it does not override the lookups. On OCR
+text it says yes on tire lines that are not safety work (see "Measured").
+
+`decide_line(answers, thresholds=None)` returns a `LineDecision` with the route, the tool to run,
+the confidence, the threshold used, P(readable), P(safety) and the reason in words. `thresholds`
+overrides some of the defaults (`{"decline_addon": 0.9}`); `parse_thresholds("decline_addon=0.9")`
+reads the same from text, and `act_threshold=` sets one threshold for every tool.
 
 Which input feeds which question (from the spike, see "Measured"): `safety` and `tool` are asked
 on the OCR text. `readable` is asked on the line image (name crop + price crop) when there is
@@ -51,7 +71,8 @@ one; without an image the caller decides readability in code ("OCR found a name 
 
 ## The safety gate
 
-When a general model picks the tool (route `ask_llm`), `build_safety_gate(client)` returns a
+Lines flagged by `safety` that Decider wanted to decline, and lines below their tool's
+threshold, go to a general model (route `ask_llm`). There `build_safety_gate(client)` returns a
 `DeciderGate` for Strands `before_tool_call`. If the model calls `decline_addon`, the gate asks
 Decider the `safety` question about the `line_text` argument of that call. P(safety) >= 0.5 gives
 `Deny`, and the model reads `DENIED: this line is a safety item; the owner decides`. Other tools
@@ -65,7 +86,7 @@ from menu_line_tool_selection import build_safety_gate, decide_line, load_patter
 
 decider = DeciderClient("http://decider-host:8099")
 answers = decider.ask(ocr_state(line_text), load_pattern_questions("ocr_text")).answers
-decision = decide_line(answers, act_threshold=0.8)          # retake | owner_decides | tool | ask_llm
+decision = decide_line(answers)            # retake | owner_decides | tool | ask_llm
 
 # where a general model picks the tool instead
 agent = Agent(tools=[...], interventions=[build_safety_gate(decider)])
@@ -88,6 +109,21 @@ labelled menu lines, 103 of them readable, warm Decider 2B on a Mac mini.
   "safety yes OR tool owner_decides" no safety line was missed.
 * Price over $100 was read correctly on 97 to 100% of lines, even from the whole line as one image.
 
-So the defaults: OCR text for `safety` and `tool`, act threshold 0.8, safety route at P(safety)
->= 0.5 or tool owner_decides. These thresholds come from synthetic menus; measure them again on
-real menus before relying on them.
+Live run of 2026-10-20 on the demo menu (real Decider on the Mac mini): the OCR-text `safety`
+question said yes on the brake line (0.72), but also on "Tire rotation" (0.68) and "Nitrogen tire
+fill" (0.66). Under the earlier rule "safety yes OR tool owner_decides -> owner decides" those
+became the owner's call, and with one act threshold of 0.8 the line "Replace fuel pump module"
+(check_recall_warranty at 0.64) never reached the recall lookup.
+
+Pipeline policies replayed on the recorded answers from the spike (synthetic menus; 103 readable
+lines, Decider 2B on the OCR text, 2026-10-20; `menu-race --replay-recorded`). "Acted" means a
+tool ran or the owner decides from Decider's answers alone; the rest go to the general model.
+
+| Policy | Acted | Accuracy on acted | Safety lines auto-declined | False "your call" | Wrong declines |
+|---|---|---|---|---|---|
+| per-tool thresholds (this pattern) | 90/103 | 0.89 | 0/20 | 0 | 0 |
+| previous: safety OR owner_decides, act >= 0.8 | 76/103 | 0.76 | 0/20 | 10 | 0 |
+
+So the defaults: OCR text for `safety` and `tool`; act at 0.8 for `decline_addon` and 0.5 for the
+lookups and the fee question; `safety` only blocks a decline. These numbers come from synthetic
+menus; measure them again on real menus before relying on them.

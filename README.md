@@ -10,9 +10,11 @@
 A car owner stands at a dealer's service counter with a printed service menu and takes one photo. The agent
 splits the menu into lines and, for each line, Strands Decider 2B decides which tool fits: decline an optional
 add-on, check the maintenance schedule against the odometer, look up recalls for this car (public NHTSA API),
-ask about a fee, or leave a safety part (brakes, tires, alignment, steering) to the owner. Lines Decider is not
-sure about go to a general model on Amazon Bedrock; Bedrock also writes one plain question for the service
-advisor per flagged line and the summary ("Keep 3 · Decline 4 · Ask 4 · Your call 1"). On the demo menu the
+ask about a fee, or leave a safety part (brakes, tires, alignment, steering) to the owner. How sure Decider must
+be depends on what a wrong action costs: a decline needs 0.8, a lookup or a question 0.5, and a decline on a line
+Decider flags as a safety item is never taken automatically. Lines below their threshold go to a general model on
+Amazon Bedrock; Bedrock also writes one plain question for the service advisor per flagged line and the summary
+card (Keep · Decline · Ask · Your call). On the demo menu the
 line "Replace fuel pump module $1,089.00" goes to the recall lookup, which finds recall campaign 23V858000 for a
 2019 Civic: "Is this covered by recall 23V858000?"
 
@@ -26,7 +28,7 @@ TBD. Fill in: the one repeated decision, the workflow it lives in, what the agen
 | Question type(s) | `readable` (noul), `safety` (noul), `tool` (choice) |
 | Option set | `decline_addon`, `check_schedule`, `check_recall_warranty`, `ask_about_fee`, `owner_decides` |
 | Where in the loop | per line before any tool runs; plus a `before_tool_call` gate on the LLM picker's `decline_addon` |
-| Plain-code policy | unreadable -> retake; P(safety) >= 0.5 or tool owner_decides -> owner decides; tool confidence >= 0.8 -> run it; else LLM picker |
+| Plain-code policy | unreadable -> retake; tool owner_decides -> owner decides; decline with P(safety) >= 0.5 -> LLM picker, never declined; confidence >= the tool's threshold (decline 0.8, lookups and fee 0.5) -> run it; else LLM picker |
 
 ## How it works
 
@@ -122,7 +124,10 @@ The real Decider model runs on another machine; this code only talks HTTP.
 menu-check --ocr-json tests/fixtures/textract_menu.json --vehicle "2019 Honda Civic 31200" \
   --decider-url http://127.0.0.1:8099 --nhtsa-recorded tests/fixtures/nhtsa_recalls_civic_2019.json \
   --ledger out/ledger.jsonl --json out/report.json
-# Decider vs keyword rules on the 103 labelled spike lines: recorded answers (no server) or live
+# per-tool act thresholds over the defaults (decline_addon 0.8, the others 0.5)
+menu-check ... --thresholds decline_addon=0.85,check_schedule=0.6
+# Decider vs keyword rules on the 103 labelled spike lines, plus what the pipeline policy does with
+# Decider's answers (per-tool thresholds vs the previous policy): recorded answers (no server) or live
 menu-race --replay-recorded
 menu-race --decider-url http://127.0.0.1:8099 --out out/race.md
 ```
@@ -130,6 +135,10 @@ menu-race --decider-url http://127.0.0.1:8099 --out out/race.md
 Nothing calls Bedrock without `--allow-bedrock` (paid; model ids from `N2_PICKER_MODEL` / `N2_WRITER_MODEL`,
 default `us.amazon.nova-lite-v1:0`). Without it the advisor questions come from templates and low-confidence
 lines become "ask the advisor".
+
+On the recorded spike answers (synthetic menus, 2026-10-20) the per-tool policy acts on 90 of 103 lines at 0.89
+accuracy with no safety line declined, no false "your call" and no wrong decline; the previous single-threshold
+policy acted on 76 at 0.76 with 10 false "your call". Details: `patterns/menu_line_tool_selection/README.md`.
 
 ```bash
 # on the Decider host (not here)
