@@ -19,12 +19,15 @@ from decider_kit import (
     read_ledger,
 )
 from menu_line_tool_selection import (
+    DEFAULT_THRESHOLDS,
     TOOLS,
     LineDecision,
     build_safety_gate,
     decide_line,
     load_pattern_questions,
     ocr_state,
+    parse_thresholds,
+    resolve_thresholds,
 )
 
 from .conftest import FakeServer, noul, ok_response
@@ -99,36 +102,85 @@ def test_unreadable_line_is_retaken_before_anything_else():
     assert isinstance(d, LineDecision) and d.route == "retake" and d.tool is None
 
 
-def test_safety_probability_overrides_a_confident_decline():
-    d = decide_line(answers(p_safety=0.55, tool="decline_addon", conf=0.99))
-    assert d.route == "owner_decides" and d.tool == "owner_decides"
-    assert d.decider_choice == "decline_addon" and d.p_safety == pytest.approx(0.55)
+def test_tire_rotation_flagged_by_safety_still_checks_the_schedule():
+    # live run 2026-10-20: P(safety) 0.68 on "Tire rotation"; safety is no override of lookups
+    d = decide_line(answers(p_safety=0.68, tool="check_schedule", conf=0.56))
+    assert (d.route, d.tool, d.threshold) == ("tool", "check_schedule", 0.5)
 
 
-def test_owner_decides_choice_routes_to_owner_even_at_low_confidence():
-    d = decide_line(answers(p_safety=0.1, tool="owner_decides", conf=0.6))
-    assert d.route == "owner_decides" and d.confidence == pytest.approx(0.6)
+def test_decline_on_a_line_flagged_by_safety_is_not_declined_but_goes_to_the_llm():
+    d = decide_line(answers(p_safety=0.66, tool="decline_addon", conf=0.78))  # nitrogen tire fill
+    assert (d.route, d.tool) == ("ask_llm", None) and "not declined" in d.reason
+    sure = decide_line(answers(p_safety=0.55, tool="decline_addon", conf=0.99))
+    assert sure.route == "ask_llm" and sure.decider_choice == "decline_addon"
+    assert sure.p_safety == pytest.approx(0.55)
 
 
-def test_low_tool_confidence_goes_to_the_llm_picker():
-    d = decide_line(answers(tool="check_schedule", conf=0.62))
-    assert d.route == "ask_llm" and d.tool is None and d.decider_choice == "check_schedule"
+def test_fuel_pump_recall_at_064_runs_the_lookup():
+    d = decide_line(answers(p_safety=0.2, tool="check_recall_warranty", conf=0.64))
+    assert (d.route, d.tool, d.confidence) == ("tool", "check_recall_warranty", 0.64)
 
 
-def test_act_threshold_is_respected():
-    assert decide_line(answers(tool="ask_about_fee", conf=0.8)).route == "tool"
-    assert decide_line(answers(tool="ask_about_fee", conf=0.79)).route == "ask_llm"
-    strict = decide_line(answers(tool="ask_about_fee", conf=0.85), act_threshold=0.9)
-    assert strict.route == "ask_llm"
-    loose = decide_line(answers(tool="check_recall_warranty", conf=0.72), act_threshold=0.7)
-    assert (loose.route, loose.tool, loose.confidence) == ("tool", "check_recall_warranty", 0.72)
+def test_owner_decides_choice_routes_to_owner_at_any_confidence():
+    d = decide_line(answers(p_safety=0.1, tool="owner_decides", conf=0.3))
+    assert (d.route, d.tool, d.confidence) == ("owner_decides", "owner_decides", 0.3)
+
+
+def test_safety_alone_no_longer_makes_a_line_the_owners_call():
+    for tool in ("check_schedule", "check_recall_warranty", "ask_about_fee"):
+        d = decide_line(answers(p_safety=0.95, tool=tool, conf=0.9))
+        assert (d.route, d.tool) == ("tool", tool)
+
+
+def test_per_tool_default_thresholds():
+    assert DEFAULT_THRESHOLDS == {
+        "decline_addon": 0.8,
+        "check_schedule": 0.5,
+        "check_recall_warranty": 0.5,
+        "ask_about_fee": 0.5,
+    }
+    assert decide_line(answers(tool="decline_addon", conf=0.8)).route == "tool"
+    assert decide_line(answers(tool="decline_addon", conf=0.79)).route == "ask_llm"
+    assert decide_line(answers(tool="ask_about_fee", conf=0.5)).route == "tool"
+    low = decide_line(answers(tool="check_schedule", conf=0.49))
+    assert (low.route, low.tool, low.decider_choice) == ("ask_llm", None, "check_schedule")
+
+
+def test_thresholds_are_configurable_and_act_threshold_overrides_all():
+    strict = {"check_schedule": 0.9}
+    assert decide_line(answers(tool="check_schedule", conf=0.85), strict).route == "ask_llm"
+    assert decide_line(answers(tool="ask_about_fee", conf=0.55), strict).route == "tool"
+    one = decide_line(answers(tool="check_recall_warranty", conf=0.64), act_threshold=0.8)
+    assert one.route == "ask_llm" and one.threshold == 0.8
+
+
+def test_resolve_and_parse_thresholds():
+    assert resolve_thresholds({"decline_addon": 0.9})["decline_addon"] == 0.9
+    assert resolve_thresholds(None, act_threshold=0.7) == dict.fromkeys(DEFAULT_THRESHOLDS, 0.7)
+    assert parse_thresholds("decline_addon=0.85, check_schedule=0.6") == {
+        "decline_addon": 0.85,
+        "check_schedule": 0.6,
+    }
+    with pytest.raises(ValueError, match="unknown tool"):
+        resolve_thresholds({"owner_decides": 0.5})
+    with pytest.raises(ValueError, match="between 0 and 1"):
+        resolve_thresholds({"decline_addon": 1.5})
+    with pytest.raises(ValueError, match="tool=value"):
+        parse_thresholds("decline_addon:0.8")
 
 
 def test_boundaries_of_the_yes_no_cut_offs():
     assert decide_line(answers(p_readable=0.5)).route == "tool"
     assert decide_line(answers(p_readable=0.4999)).route == "retake"
-    assert decide_line(answers(p_safety=0.5)).route == "owner_decides"
-    assert decide_line(answers(p_safety=0.4999)).route == "tool"
+    assert decide_line(answers(p_safety=0.5, tool="decline_addon")).route == "ask_llm"
+    assert decide_line(answers(p_safety=0.4999, tool="decline_addon")).route == "tool"
+
+
+def test_an_unknown_option_goes_to_the_llm():
+    d = decide_line(
+        answers(tool="check_schedule", conf=0.99) | {"tool": ChoiceAnswer("x", {}, 1.0)}
+    )
+    assert d.route == "ask_llm" and "unknown" in d.reason
 
 
 def test_wrong_answer_types_are_rejected():

@@ -173,7 +173,7 @@ class StrandsPicker:
         if picks:
             return picks[-1], rationale
         if _was_denied(agent.messages):
-            return "owner_decides", "decline_addon was denied by the safety gate"
+            return None, "decline_addon was denied by the safety gate; not declined automatically"
         return None, rationale
 
 

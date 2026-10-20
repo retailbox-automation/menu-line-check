@@ -19,13 +19,13 @@ MENU_ANSWERS: dict[str, tuple[str, float, float]] = {
     "Oil & filter change": ("check_schedule", 0.93, 0.05),
     "Engine oil conditioner": ("decline_addon", 0.91, 0.04),
     "Fuel injection cleaning": ("decline_addon", 0.86, 0.06),
-    "Tire rotation": ("check_schedule", 0.88, 0.35),
+    "Tire rotation": ("check_schedule", 0.56, 0.68),  # live run: safety yes on tire lines
     "Cabin air filter": ("check_schedule", 0.95, 0.03),
-    "Replace fuel pump module": ("check_recall_warranty", 0.84, 0.12),
-    "Tech diagnostic": ("check_recall_warranty", 0.72, 0.08),  # below 0.8: ask_llm
+    "Replace fuel pump module": ("check_recall_warranty", 0.64, 0.2),
+    "Tech diagnostic": ("check_recall_warranty", 0.72, 0.08),
     "Shop supplies": ("ask_about_fee", 0.97, 0.02),
-    "Front brake pads": ("owner_decides", 0.6, 0.92),
-    "Nitrogen tire fill": ("decline_addon", 0.81, 0.3),
+    "Front brake pads": ("owner_decides", 0.88, 0.72),
+    "Nitrogen tire fill": ("decline_addon", 0.78, 0.66),  # safety-flagged decline: ask_llm
     "Throttle body service": ("decline_addon", 0.83, 0.07),
     "Environmental disposal fee": ("ask_about_fee", 0.9, 0.02),
 }

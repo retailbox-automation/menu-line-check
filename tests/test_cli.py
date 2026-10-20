@@ -37,22 +37,43 @@ def test_cli_prints_the_table_and_the_summary(fake_decider, capsys, tmp_path):
     out = capsys.readouterr().out
     assert rc == 0
     assert "2019 Honda Civic, 31,200 mi" in out
-    assert out.count("Keep 3 · Decline 4 · Ask 4 · Your call 1") == 1
+    assert out.count("Keep 3 · Decline 3 · Ask 5 · Your call 1") == 1
+    assert "act >= decline_addon 0.8, check_schedule 0.5" in out
     assert "Is this covered by recall 23V858000?" in out
     fuel_row = next(r for r in out.splitlines() if "Replace fuel pump module" in r)
-    for cell in ("$1,089.00", "tool", "check_recall_warranty", "0.84", "decider"):
+    for cell in ("$1,089.00", "tool", "check_recall_warranty", "0.64", "decider"):
         assert cell in fuel_row
-    diag_row = next(r for r in out.splitlines() if "Tech diagnostic" in r)
-    assert "ask_advisor" in diag_row and "code" in diag_row
+    nitrogen_row = next(r for r in out.splitlines() if "Nitrogen tire fill" in r)
+    assert "ask_advisor" in nitrogen_row and "code" in nitrogen_row
     report = json.loads(report_path.read_text())
-    assert report["counts"] == {"keep": 3, "decline": 4, "ask": 4, "your_call": 1, "retake": 0}
+    assert report["counts"] == {"keep": 3, "decline": 3, "ask": 5, "your_call": 1, "retake": 0}
     assert len(read_ledger(ledger_path)) == 12
 
 
-def test_cli_threshold_changes_the_route(fake_decider, capsys):
-    assert cli.main([*OFFLINE, "--act-threshold", "0.7"]) == 0
-    diag_row = next(r for r in capsys.readouterr().out.splitlines() if "Tech diagnostic" in r)
-    assert "check_recall_warranty" in diag_row and "decider" in diag_row
+def row(out, name):
+    return next(r for r in out.splitlines() if name in r)
+
+
+def test_cli_thresholds_change_the_route(fake_decider, capsys):
+    assert cli.main([*OFFLINE, "--thresholds", "check_schedule=0.6"]) == 0
+    out = capsys.readouterr().out
+    assert "ask_advisor" in row(out, "Tire rotation") and "check_schedule 0.6" in out
+    assert "check_recall_warranty" in row(out, "Replace fuel pump")
+    assert cli.main([*OFFLINE, "--act-threshold", "0.9"]) == 0
+    assert "ask_advisor" in row(capsys.readouterr().out, "Replace fuel pump")
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [
+        ["--thresholds", "owner_decides=0.5"],
+        ["--thresholds", "decline_addon:0.8"],
+        ["--thresholds", "decline_addon=0.8", "--act-threshold", "0.7"],
+    ],
+)
+def test_cli_rejects_bad_thresholds(fake_decider, extra):
+    with pytest.raises(SystemExit):
+        cli.main([*OFFLINE, *extra])
 
 
 def test_cli_with_a_photo_asks_readable_on_the_line_crops(fake_decider, tmp_path, capsys):
@@ -92,5 +113,5 @@ def test_allow_bedrock_builds_the_bedrock_parts_only_with_the_flag(monkeypatch, 
     monkeypatch.setattr(cli, "make_bedrock_parts", parts)
     assert cli.main(OFFLINE) == 0 and built == []
     assert cli.main([*OFFLINE, "--allow-bedrock"]) == 0 and built == ["us-east-1"]
-    diag_row = next(r for r in capsys.readouterr().out.splitlines()[::-1] if "Tech diag" in r)
-    assert "ask_llm" in diag_row and "llm" in diag_row
+    nitrogen = next(r for r in capsys.readouterr().out.splitlines()[::-1] if "Nitrogen" in r)
+    assert "ask_llm" in nitrogen and "llm" in nitrogen and "owner_decides" in nitrogen

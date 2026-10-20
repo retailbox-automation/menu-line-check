@@ -7,9 +7,13 @@ Per line:
    Without images, readability is the code check "OCR found a name and a price" (the spike
    measured that check above Decider's OCR-text ``readable`` answer); the OCR-text answer is
    still asked and written to the ledger.
-2. ``decide_line`` routes the line: retake / owner_decides / tool / ask_llm.
+2. ``decide_line`` routes the line with per-tool act thresholds: retake / owner_decides / tool /
+   ask_llm. A decline on a line Decider flags as a safety item is never taken here.
 3. ``ask_llm`` goes to ``llm_picker(line, vehicle) -> (tool, rationale)``. With no picker, or
    when it picks nothing, the line is "ask the advisor" (route ``ask_advisor``, source code).
+   Whatever picker is plugged in, its ``decline_addon`` on a line with P(safety) >= 0.5 is not
+   applied either: the line becomes "ask the advisor" (the Strands picker's gate already
+   denies that call; this keeps the rule for any other picker).
 4. The chosen tool runs (NHTSA for check_recall_warranty, the schedule for check_schedule).
 5. One ledger row per line. If Decider is unreachable for a line, nothing is declined: the
    line becomes the owner's call (route ``unavailable``).
@@ -34,13 +38,14 @@ from decider_kit import (
     NoulAnswer,
 )
 from menu_line_tool_selection import (
-    DEFAULT_ACT_THRESHOLD,
+    SAFETY_YES,
     TOOLS,
     LineDecision,
     decide_line,
     image_state,
     load_pattern_questions,
     ocr_state,
+    resolve_thresholds,
 )
 
 from .models import (
@@ -113,7 +118,7 @@ def _check_line(
     line: MenuLine,
     vehicle: Vehicle,
     decider: DeciderClient,
-    act_threshold: float,
+    thresholds: dict[str, float],
     llm_picker: Picker | None,
     nhtsa: NhtsaClient | None,
     ledger: Ledger | None,
@@ -150,7 +155,7 @@ def _check_line(
 
     decision = decide_line(
         {"readable": readable, "safety": answers["safety"], "tool": answers["tool"]},
-        act_threshold,
+        thresholds,
     )
     outcome = _resolve(line, vehicle, decision, readable_source, llm_picker, nhtsa)
     outcome = replace(outcome, decider_ms=timing)
@@ -219,6 +224,12 @@ def _resolve(
         except Exception as exc:  # the line falls back to "ask the advisor"; logged and recorded
             logger.warning("LLM picker failed on line %s: %r", line.index, exc)
             picked, rationale = None, f"LLM picker failed: {exc!r}"
+    if picked == "decline_addon" and decision.p_safety >= SAFETY_YES:
+        picked = None
+        rationale = (
+            f"the picker chose decline_addon, but P(safety)={decision.p_safety:.2f}: "
+            "not declined automatically"
+        )
     if picked in TOOLS:
         result = run_tool(picked, line, vehicle, nhtsa)
         return LineOutcome(
@@ -246,16 +257,21 @@ def check_menu(
     vehicle: Vehicle,
     decider: DeciderClient,
     *,
-    act_threshold: float = DEFAULT_ACT_THRESHOLD,
+    thresholds: dict[str, float] | None = None,
+    act_threshold: float | None = None,
     llm_picker: Picker | None = None,
     writer: Writer | None = None,
     nhtsa: NhtsaClient | None = None,
     ledger: Ledger | None = None,
 ) -> MenuReport:
-    """Check every line of one menu for one vehicle. Lines are checked one after another."""
+    """Check every line of one menu for one vehicle. Lines are checked one after another.
+
+    ``thresholds`` overrides some per-tool act thresholds (defaults in the pattern);
+    ``act_threshold`` sets one threshold for every tool instead.
+    """
+    limits = resolve_thresholds(thresholds, act_threshold)
     outcomes = [
-        _check_line(line, vehicle, decider, act_threshold, llm_picker, nhtsa, ledger)
-        for line in lines
+        _check_line(line, vehicle, decider, limits, llm_picker, nhtsa, ledger) for line in lines
     ]
     if writer is not None:
         outcomes = [

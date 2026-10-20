@@ -8,15 +8,21 @@ Decider 2B answers three typed questions about one menu line (see ``questions.ya
 
 Plain code then routes the line (:func:`decide_line`), in this order:
 
-1. P(readable) < 0.5                                   -> ``retake``
-2. P(safety) >= 0.5, or the tool choice is owner_decides -> ``owner_decides`` (any confidence)
-3. tool confidence >= ``act_threshold`` (default 0.8)   -> ``tool`` (run the chosen tool)
-4. otherwise                                            -> ``ask_llm`` (a general model picks)
+1. P(readable) < 0.5                                     -> ``retake``
+2. tool choice is owner_decides (any confidence)         -> ``owner_decides``
+3. tool choice is decline_addon and P(safety) >= 0.5     -> ``ask_llm`` (never declined here)
+4. tool confidence >= that tool's threshold              -> ``tool`` (run the chosen tool)
+5. otherwise                                             -> ``ask_llm`` (a general model picks)
 
-Safety parts are never declined automatically. :func:`build_safety_gate` adds a second check
-where a general model picks the tool: a Strands ``before_tool_call`` gate that asks Decider the
-safety question about the line text the model passed to ``decline_addon`` and denies the call
-when P(safety) >= 0.5.
+The threshold follows the cost of a wrong action: declining is the one action the owner cannot
+take back, so ``decline_addon`` needs 0.8; the lookups and the fee question only fetch
+information or ask, so they act from 0.5 (:data:`DEFAULT_THRESHOLDS`, configurable).
+
+The ``safety`` answer is a guardrail on that one irreversible action, not an override of the
+lookups: on OCR text it says yes on every tire line (live run 2026-10-20). Where a general model
+picks the tool, :func:`build_safety_gate` repeats the guardrail: a Strands ``before_tool_call``
+gate that asks Decider the safety question about the line text the model passed to
+``decline_addon`` and denies the call when P(safety) >= 0.5.
 
 This module depends only on ``decider_kit``; it holds no menu parsing and no tool code.
 """
@@ -26,6 +32,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any, Literal
 
 import yaml
@@ -58,7 +65,16 @@ Route = Literal["retake", "owner_decides", "tool", "ask_llm"]
 
 READABLE_YES = 0.5
 SAFETY_YES = 0.5
-DEFAULT_ACT_THRESHOLD = 0.8
+
+DEFAULT_THRESHOLDS: Mapping[str, float] = MappingProxyType(
+    {
+        "decline_addon": 0.8,  # irreversible for the owner: high bar
+        "check_schedule": 0.5,  # a lookup: a wrong pick costs one wasted check
+        "check_recall_warranty": 0.5,  # a lookup
+        "ask_about_fee": 0.5,  # a question to the advisor
+    }
+)
+"""Act threshold per tool. ``owner_decides`` has none: it is followed at any confidence."""
 
 # State captions used in the spike of 2026-10-20 (spike/n2-menu/run_n2_spike.py).
 STATE_OCR_TEXT = 'OCR text of one line of a car dealer\'s printed service menu: "{text}"'
@@ -108,6 +124,8 @@ class LineDecision:
     decider_choice: str | None
     """Decider's top tool, whatever the route."""
     reason: str
+    threshold: float | None = None
+    """The act threshold of Decider's top tool, when one applied."""
 
 
 def _noul(answers: Mapping[str, Answer], name: str) -> NoulAnswer:
@@ -117,32 +135,83 @@ def _noul(answers: Mapping[str, Answer], name: str) -> NoulAnswer:
     return answer
 
 
+def resolve_thresholds(
+    thresholds: Mapping[str, float] | None = None, act_threshold: float | None = None
+) -> dict[str, float]:
+    """Per-tool thresholds: ``thresholds`` over the defaults, or one ``act_threshold`` for all."""
+    if act_threshold is not None:
+        out = dict.fromkeys(DEFAULT_THRESHOLDS, float(act_threshold))
+    else:
+        out = dict(DEFAULT_THRESHOLDS)
+        unknown = set(thresholds or {}) - set(DEFAULT_THRESHOLDS)
+        if unknown:
+            raise ValueError(
+                f"unknown tool(s) {sorted(unknown)}; thresholds exist for {sorted(out)}"
+            )
+        out.update({k: float(v) for k, v in (thresholds or {}).items()})
+    bad = {k: v for k, v in out.items() if not 0.0 <= v <= 1.0}
+    if bad:
+        raise ValueError(f"thresholds must be between 0 and 1, got {bad}")
+    return out
+
+
+def parse_thresholds(text: str) -> dict[str, float]:
+    """``"decline_addon=0.8,check_schedule=0.5"`` -> a dict (validated by resolve_thresholds)."""
+    out: dict[str, float] = {}
+    for part in (p.strip() for p in text.split(",")):
+        if not part:
+            continue
+        name, sep, value = part.partition("=")
+        try:
+            if not sep:
+                raise ValueError
+            out[name.strip()] = float(value)
+        except ValueError:
+            raise ValueError(f"thresholds must be tool=value pairs, got {part!r}") from None
+    resolve_thresholds(out)
+    return out
+
+
 def decide_line(
     answers: Mapping[str, Answer],
-    act_threshold: float = DEFAULT_ACT_THRESHOLD,
+    thresholds: Mapping[str, float] | None = None,
     *,
+    act_threshold: float | None = None,
     readable_yes: float = READABLE_YES,
     safety_yes: float = SAFETY_YES,
 ) -> LineDecision:
-    """Route one line from its ``readable``, ``safety`` and ``tool`` answers. Plain code only."""
+    """Route one line from its ``readable``, ``safety`` and ``tool`` answers. Plain code only.
+
+    ``thresholds`` overrides some or all of :data:`DEFAULT_THRESHOLDS`; ``act_threshold`` (kept
+    for older callers) sets one threshold for every tool instead.
+    """
+    limits = resolve_thresholds(thresholds, act_threshold)
     readable = _noul(answers, "readable")
     safety = _noul(answers, "safety")
     tool = answers["tool"]
     if not isinstance(tool, ChoiceAnswer):
         raise TypeError(f"answer 'tool' must be a choice answer, got {type(tool).__name__}")
-    p_r, p_s, conf = readable.probability, safety.probability, tool.confidence
+    p_r, p_s, conf, choice = readable.probability, safety.probability, tool.confidence, tool.choice
+    limit = limits.get(choice)
 
     def made(route: Route, chosen: str | None, reason: str) -> LineDecision:
-        return LineDecision(route, chosen, conf, p_r, p_s, tool.choice, reason)
+        return LineDecision(route, chosen, conf, p_r, p_s, choice, reason, limit)
 
     if p_r < readable_yes:
         return made("retake", None, f"P(readable)={p_r:.2f} < {readable_yes}")
-    if p_s >= safety_yes or tool.choice == "owner_decides":
-        why = f"P(safety)={p_s:.2f}" if p_s >= safety_yes else "tool choice is owner_decides"
-        return made("owner_decides", "owner_decides", f"safety route: {why}")
-    if tool.choice in TOOLS and conf >= act_threshold:
-        return made("tool", tool.choice, f"{tool.choice} at {conf:.2f} >= {act_threshold}")
-    return made("ask_llm", None, f"{tool.choice} at {conf:.2f} < {act_threshold}")
+    if choice == "owner_decides":
+        return made("owner_decides", "owner_decides", f"tool choice is owner_decides at {conf:.2f}")
+    if choice == "decline_addon" and p_s >= safety_yes:
+        return made(
+            "ask_llm",
+            None,
+            f"decline_addon with P(safety)={p_s:.2f} >= {safety_yes}: not declined automatically",
+        )
+    if limit is None:
+        return made("ask_llm", None, f"unknown option {choice!r}")
+    if conf >= limit:
+        return made("tool", choice, f"{choice} at {conf:.2f} >= {limit}")
+    return made("ask_llm", None, f"{choice} at {conf:.2f} < {limit}")
 
 
 # ----------------------------------------------------------------------------- safety gate

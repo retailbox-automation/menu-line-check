@@ -37,14 +37,14 @@ def by_name(report, fragment):
 
 def test_fixture_menu_summary_card(tmp_path):
     report, server = run(writer=FakeWriter(), ledger=Ledger(tmp_path / "l.jsonl"))
-    assert report.counts == {"keep": 3, "decline": 4, "ask": 4, "your_call": 1, "retake": 0}
-    assert report.summary == "Keep 3 · Decline 4 · Ask 4 · Your call 1"
+    assert report.counts == {"keep": 3, "decline": 3, "ask": 5, "your_call": 1, "retake": 0}
+    assert report.summary == "Keep 3 · Decline 3 · Ask 5 · Your call 1"
     assert report.summary_text.startswith(report.summary)
-    assert "$2,361.25" in report.summary_text and "$336.95" in report.summary_text
+    assert "$2,361.25" in report.summary_text and "$307.00" in report.summary_text
     assert len(server.requests) == 12  # one request per line, no images in the fixture
 
 
-def test_fuel_pump_line_finds_the_recall_and_asks_about_it():
+def test_fuel_pump_recall_at_064_runs_the_nhtsa_lookup():
     report, _ = run(writer=FakeWriter())
     fuel = by_name(report, "fuel pump")
     assert (fuel.route, fuel.tool, fuel.source, fuel.verdict) == (
@@ -53,9 +53,30 @@ def test_fuel_pump_line_finds_the_recall_and_asks_about_it():
         "decider",
         "ask",
     )
-    assert fuel.confidence == pytest.approx(0.84)
+    assert fuel.confidence == pytest.approx(0.64)
     assert fuel.tool_result["recall"]["campaign"] == "23V858000"
     assert fuel.advisor_question == "Is this covered by recall 23V858000?"
+
+
+def test_tire_rotation_flagged_by_safety_still_checks_the_schedule():
+    report, _ = run(writer=FakeWriter())
+    rotation = by_name(report, "Tire rotation")
+    assert (rotation.route, rotation.tool, rotation.verdict) == ("tool", "check_schedule", "keep")
+    assert rotation.p_safety == pytest.approx(0.68)
+    assert rotation.tool_result["schedule"]["status"] == "due"
+
+
+def test_nitrogen_fill_flagged_by_safety_is_not_declined():
+    report, _ = run(writer=FakeWriter())
+    nitrogen = by_name(report, "Nitrogen")
+    assert (nitrogen.route, nitrogen.source, nitrogen.tool, nitrogen.verdict) == (
+        "ask_advisor",
+        "code",
+        None,
+        "ask",
+    )
+    assert nitrogen.decider_choice == "decline_addon" and nitrogen.p_safety == pytest.approx(0.66)
+    assert nitrogen.advisor_question is not None
 
 
 def test_each_route_and_who_decided():
@@ -70,13 +91,8 @@ def test_each_route_and_who_decided():
     oil = by_name(report, "Oil & filter")
     assert oil.verdict == "keep" and oil.tool_result["schedule"]["status"] == "due"
     diag = by_name(report, "Tech diagnostic")
-    assert (diag.route, diag.source, diag.tool, diag.verdict) == (
-        "ask_advisor",
-        "code",
-        None,
-        "ask",
-    )
-    assert diag.decider_choice == "check_recall_warranty"
+    assert (diag.route, diag.tool, diag.verdict) == ("tool", "check_recall_warranty", "ask")
+    assert diag.tool_result["recall"] is None
     conditioner = by_name(report, "conditioner")
     assert conditioner.verdict == "decline" and conditioner.advisor_question is None
     fee = by_name(report, "Shop supplies")
@@ -101,37 +117,60 @@ def test_every_line_is_written_to_the_ledger(tmp_path):
     fuel = rows[5]
     assert fuel["gate"] == "menu-line-check" and fuel["tool"] == "check_recall_warranty"
     assert fuel["action"]["type"] == "tool" and "line 6" in fuel["action"]["reason"]
-    assert fuel["confidences"]["tool"] == pytest.approx(0.84)
+    assert fuel["confidences"]["tool"] == pytest.approx(0.64)
     assert set(fuel["answers"]) == {"readable", "safety", "tool", "readable_code"}
+    assert "not declined automatically" in rows[9]["action"]["reason"]  # nitrogen fill
 
 
-def test_low_confidence_line_goes_to_the_llm_picker():
+def test_per_tool_thresholds_and_the_single_override():
+    strict, _ = run(thresholds={"check_recall_warranty": 0.75})
+    assert by_name(strict, "fuel pump").route == "ask_advisor"
+    assert by_name(strict, "Tech diagnostic").route == "ask_advisor"
+    assert by_name(strict, "Tire rotation").route == "tool"
+    one, _ = run(act_threshold=0.9)
+    assert [o.line.name for o in one.outcomes if o.route == "tool"] == [
+        "Oil & filter change, full synthetic",
+        "Engine oil conditioner",
+        "Cabin air filter",
+        "Shop supplies",
+        "Environmental disposal fee",
+    ]
+
+
+def test_safety_flagged_decline_goes_to_the_llm_picker():
     picks = []
 
     def picker(line, vehicle):
         picks.append((line.index, vehicle))
-        return "check_recall_warranty", "a diagnostic fee"
+        return "check_schedule", "a tire service"
 
     report, _ = run(llm_picker=picker, writer=FakeWriter())
-    diag = by_name(report, "Tech diagnostic")
-    assert picks == [(7, CIVIC)]
-    assert (diag.route, diag.source, diag.tool, diag.rationale) == (
+    nitrogen = by_name(report, "Nitrogen")
+    assert picks == [(10, CIVIC)]
+    assert (nitrogen.route, nitrogen.source, nitrogen.tool, nitrogen.rationale) == (
         "ask_llm",
         "llm",
-        "check_recall_warranty",
-        "a diagnostic fee",
+        "check_schedule",
+        "a tire service",
     )
-    assert diag.tool_result["recall"] is None and diag.verdict == "ask"
-    assert report.counts["ask"] == 4
+    assert nitrogen.tool_result["schedule"]["status"] == "unknown" and nitrogen.verdict == "ask"
+
+
+def test_a_picker_decline_on_a_safety_flagged_line_is_not_applied():
+    report, _ = run(llm_picker=lambda line, vehicle: ("decline_addon", "an add-on"))
+    nitrogen = by_name(report, "Nitrogen")
+    assert (nitrogen.route, nitrogen.tool, nitrogen.verdict) == ("ask_advisor", None, "ask")
+    assert "not declined automatically" in nitrogen.rationale
+    assert report.counts["decline"] == 3
 
 
 def test_fake_picker_and_a_picker_that_picks_nothing_or_fails():
     report, _ = run(llm_picker=FakePicker())
-    assert by_name(report, "Tech diagnostic").tool == "check_recall_warranty"
+    assert by_name(report, "Nitrogen").tool == "owner_decides"  # keyword rule: "tire"
 
     nothing, _ = run(llm_picker=lambda line, vehicle: (None, "no tool was called"))
-    diag = by_name(nothing, "Tech diagnostic")
-    assert (diag.route, diag.source, diag.rationale) == (
+    nitrogen = by_name(nothing, "Nitrogen")
+    assert (nitrogen.route, nitrogen.source, nitrogen.rationale) == (
         "ask_advisor",
         "code",
         "no tool was called",
@@ -141,8 +180,8 @@ def test_fake_picker_and_a_picker_that_picks_nothing_or_fails():
         raise RuntimeError("throttled")
 
     failed, _ = run(llm_picker=broken)
-    diag = by_name(failed, "Tech diagnostic")
-    assert diag.route == "ask_advisor" and "throttled" in diag.rationale
+    nitrogen = by_name(failed, "Nitrogen")
+    assert nitrogen.route == "ask_advisor" and "throttled" in nitrogen.rationale
 
 
 def test_line_images_ask_readable_on_the_image_in_a_second_request():
@@ -183,4 +222,4 @@ def test_report_to_dict_is_json_ready():
     data = json.loads(json.dumps(report.to_dict()))
     assert data["counts"]["keep"] == 3 and len(data["outcomes"]) == 12
     assert data["outcomes"][5]["tool_result"]["recall"]["campaign"] == "23V858000"
-    assert data["declined_total"] == 336.95
+    assert data["declined_total"] == 307.0

@@ -156,12 +156,13 @@ def test_picker_behind_the_gate_moves_from_decline_to_owner_decides():
     assert picker(line(BRAKES), CIVIC)[0] == "owner_decides"
 
 
-def test_picker_after_a_denied_decline_and_no_other_call_returns_owner_decides():
+def test_picker_after_a_denied_decline_and_no_other_call_picks_nothing():
     model = ScriptedModel(
         [("tool", "decline_addon", {"line_index": 9, "line_text": BRAKES}), ("text", "ok")]
     )
     picker = StrandsPicker(safety_server(0.93).client(), model=model)
-    assert picker(line(BRAKES)) == ("owner_decides", "decline_addon was denied by the safety gate")
+    tool, why = picker(line(BRAKES))
+    assert tool is None and why.startswith("decline_addon was denied by the safety gate")
 
 
 def test_picker_that_calls_no_tool_returns_none():

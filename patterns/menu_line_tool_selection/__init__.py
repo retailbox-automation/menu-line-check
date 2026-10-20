@@ -5,9 +5,10 @@ installed (``pip install -e .``).
 """
 
 from .handler import (
-    DEFAULT_ACT_THRESHOLD,
+    DEFAULT_THRESHOLDS,
     QUESTIONS_PATH,
     SAFETY_DENY_REASON,
+    SAFETY_YES,
     TOOLS,
     DeclineSafetyGate,
     LineDecision,
@@ -16,12 +17,15 @@ from .handler import (
     image_state,
     load_pattern_questions,
     ocr_state,
+    parse_thresholds,
+    resolve_thresholds,
 )
 
 __all__ = [
-    "DEFAULT_ACT_THRESHOLD",
+    "DEFAULT_THRESHOLDS",
     "QUESTIONS_PATH",
     "SAFETY_DENY_REASON",
+    "SAFETY_YES",
     "TOOLS",
     "DeclineSafetyGate",
     "LineDecision",
@@ -30,4 +34,6 @@ __all__ = [
     "image_state",
     "load_pattern_questions",
     "ocr_state",
+    "parse_thresholds",
+    "resolve_thresholds",
 ]

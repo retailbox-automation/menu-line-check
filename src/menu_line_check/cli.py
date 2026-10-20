@@ -1,7 +1,8 @@
 """``menu-check``: check a service menu from its OCR JSON and print one row per line.
 
     menu-check --ocr-json menu.json --vehicle "<year> <make> <model> <odometer>" \\
-        [--decider-url URL] [--act-threshold 0.8] [--image menu.jpg] \\
+        [--decider-url URL] [--thresholds decline_addon=0.8,check_schedule=0.5] \\
+        [--image menu.jpg] \\
         [--nhtsa-recorded recalls.json | --nhtsa-cache DIR] [--allow-bedrock] \\
         [--ledger out/ledger.jsonl] [--json out/report.json]
 
@@ -23,7 +24,7 @@ from pathlib import Path
 from typing import Any
 
 from decider_kit import DeciderClient, DeciderError, Ledger
-from menu_line_tool_selection import DEFAULT_ACT_THRESHOLD
+from menu_line_tool_selection import parse_thresholds, resolve_thresholds
 
 from .llm import DEFAULT_REGION, FakeWriter
 from .models import LineOutcome, MenuLine, MenuReport, Vehicle
@@ -104,7 +105,14 @@ def build_parser() -> argparse.ArgumentParser:
         "--vehicle", required=True, type=_vehicle, help='"<year> <make> <model> <odometer mi>"'
     )
     p.add_argument("--decider-url", default=os.environ.get("STRANDS_DECIDER_URL", DEFAULT_URL))
-    p.add_argument("--act-threshold", type=float, default=DEFAULT_ACT_THRESHOLD)
+    limits = p.add_mutually_exclusive_group()
+    limits.add_argument(
+        "--thresholds",
+        type=_thresholds,
+        default={},
+        help="per-tool act thresholds over the defaults, e.g. decline_addon=0.8,check_schedule=0.5",
+    )
+    limits.add_argument("--act-threshold", type=float, help="one act threshold for every tool")
     p.add_argument("--image", help="the menu photo the OCR JSON came from (adds line crops)")
     nhtsa = p.add_mutually_exclusive_group()
     nhtsa.add_argument("--nhtsa-recorded", help="serve this recorded NHTSA response (offline)")
@@ -118,6 +126,13 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--ledger", help="append one JSONL row per line to this file")
     p.add_argument("--json", dest="json_out", help="also write the report as JSON")
     return p
+
+
+def _thresholds(text: str) -> dict[str, float]:
+    try:
+        return parse_thresholds(text)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(str(exc)) from exc
 
 
 def _vehicle(text: str) -> Vehicle:
@@ -160,6 +175,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             lines,
             args.vehicle,
             decider,
+            thresholds=args.thresholds,
             act_threshold=args.act_threshold,
             llm_picker=picker,
             writer=writer,
@@ -169,10 +185,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     finally:
         decider.close()
 
+    limits = resolve_thresholds(args.thresholds, args.act_threshold)
+    shown = ", ".join(f"{k} {v:g}" for k, v in limits.items())
     header = (
-        f"Menu Line Check · {args.vehicle.label} · {len(lines)} lines · "
-        f"Decider {args.decider_url} · act >= {args.act_threshold}"
-        + ("" if args.allow_bedrock else " · offline writer, no LLM picker")
+        f"Menu Line Check \u00b7 {args.vehicle.label} \u00b7 {len(lines)} lines \u00b7 "
+        f"Decider {args.decider_url} \u00b7 act >= {shown}"
+        + ("" if args.allow_bedrock else " \u00b7 offline writer, no LLM picker")
     )
     print(render(report, header))
     if args.json_out:
