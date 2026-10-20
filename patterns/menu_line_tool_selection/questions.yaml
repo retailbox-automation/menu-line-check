@@ -1,0 +1,53 @@
+# PATTERN menu_line_tool_selection: the typed questions for ONE line of a printed car-service menu.
+#
+# Two wordings of the same three questions:
+#   ocr_text  the state is the OCR text of the line (default input for `safety` and `tool`)
+#   image     the state is a short caption and the line comes as images (used for `readable`)
+# The wording is the one tested in the spike of 2026-10-20 (spike/n2-menu/run_n2_spike.py).
+# Every string is quoted: PyYAML reads unquoted yes/no/true/false as booleans.
+
+ocr_text:
+  readable:
+    type: noul
+    instructions: "Can you read both the name of the service and its dollar price on this OCR text of one menu line?"
+    criteria:
+      "true": "both the service name and the price are legible"
+      "false": "blurred, cut off, or the name or the price cannot be read"
+  safety:
+    type: noul
+    instructions: "Is this OCR text of one menu line about brakes, tires, wheel alignment, steering, or another part that affects driving safety?"
+    criteria:
+      "true": "a driving-safety part"
+      "false": "not a driving-safety part"
+  tool:
+    type: choice
+    instructions: "A car owner at the dealer's service counter holds the menu. Which action fits this OCR text of one menu line?"
+    criteria:
+      decline_addon: "an optional add-on product or chemical treatment the maker's schedule does not require (conditioners, cleanings, additives, nitrogen, protection packages)"
+      check_schedule: "routine maintenance the owner's manual schedules by mileage (oil and filter, filters, rotation, fluid changes, spark plugs, inspection)"
+      check_recall_warranty: "a diagnostic fee or the repair of one specific failed part, which an open recall or the warranty may cover"
+      ask_about_fee: "a fee or surcharge rather than a service (shop supplies, disposal, handling, admin)"
+      owner_decides: "brakes, tires, alignment, steering or another part that affects driving safety"
+
+image:
+  readable:
+    type: noul
+    instructions: "Can you read both the name of the service and its dollar price on this menu line?"
+    criteria:
+      "true": "both the service name and the price are legible"
+      "false": "blurred, cut off, or the name or the price cannot be read"
+  safety:
+    type: noul
+    instructions: "Is this menu line about brakes, tires, wheel alignment, steering, or another part that affects driving safety?"
+    criteria:
+      "true": "a driving-safety part"
+      "false": "not a driving-safety part"
+  tool:
+    type: choice
+    instructions: "A car owner at the dealer's service counter holds the menu. Which action fits this menu line?"
+    criteria:
+      decline_addon: "an optional add-on product or chemical treatment the maker's schedule does not require (conditioners, cleanings, additives, nitrogen, protection packages)"
+      check_schedule: "routine maintenance the owner's manual schedules by mileage (oil and filter, filters, rotation, fluid changes, spark plugs, inspection)"
+      check_recall_warranty: "a diagnostic fee or the repair of one specific failed part, which an open recall or the warranty may cover"
+      ask_about_fee: "a fee or surcharge rather than a service (shop supplies, disposal, handling, admin)"
+      owner_decides: "brakes, tires, alignment, steering or another part that affects driving safety"
