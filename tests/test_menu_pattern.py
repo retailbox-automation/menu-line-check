@@ -87,7 +87,7 @@ def test_question_subset_and_bad_mode():
 
 def test_ocr_state_quotes_the_line_text():
     assert ocr_state("Shop supplies $34.50") == (
-        "OCR text of one line of a car dealer's printed service menu: \"Shop supplies $34.50\""
+        'OCR text of one line of a car dealer\'s printed service menu: "Shop supplies $34.50"'
     )
 
 
