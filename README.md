@@ -18,6 +18,12 @@ card (Keep · Decline · Ask · Your call). On the demo menu the
 line "Replace fuel pump module $1,089.00" goes to the recall lookup, which finds recall campaign 23V858000 for a
 2019 Civic: "Is this covered by recall 23V858000?"
 
+It also reads a real dealer sheet: the redacted sheet of a 2024 RX 350 at 20,000 miles, which prices no line
+(nine bullet services, then Menu Total, Shop Charges, Tax, Fees, TOTAL $801.05). Every line still gets a Decider
+decision, the report adds a recalls card for the car ("Are there open recalls on my VIN?") and, given the sheet
+printed after the owner declined four lines, compares the two totals ($801.05 -> $391.38, $409.67 less) and the
+owner's declines with the agent's verdicts. Live run, line by line: `docs/RX350-SHEET-RUN-2026-10-21.md`.
+
 ## The decision handed to Decider 2B
 
 One decision, repeated for every line of the menu: which tool handles this line. It sits at the start of the
@@ -100,7 +106,8 @@ The Bedrock column waits for a spend approval: `menu-race --allow-bedrock` runs 
 ## What this does not show
 
 - The menus are synthetic and the Textract response in `tests/fixtures/` is hand-made; the NHTSA data is a real,
-  recorded response. No dealer and no car owner has used this.
+  recorded response. One real sheet (11 lines, one visit, OCR by Apple Vision on redacted photos) was run as an
+  example, not as a measure; no dealer has used this.
 - The maintenance table is illustrative, not any maker's schedule. A recall is matched to a line by part words,
   not by VIN, so the agent asks "is this covered by…?" rather than claiming it is.
 - Decider is often unsure: at >= 0.9 it covers only about a fifth of the lines. The per-tool thresholds are a
@@ -130,11 +137,19 @@ Found while building the toolkit:
   the confirm threshold for that question is raised.
 * PyYAML turns unquoted `yes/no/on/off/true/false` into booleans: a choice option called `no` silently becomes `False`. `load_questions` rejects it with a clear message.
 
+Found on the real sheet (2026-10-21):
+
+* **NHTSA's recalls API matches the model name exactly.** For make LEXUS, 2024, model "RX 350" returns 0 campaigns
+  (as HTTP 400 with an ordinary `"Results returned successfully"` body), while the family "RX" returns 4, three of
+  which name the 2024 RX 350 in their summary, although "RX 350" is in NHTSA's own model list for that year. An agent
+  asking naively would tell the owner "no recalls" (or "lookup failed"). The recalls card retries with the family
+  and keeps only the campaigns whose summary names the model, and says it did.
+
 ## How AI was used
 
 The code, tests and documents were written with an AI coding assistant working under our direction. The
 decision design, the thresholds and every claim here were checked against measurements: each number comes from a
-script in this repository run on our own hardware (commands under "Run it"), and the 226 tests run without
+script in this repository run on our own hardware (commands under "Run it"), and the 283 tests run without
 network access.
 
 ## Run it
@@ -168,7 +183,20 @@ menu-check --textract photo.jpg --allow-textract --vehicle "2019 Honda Civic 312
 # Decider's answers (per-tool thresholds vs the previous policy): recorded answers (no server) or live
 menu-race --replay-recorded
 menu-race --decider-url http://127.0.0.1:8099 --out out/race.md
+# the real sheet of a 2024 RX 350 and the sheet printed after the owner's declines; NHTSA live, cached
+# (the make is the NHTSA parameter); prints the lines, the sheet totals, the recalls card and the after block
+menu-check --ocr-json tests/fixtures/lexus_sheet_801_vision.json --after tests/fixtures/lexus_sheet_391_vision.json \
+  --vehicle "2024 Lexus RX 350 20000" --decider-url http://127.0.0.1:8099 --nhtsa-cache out/nhtsa-cache \
+  --json out/report-sheet.json
+# offline: --nhtsa-recorded tests/fixtures/nhtsa_recalls_lexus_rx_2024.json \
+#   --nhtsa-recorded "tests/fixtures/nhtsa_recalls_lexus_rx350_2024_empty.json=LEXUS/RX 350/2024"
 ```
+
+Free OCR on a Mac instead of Textract: `scripts/vision_to_textract.swift` runs Apple Vision on the device and
+writes a Textract-shaped JSON that `--ocr-json` reads (`swiftc -O scripts/vision_to_textract.swift -o
+vision_to_textract && ./vision_to_textract photo.jpg > sheet.json`). Sheets with bullet lines and a totals block
+are read by the same parser: the bullet rows are the lines, Shop Charges and Fees become lines, and lines under a
+"Declined" header are marked.
 
 Nothing calls Bedrock without `--allow-bedrock` (paid; model ids from `N2_PICKER_MODEL` / `N2_WRITER_MODEL`,
 default `us.amazon.nova-lite-v1:0`), and every paid run also stops at a spend cap (`--max-usd`, default $1,
@@ -196,11 +224,11 @@ Layout:
 ```
 src/decider_kit/       client.py  questions.py  policy.py  intervention.py  ledger.py  bench.py
 src/menu_line_check/  models.py  ocr.py  nhtsa.py  schedule.py  tools.py  baseline.py  pipeline.py  llm.py
-                      cli.py  race.py  data/ (illustrative maintenance schedule, 103 labelled race lines)
+                      after.py  cli.py  race.py  data/ (illustrative maintenance schedule, 103 labelled race lines)
 patterns/             README.md  menu_line_tool_selection/  example_grounding/
-scripts/              build_race_lines.py (race lines from the spike output)
+scripts/              build_race_lines.py (race lines from the spike output), vision_to_textract.swift
 tests/                fake-server tests, real Strands actions, real Agent loop with a scripted model
-docs/                 STRANDS-INTERVENTIONS-NOTES.md
+docs/                 STRANDS-INTERVENTIONS-NOTES.md, RX350-SHEET-RUN-2026-10-21.md
 ```
 
 ## Licence
