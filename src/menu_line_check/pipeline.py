@@ -21,6 +21,9 @@ time, default 12); everything after that runs per line, in line order. Per line:
 
 Then ``writer`` (if given) writes an advisor question for every line the owner keeps, asks
 about or decides (not for declines, not-due lines or retakes), and a plain summary.
+
+A :class:`~menu_line_check.spend.SpendCapReached` from the picker or the writer is not caught
+anywhere in here: it surfaces from ``check_menu`` and ends the run.
 """
 
 from __future__ import annotations
@@ -64,6 +67,7 @@ from .models import (
     summary_counts,
 )
 from .nhtsa import NhtsaClient
+from .spend import SpendCapReached
 from .tools import ask_advisor, retake_line, run_tool
 
 logger = logging.getLogger(__name__)
@@ -302,6 +306,8 @@ def _resolve(
     if llm_picker is not None:
         try:
             picked, rationale = llm_picker(line, vehicle)
+        except SpendCapReached:
+            raise  # the spend cap stops the run; it is not a picker failure to fall back from
         except Exception as exc:  # the line falls back to "ask the advisor"; logged and recorded
             logger.warning("LLM picker failed on line %s: %r", line.index, exc)
             picked, rationale = None, f"LLM picker failed: {exc!r}"

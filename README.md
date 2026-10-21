@@ -134,7 +134,7 @@ Found while building the toolkit:
 
 The code, tests and documents were written with an AI coding assistant working under our direction. The
 decision design, the thresholds and every claim here were checked against measurements: each number comes from a
-script in this repository run on our own hardware (commands under "Run it"), and the 203 tests run without
+script in this repository run on our own hardware (commands under "Run it"), and the 226 tests run without
 network access.
 
 ## Run it
@@ -158,6 +158,9 @@ menu-check --ocr-json tests/fixtures/textract_menu.json --vehicle "2019 Honda Ci
 # time, so 12 concurrent lines still took 6.7 s (server_ms grew 1.2 s -> 6.6 s); concurrency only overlaps the
 # network. What shortens a menu is fewer or shorter questions per line (1 yes/no ~100 ms, 3 long ~490 ms).
 menu-check ... --thresholds decline_addon=0.85,check_schedule=0.6 --concurrency 12
+# a photo instead of a saved response: Amazon Textract (paid, $0.0015 a page, refused without --allow-textract);
+# the response is saved as textract-<photo>.json so later runs replay it free with --ocr-json
+menu-check --textract photo.jpg --allow-textract --vehicle "2019 Honda Civic 31200" --json out/report.json
 # questions per line: 2 (safety, tool on the OCR text; readable is the code check "name and price found"),
 # 3 with --image (readable asked on the line crops). --criteria short sends shorter tool criteria with the same
 # meaning (not measured); the default --criteria spike keeps the sentences our numbers come from.
@@ -168,7 +171,9 @@ menu-race --decider-url http://127.0.0.1:8099 --out out/race.md
 ```
 
 Nothing calls Bedrock without `--allow-bedrock` (paid; model ids from `N2_PICKER_MODEL` / `N2_WRITER_MODEL`,
-default `us.amazon.nova-lite-v1:0`). Without it the advisor questions come from templates and low-confidence
+default `us.amazon.nova-lite-v1:0`), and every paid run also stops at a spend cap (`--max-usd`, default $1,
+env `N2_MAX_USD`) that is checked before each call (Bedrock and Textract share it; exit code 4) and prints what
+it spent. Without it the advisor questions come from templates and low-confidence
 lines become "ask the advisor".
 
 On the recorded spike answers (synthetic menus, 2026-10-20) the per-tool policy acts on 90 of 103 lines at 0.89

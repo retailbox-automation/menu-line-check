@@ -8,7 +8,9 @@
   demo; no network.
 
 Anything that calls Bedrock costs money, so both Bedrock classes refuse to be built unless the
-caller passes ``allow_bedrock=True``. boto3 is never imported by this module at import time.
+caller passes ``allow_bedrock=True``, and every Bedrock-backed object carries a
+:class:`~menu_line_check.spend.SpendCap` that refuses the next call once the cap is reached.
+boto3 is never imported by this module at import time.
 """
 
 from __future__ import annotations
@@ -24,6 +26,7 @@ from menu_line_tool_selection import build_safety_gate
 
 from .baseline import keyword_tool
 from .models import LineOutcome, MenuLine, MenuReport, Vehicle
+from .spend import SpendCap
 from .tools import make_picker_tools
 
 DEFAULT_PICKER_MODEL = "us.amazon.nova-lite-v1:0"
@@ -121,6 +124,10 @@ class StrandsPicker:
     Without ``model`` a ``BedrockModel`` is built (model id from ``N2_PICKER_MODEL``, default
     Nova Lite, region us-east-1), and only when ``allow_bedrock=True``.
 
+    ``spend`` is the run's :class:`SpendCap`: checked before each agent run, added to after it.
+    A picker that really uses Bedrock always has one (a default ``SpendCap()`` when none is
+    passed); with a scripted ``model`` it is whatever the caller passes (``None`` = no checks).
+
     ``decider`` enables the safety gate (``build_safety_gate``): a ``decline_addon`` call on a line
     Decider calls a safety item is denied. Pass ``decider=None`` to measure the LLM alone.
     """
@@ -134,6 +141,7 @@ class StrandsPicker:
         model_id: str | None = None,
         region: str = DEFAULT_REGION,
         ledger: Ledger | None = None,
+        spend: SpendCap | None = None,
     ) -> None:
         if model is None:
             if not allow_bedrock:
@@ -147,13 +155,17 @@ class StrandsPicker:
             model = BedrockModel(
                 model_id=self.model_id, region_name=region, temperature=0.0, max_tokens=300
             )
+            spend = spend or SpendCap()
         else:
             self.model_id = model_id or type(model).__name__
         self._model = model
+        self.spend = spend
         self._gate = build_safety_gate(decider, ledger=ledger) if decider is not None else None
         self.last_usage: dict[str, int] = {"inputTokens": 0, "outputTokens": 0}
 
     def __call__(self, line: MenuLine, vehicle: Vehicle | None = None) -> tuple[str | None, str]:
+        if self.spend is not None:
+            self.spend.check(self.model_id)
         picks: list[str] = []
         agent = Agent(
             model=self._model,
@@ -169,6 +181,10 @@ class StrandsPicker:
             "inputTokens": int(usage.get("inputTokens", 0)),
             "outputTokens": int(usage.get("outputTokens", 0)),
         }
+        if self.spend is not None:
+            self.spend.add(
+                self.model_id, self.last_usage["inputTokens"], self.last_usage["outputTokens"]
+            )
         rationale = _text_of(result.message) or f"stop reason: {result.stop_reason}"
         if picks:
             return picks[-1], rationale
@@ -196,10 +212,17 @@ class BedrockWriter:
 
     ``client`` is a boto3 ``bedrock-runtime`` client created by the caller. Model id from
     ``N2_WRITER_MODEL`` (default Nova Lite). Refuses to be built without ``allow_bedrock=True``.
+    Every call is checked against ``spend`` first and counted after; without one passed, a
+    default ``SpendCap()`` is made, so a writer is never uncapped.
     """
 
     def __init__(
-        self, client: Any, *, allow_bedrock: bool = False, model_id: str | None = None
+        self,
+        client: Any,
+        *,
+        allow_bedrock: bool = False,
+        model_id: str | None = None,
+        spend: SpendCap | None = None,
     ) -> None:
         if not allow_bedrock:
             raise BedrockNotAllowed(
@@ -208,9 +231,11 @@ class BedrockWriter:
             )
         self.client = client
         self.model_id = model_id or os.environ.get("N2_WRITER_MODEL", DEFAULT_WRITER_MODEL)
+        self.spend = spend or SpendCap()
         self.usage = {"inputTokens": 0, "outputTokens": 0}
 
     def _converse(self, system: str, facts: dict[str, Any], max_tokens: int) -> str:
+        self.spend.check(self.model_id)
         response = self.client.converse(
             modelId=self.model_id,
             system=[{"text": system}],
@@ -220,6 +245,9 @@ class BedrockWriter:
         usage = response.get("usage") or {}
         for key in self.usage:
             self.usage[key] += int(usage.get(key, 0))
+        self.spend.add(
+            self.model_id, int(usage.get("inputTokens", 0)), int(usage.get("outputTokens", 0))
+        )
         blocks = response["output"]["message"]["content"]
         return "".join(b.get("text", "") for b in blocks).strip()
 

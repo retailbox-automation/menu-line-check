@@ -45,23 +45,16 @@ from menu_line_tool_selection import (
 from .baseline import keyword_tool
 from .models import MenuLine
 from .ocr import parse_line_texts
+from .spend import (  # noqa: F401 - BEDROCK_PRICES_PER_M stays importable from here
+    BEDROCK_PRICES_PER_M,
+    SpendCap,
+    SpendCapReached,
+    bedrock_price,
+)
 
 RACE_LINES_PATH = Path(__file__).parent / "data" / "race_lines.jsonl"
 DEFAULT_URL = "http://127.0.0.1:8099"
 THRESHOLDS = (0.5, 0.7, 0.8, 0.9)
-
-# USD per 1M tokens (input, output), us-east-1 on-demand standard tier, read from the AWS Price List
-# API (service AmazonBedrock, usage types USE1-Nova*-input/output-tokens) on 2026-10-21. A model id
-# that is not listed prints "price not set".
-BEDROCK_PRICES_PER_M: dict[str, tuple[float, float]] = {
-    "us.amazon.nova-micro-v1:0": (0.035, 0.14),
-    "us.amazon.nova-lite-v1:0": (0.06, 0.24),
-    "us.amazon.nova-2-lite-v1:0": (0.33, 2.75),
-}
-
-
-def bedrock_price(model_id: str) -> tuple[float, float] | None:
-    return BEDROCK_PRICES_PER_M.get(model_id)
 
 
 @dataclass(frozen=True)
@@ -200,6 +193,8 @@ def llm_picks(
         started = time.perf_counter()
         try:
             tool, _ = picker(menu_line(line, i), None)
+        except SpendCapReached:
+            raise  # the cap stops the race; it is not a wrong answer on this line
         except Exception as exc:  # scored as wrong and reported on stderr
             print(f"LLM picker failed on {line.id}: {exc!r}", file=sys.stderr)
             tool = None
@@ -391,6 +386,23 @@ def _policy_thresholds(text: str) -> dict[str, float]:
         raise argparse.ArgumentTypeError(str(exc)) from exc
 
 
+def _non_negative_float(text: str) -> float:
+    try:
+        value = float(text)
+    except ValueError:
+        value = -1.0
+    if value < 0:
+        raise argparse.ArgumentTypeError(f"must be a number of dollars, 0 or more, got {text!r}")
+    return value
+
+
+def make_llm_picker(spend: SpendCap) -> Any:
+    """The Bedrock-backed picker for the race, capped by ``spend`` (a seam for tests)."""
+    from .llm import StrandsPicker
+
+    return StrandsPicker(allow_bedrock=True, spend=spend)
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="menu-race", description=__doc__.split("\n\n")[0])
     p.add_argument("--lines", default=str(RACE_LINES_PATH), help="labelled lines, JSONL")
@@ -408,6 +420,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="tool criteria for live Decider calls: spike (measured, default) or short",
     )
     p.add_argument("--allow-bedrock", action="store_true", help="also race the LLM picker (paid)")
+    p.add_argument(
+        "--max-usd",
+        type=_non_negative_float,
+        help="hard cap on Bedrock spend for this run, checked before each call "
+        "(default env N2_MAX_USD or 1.0)",
+    )
     p.add_argument("--limit", type=int, help="only the first N lines")
     p.add_argument("--thresholds", type=_thresholds, default=THRESHOLDS)
     p.add_argument(
@@ -440,17 +458,20 @@ def main(argv: Sequence[str] | None = None) -> int:
         finally:
             client.close()
     contestants.append(("keyword rules", keyword_picks(lines), "$0"))
+    spend: SpendCap | None = None
     if args.allow_bedrock:
-        from .llm import StrandsPicker
-
-        picker = StrandsPicker(allow_bedrock=True)
-        contestants.append(
-            (
-                f"LLM picker ({picker.model_id})",
-                llm_picks(lines, picker),
-                bedrock_price(picker.model_id),
-            )
-        )
+        try:
+            spend = SpendCap(args.max_usd)
+        except ValueError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+        picker = make_llm_picker(spend)
+        try:
+            llm = llm_picks(lines, picker)
+        except SpendCapReached as exc:
+            print(f"error: {exc}\n{spend.summary}", file=sys.stderr)
+            return 4
+        contestants.append((f"LLM picker ({picker.model_id})", llm, bedrock_price(picker.model_id)))
     name, decider, _ = contestants[0]
     policies = policy_table(
         lines,
@@ -474,6 +495,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     text += "\n\n" + POLICY_NOTES
     print(text)
+    if spend is not None:
+        print("\n" + spend.summary)
     if args.out:
         Path(args.out).write_text(text + "\n", encoding="utf-8")
     return 0

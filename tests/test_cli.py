@@ -116,7 +116,7 @@ def test_allow_bedrock_builds_the_bedrock_parts_only_with_the_flag(monkeypatch, 
     monkeypatch.setattr(cli, "make_decider_client", lambda url, timeout=30.0: server.client())
     built = []
 
-    def parts(decider, ledger, region):
+    def parts(decider, ledger, region, spend):
         built.append(region)
         return FakeWriter(), FakePicker()
 
