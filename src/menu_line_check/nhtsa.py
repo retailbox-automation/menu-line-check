@@ -116,6 +116,19 @@ def parse_recalls(body: Any) -> list[Recall]:
     return out
 
 
+def _empty_result(response: httpx.Response) -> bool:
+    """HTTP 400 with an ordinary empty result: ``{"Count": 0, ..., "results": []}``.
+
+    The recalls API answers a make/model/year with no campaigns this way (for "RX 350" and
+    for a made-up model alike, checked live 2026-10-21) instead of 200 with an empty list.
+    """
+    try:
+        body = response.json()
+    except ValueError:
+        return False
+    return isinstance(body, dict) and body.get("Count") == 0 and body.get("results") == []
+
+
 def _slug(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
 
@@ -150,7 +163,8 @@ class NhtsaClient:
 
         A path is keyed by the make, model and year of its first result. A response with no
         results (``Count`` 0) says nothing about what was asked, so it is given as
-        ``(path, make, model, year)``. Anything else asked gets HTTP 404.
+        ``(path, make, model, year)``; it is served with HTTP 400, as the live API sends it.
+        Anything else asked gets HTTP 404.
         """
         if not recordings:
             raise ValueError("from_recorded needs at least one recorded response")
@@ -180,7 +194,9 @@ class NhtsaClient:
             p = request.url.params
             asked = (p.get("make", "").upper(), p.get("model", "").upper(), p.get("modelYear"))
             if asked in served:
-                return httpx.Response(200, json=served[asked])
+                body = served[asked]
+                # the live API sends an empty result with HTTP 400; replay it the same way
+                return httpx.Response(400 if not body.get("results") else 200, json=body)
             return httpx.Response(404, text=f"no recorded response for {p}")
 
         return cls(transport=httpx.MockTransport(handle))
@@ -207,6 +223,8 @@ class NhtsaClient:
             raise NhtsaError("timeout", repr(exc)) from exc
         except httpx.HTTPError as exc:
             raise NhtsaError("transport", repr(exc)) from exc
+        if response.status_code == 400 and _empty_result(response):
+            return response.json()  # how the API says "no campaigns" (live, 2026-10-21)
         if response.status_code >= 400:
             raise NhtsaError("http", f"HTTP {response.status_code}: {response.text[:200]}")
         try:

@@ -94,6 +94,17 @@ def test_errors_raise_a_typed_exception(handler, kind):
     assert exc.value.kind == kind
 
 
+def test_http_400_with_an_empty_result_means_no_campaigns_and_is_cached(tmp_path):
+    empty = {"Count": 0, "Message": "Results returned successfully", "results": []}
+    rec = Recorder(status=400, body=empty)
+    assert client(rec, cache_dir=tmp_path).recalls(CIVIC) == []
+    assert client(rec, cache_dir=tmp_path).recalls(CIVIC) == [] and len(rec.requests) == 1
+    for status, body in ((400, {"Count": 0, "Message": "bad model"}), (500, empty)):
+        with pytest.raises(NhtsaError) as exc:
+            client(Recorder(status=status, body=body)).recalls(CIVIC)
+        assert exc.value.kind == "http"
+
+
 def test_timeout_and_connection_errors_are_typed():
     def slow(request):
         raise httpx.ReadTimeout("slow", request=request)
