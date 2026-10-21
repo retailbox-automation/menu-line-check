@@ -61,6 +61,9 @@ TOOLS: tuple[str, ...] = (
 """The five tools, in the order of the ``tool`` question's options."""
 
 InputMode = Literal["ocr_text", "image"]
+INPUT_MODES: tuple[str, ...] = ("ocr_text", "image")
+CriteriaSet = Literal["spike", "short"]
+CRITERIA_SETS: tuple[str, ...] = ("spike", "short")
 Route = Literal["retake", "owner_decides", "tool", "ask_llm"]
 
 READABLE_YES = 0.5
@@ -88,13 +91,26 @@ SAFETY_DENY_REASON = "this line is a safety item; the owner decides"
 
 
 def load_pattern_questions(
-    mode: InputMode = "ocr_text", names: Iterable[str] | None = None
+    mode: InputMode = "ocr_text",
+    names: Iterable[str] | None = None,
+    *,
+    criteria: CriteriaSet = "spike",
 ) -> dict[str, Question]:
-    """Load the questions in one wording. ``names`` selects a subset, in the given order."""
+    """Load the questions in one wording. ``names`` selects a subset, in the given order.
+
+    ``criteria="spike"`` (default) keeps the ``tool`` criteria sentences the spike measured;
+    ``"short"`` swaps in shorter ones with the same meaning (not measured). Only the ``tool``
+    criteria change; every instruction and the yes/no criteria stay as they are.
+    """
     data = yaml.safe_load(QUESTIONS_PATH.read_text(encoding="utf-8"))
-    if mode not in data:
-        raise ValueError(f"mode must be one of {sorted(data)}, got {mode!r}")
-    questions = parse_questions(data[mode])
+    if mode not in INPUT_MODES:
+        raise ValueError(f"mode must be one of {list(INPUT_MODES)}, got {mode!r}")
+    if criteria not in CRITERIA_SETS:
+        raise ValueError(f"criteria must be one of {list(CRITERIA_SETS)}, got {criteria!r}")
+    raw = dict(data[mode])
+    if criteria == "short":
+        raw["tool"] = {**raw["tool"], "criteria": data["criteria_short"]}
+    questions = parse_questions(raw)
     if names is None:
         return questions
     return {name: questions[name] for name in names}

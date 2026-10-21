@@ -33,6 +33,8 @@ from typing import Any
 from decider_kit import ChoiceAnswer, DeciderClient, DeciderError, DeciderUnavailable, NoulAnswer
 from decider_kit.bench import percentile
 from menu_line_tool_selection import (
+    CRITERIA_SETS,
+    CriteriaSet,
     decide_line,
     load_pattern_questions,
     ocr_state,
@@ -120,9 +122,12 @@ def menu_line(line: RaceLine, index: int) -> MenuLine:
 # --------------------------------------------------------------------------------- contestants
 
 
-def decider_picks(lines: Sequence[RaceLine], client: DeciderClient) -> list[Pick]:
-    """Ask Decider the pattern's three OCR-text questions per line (a down line scores wrong)."""
-    questions = load_pattern_questions("ocr_text")
+def decider_picks(
+    lines: Sequence[RaceLine], client: DeciderClient, criteria: CriteriaSet = "spike"
+) -> list[Pick]:
+    """Ask Decider ``safety`` and ``tool`` on the OCR text, as the pipeline does without images
+    (a line the server cannot answer scores wrong)."""
+    questions = load_pattern_questions("ocr_text", names=["safety", "tool"], criteria=criteria)
     picks = []
     for line in lines:
         try:
@@ -384,6 +389,12 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="use the Decider answers recorded in the lines file instead of a server",
     )
+    p.add_argument(
+        "--criteria",
+        choices=list(CRITERIA_SETS),
+        default="spike",
+        help="tool criteria for live Decider calls: spike (measured, default) or short",
+    )
     p.add_argument("--allow-bedrock", action="store_true", help="also race the LLM picker (paid)")
     p.add_argument("--limit", type=int, help="only the first N lines")
     p.add_argument("--thresholds", type=_thresholds, default=THRESHOLDS)
@@ -409,7 +420,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         client = make_decider_client(args.decider_url)
         try:
             client.health()
-            contestants.append(("Decider 2B", decider_picks(lines, client), "self-hosted"))
+            picks = decider_picks(lines, client, args.criteria)
+            contestants.append(("Decider 2B", picks, "self-hosted"))
         except DeciderError as exc:
             print(f"error: {exc}", file=sys.stderr)
             return 3
@@ -429,7 +441,19 @@ def main(argv: Sequence[str] | None = None) -> int:
             (f"{name}, previous policy (safety OR owner, all >= 0.8)", decider, previous_policy),
         ],
     )
-    text = "\n\n".join([race_table(lines, contestants, args.thresholds), NOTES, policies])
+    asked = (
+        "recorded in the spike (4 questions per request, spike criteria)"
+        if args.replay_recorded
+        else f"safety, tool on the OCR text; criteria: {args.criteria}"
+    )
+    text = "\n\n".join(
+        [
+            f"Decider questions: {asked}",
+            race_table(lines, contestants, args.thresholds),
+            NOTES,
+            policies,
+        ]
+    )
     text += "\n\n" + POLICY_NOTES
     print(text)
     if args.out:

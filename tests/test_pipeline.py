@@ -11,7 +11,8 @@ from menu_line_check.llm import FakePicker, FakeWriter
 from menu_line_check.models import MenuLine, Vehicle
 from menu_line_check.nhtsa import NhtsaClient
 from menu_line_check.ocr import parse_line_texts, parse_textract
-from menu_line_check.pipeline import check_menu
+from menu_line_check.pipeline import check_menu, questions_per_line
+from menu_line_tool_selection import load_pattern_questions
 
 from .conftest import FakeServer
 from .menu_fakes import NHTSA, menu_server, textract_response
@@ -102,11 +103,13 @@ def test_each_route_and_who_decided():
 def test_requests_use_the_ocr_text_wording_and_latency_is_kept():
     report, server = run()
     body = server.requests[0]
-    assert list(body["questions"]) == ["readable", "safety", "tool"]
+    assert all(list(r["questions"]) == ["safety", "tool"] for r in server.requests)
     assert "OCR text of one menu line" in body["questions"]["tool"]["instructions"]
     assert body["state"].endswith('"Oil & filter change, full synthetic ... $89.95"')
     timing = report.outcomes[0].decider_ms
     assert timing.requests == 1 and timing.server_ms == 12.5 and timing.client_ms > 0
+    assert timing.questions == ("safety", "tool")
+    assert report.outcomes[0].p_readable == 1.0  # the code check, not a Decider answer
 
 
 def test_every_line_is_written_to_the_ledger(tmp_path):
@@ -118,7 +121,8 @@ def test_every_line_is_written_to_the_ledger(tmp_path):
     assert fuel["gate"] == "menu-line-check" and fuel["tool"] == "check_recall_warranty"
     assert fuel["action"]["type"] == "tool" and "line 6" in fuel["action"]["reason"]
     assert fuel["confidences"]["tool"] == pytest.approx(0.64)
-    assert set(fuel["answers"]) == {"readable", "safety", "tool", "readable_code"}
+    assert fuel["questions"] == ["safety", "tool"] and set(fuel["answers"]) == {"safety", "tool"}
+    assert "asked safety, tool; readable by code check" in fuel["action"]["reason"]
     assert "not declined automatically" in rows[9]["action"]["reason"]  # nitrogen fill
 
 
@@ -190,12 +194,14 @@ def test_line_images_ask_readable_on_the_image_in_a_second_request():
     report = check_menu([line], CIVIC, server.client())
     first, second = server.requests
     assert "images" not in first and second["images"] == ["bmFtZQ==", "cHJpY2U="]
+    assert list(first["questions"]) == ["safety", "tool"]
     assert list(second["questions"]) == ["readable"]
     assert second["questions"]["readable"]["instructions"].endswith("on this menu line?")
     assert second["state"].startswith("One line of a car dealer's printed service menu. Image 1")
     (outcome,) = report.outcomes
     assert (outcome.route, outcome.verdict, outcome.source) == ("retake", "retake", "decider")
     assert outcome.decider_ms.requests == 2 and outcome.decider_ms.server_ms == 32.5
+    assert outcome.decider_ms.questions == ("safety", "tool", "readable_image")
 
 
 def test_without_images_a_line_missing_its_price_is_retaken_by_code():
@@ -223,3 +229,21 @@ def test_report_to_dict_is_json_ready():
     assert data["counts"]["keep"] == 3 and len(data["outcomes"]) == 12
     assert data["outcomes"][5]["tool_result"]["recall"]["campaign"] == "23V858000"
     assert data["declined_total"] == 307.0
+
+
+def test_questions_per_line():
+    plain = lines()[0]
+    assert questions_per_line(plain) == ("safety", "tool")
+    with_photo = dataclasses.replace(plain, images=("bmFtZQ==", "cHJpY2U="))
+    assert questions_per_line(with_photo) == ("safety", "tool", "readable_image")
+
+
+def test_short_criteria_are_sent_only_when_asked_for():
+    _, spike = run()
+    default_criteria = spike.requests[0]["questions"]["tool"]["criteria"]
+    assert default_criteria == load_pattern_questions("ocr_text")["tool"].criteria
+    _, short = run(criteria="short")
+    sent = short.requests[0]["questions"]["tool"]
+    assert sent["criteria"] == load_pattern_questions("ocr_text", criteria="short")["tool"].criteria
+    assert sent["instructions"] == spike.requests[0]["questions"]["tool"]["instructions"]
+    assert short.requests[0]["questions"]["safety"] == spike.requests[0]["questions"]["safety"]

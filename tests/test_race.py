@@ -68,7 +68,7 @@ def test_decider_and_keyword_on_a_10_line_slice():
     decider = decider_picks(lines, server.client())
     keyword = keyword_picks(lines)
     assert len(server.requests) == 10
-    assert list(server.requests[0]["questions"]) == ["readable", "safety", "tool"]
+    assert list(server.requests[0]["questions"]) == ["safety", "tool"]
     table = race_table(lines, [("Decider 2B", decider, "self-hosted"), ("keyword", keyword, "$0")])
     expected_kw = sum(keyword_tool(ln.text) == ln.tool for ln in lines) / 10
     rows = {r.split("|")[1].strip(): r for r in table.splitlines() if r.startswith("| ")}
@@ -125,7 +125,9 @@ def test_cli_runs_the_race_with_a_fake_decider(monkeypatch, tmp_path, capsys):
     printed = capsys.readouterr().out
     assert "| Decider 2B |" in printed and "| keyword rules |" in printed
     assert "| LLM picker" not in printed  # no LLM row without --allow-bedrock
-    assert out.read_text(encoding="utf-8").startswith("| contestant |")
+    written = out.read_text(encoding="utf-8")
+    assert written.startswith("Decider questions: safety, tool on the OCR text; criteria: spike")
+    assert "\n| contestant |" in written
 
 
 def test_cli_replays_recorded_answers_without_any_server(monkeypatch, capsys):
@@ -200,3 +202,18 @@ def test_cli_prints_the_policy_table_for_live_and_recorded_decider(monkeypatch, 
     strict = capsys.readouterr().out
     acted = policy_cells(strict, "Decider 2B (recorded), per-tool")[2]
     assert int(acted.split("/")[0]) < 90
+
+
+def test_race_criteria_switch(monkeypatch, capsys):
+    lines = slice10()
+    server = truthful_server(lines, "none")
+    monkeypatch.setattr(race, "make_decider_client", lambda url: server.client())
+    assert race.main(["--limit", "2", "--criteria", "short"]) == 0
+    sent = server.requests[0]["questions"]["tool"]["criteria"]
+    assert sent["owner_decides"] != SPIKE_OWNER
+    assert race.main(["--limit", "2"]) == 0
+    assert server.requests[-1]["questions"]["tool"]["criteria"]["owner_decides"] == SPIKE_OWNER
+    assert "criteria: short" in capsys.readouterr().out
+
+
+SPIKE_OWNER = "brakes, tires, alignment, steering or another part that affects driving safety"

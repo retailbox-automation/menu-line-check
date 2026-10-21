@@ -51,3 +51,14 @@ image:
       check_recall_warranty: "a diagnostic fee or the repair of one specific failed part, which an open recall or the warranty may cover"
       ask_about_fee: "a fee or surcharge rather than a service (shop supplies, disposal, handling, admin)"
       owner_decides: "brakes, tires, alignment, steering or another part that affects driving safety"
+
+# Shorter `tool` criteria with the same meaning, for fewer tokens per request. NOT MEASURED: the
+# accuracy figures in README.md come from the spike sentences above, which stay the default.
+# Select with load_pattern_questions(..., criteria="short") / --criteria short; measure with
+# menu-race before relying on them.
+criteria_short:
+  decline_addon: "an optional add-on or treatment the schedule does not require (conditioners, cleanings, additives, nitrogen, protection packages)"
+  check_schedule: "routine maintenance scheduled by mileage (oil and filter, filters, rotation, fluid changes, spark plugs, inspection)"
+  check_recall_warranty: "a diagnostic fee or repair of one failed part that a recall or the warranty may cover"
+  ask_about_fee: "a fee or surcharge, not a service (shop supplies, disposal, handling, admin)"
+  owner_decides: "brakes, tires, alignment, steering or other driving-safety parts"

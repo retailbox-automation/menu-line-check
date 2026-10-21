@@ -41,6 +41,9 @@ def test_cli_prints_the_table_and_the_summary(fake_decider, capsys, tmp_path):
     assert out.count("Keep 3 · Decline 3 · Ask 5 · Your call 1") == 1
     assert "act >= decline_addon 0.8, check_schedule 0.5" in out
     assert "(up to 12 at a time)" in out
+    assert "questions per line: 2 (safety, tool; readable by code check)" in out
+    assert "tool criteria: spike" in out
+    assert all(list(r["questions"]) == ["safety", "tool"] for r in fake_decider.requests)
     assert re.search(r"^12 lines decided in \d+ ms$", out, re.MULTILINE)
     assert report_path.exists() and "decider_wall_ms" in report_path.read_text()
     assert "Is this covered by recall 23V858000?" in out
@@ -88,6 +91,9 @@ def test_cli_with_a_photo_asks_readable_on_the_line_crops(fake_decider, tmp_path
     assert cli.main([*OFFLINE, "--image", str(photo)]) == 0
     with_images = [r for r in fake_decider.requests if "images" in r]
     assert len(fake_decider.requests) == 24 and len(with_images) == 12
+    assert "questions per line: 3 (safety, tool; readable on the line image)" in (
+        capsys.readouterr().out
+    )
     assert all(len(r["images"]) == 2 for r in with_images)
 
 
@@ -128,3 +134,14 @@ def test_cli_concurrency_option(fake_decider, capsys):
     for bad in ("0", "-2", "many"):
         with pytest.raises(SystemExit):
             cli.main([*OFFLINE, "--concurrency", bad])
+
+
+def test_cli_criteria_switch(fake_decider, capsys):
+    assert cli.main([*OFFLINE, "--criteria", "short"]) == 0
+    assert "tool criteria: short" in capsys.readouterr().out
+    sent = fake_decider.requests[0]["questions"]["tool"]["criteria"]
+    assert (
+        sent["owner_decides"] == "brakes, tires, alignment, steering or other driving-safety parts"
+    )
+    with pytest.raises(SystemExit):
+        cli.main([*OFFLINE, "--criteria", "long"])

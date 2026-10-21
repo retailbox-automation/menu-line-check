@@ -80,6 +80,38 @@ def test_both_wordings_load_with_the_spike_tested_text():
     )
 
 
+SPIKE_CRITERIA = {
+    "decline_addon": "an optional add-on product or chemical treatment the maker's schedule "
+    "does not require (conditioners, cleanings, additives, nitrogen, protection packages)",
+    "check_schedule": "routine maintenance the owner's manual schedules by mileage "
+    "(oil and filter, filters, rotation, fluid changes, spark plugs, inspection)",
+    "check_recall_warranty": "a diagnostic fee or the repair of one specific failed part, "
+    "which an open recall or the warranty may cover",
+    "ask_about_fee": "a fee or surcharge rather than a service "
+    "(shop supplies, disposal, handling, admin)",
+    "owner_decides": "brakes, tires, alignment, steering or another part that affects "
+    "driving safety",
+}
+
+
+def test_default_tool_criteria_are_the_spike_sentences_word_for_word():
+    for mode in ("ocr_text", "image"):
+        assert load_pattern_questions(mode)["tool"].criteria == SPIKE_CRITERIA
+        assert load_pattern_questions(mode, criteria="spike")["tool"].criteria == SPIKE_CRITERIA
+
+
+def test_short_criteria_keep_options_and_change_only_the_criteria():
+    for mode in ("ocr_text", "image"):
+        spike, short = load_pattern_questions(mode), load_pattern_questions(mode, criteria="short")
+        assert list(short["tool"].criteria) == list(TOOLS)
+        assert short["tool"].instructions == spike["tool"].instructions
+        assert short["safety"] == spike["safety"] and short["readable"] == spike["readable"]
+        for option in TOOLS:
+            assert len(short["tool"].criteria[option]) < len(spike["tool"].criteria[option])
+    with pytest.raises(ValueError, match="criteria"):
+        load_pattern_questions(criteria="tiny")
+
+
 def test_question_subset_and_bad_mode():
     assert list(load_pattern_questions("image", names=["readable"])) == ["readable"]
     with pytest.raises(ValueError, match="mode"):

@@ -5,11 +5,13 @@ installed (``pip install -e .``).
 """
 
 from .handler import (
+    CRITERIA_SETS,
     DEFAULT_THRESHOLDS,
     QUESTIONS_PATH,
     SAFETY_DENY_REASON,
     SAFETY_YES,
     TOOLS,
+    CriteriaSet,
     DeclineSafetyGate,
     LineDecision,
     build_safety_gate,
@@ -22,6 +24,8 @@ from .handler import (
 )
 
 __all__ = [
+    "CRITERIA_SETS",
+    "CriteriaSet",
     "DEFAULT_THRESHOLDS",
     "QUESTIONS_PATH",
     "SAFETY_DENY_REASON",

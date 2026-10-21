@@ -3,11 +3,11 @@
 Decider is asked about all lines first, concurrently (at most ``concurrency`` requests at a
 time, default 12); everything after that runs per line, in line order. Per line:
 
-1. One Decider request with the three pattern questions in the OCR-text wording. If the line
-   has images, a second request asks ``readable`` in the image wording on those images.
+1. One Decider request with two questions, ``safety`` and ``tool``, in the OCR-text wording.
    Without images, readability is the code check "OCR found a name and a price" (the spike
-   measured that check above Decider's OCR-text ``readable`` answer); the OCR-text answer is
-   still asked and written to the ledger.
+   measured that check above Decider's OCR-text ``readable`` answer), so ``readable`` is not
+   asked: fewer questions is what makes a line faster on a server that answers one request at
+   a time. If the line has images, a second request asks ``readable`` in the image wording.
 2. ``decide_line`` routes the line with per-tool act thresholds: retake / owner_decides / tool /
    ask_llm. A decline on a line Decider flags as a safety item is never taken here.
 3. ``ask_llm`` goes to ``llm_picker(line, vehicle) -> (tool, rationale)``. With no picker, or
@@ -45,6 +45,7 @@ from decider_kit import (
 from menu_line_tool_selection import (
     SAFETY_YES,
     TOOLS,
+    CriteriaSet,
     LineDecision,
     decide_line,
     image_state,
@@ -105,6 +106,15 @@ class _Asked:
     error: DeciderUnavailable | DeciderRequestError | None = None
 
 
+TEXT_QUESTIONS: tuple[str, ...] = ("safety", "tool")
+"""Asked on the OCR text of every line. ``readable`` is asked only on line images."""
+
+
+def questions_per_line(line: MenuLine) -> tuple[str, ...]:
+    """The Decider questions asked for this line (``readable_image`` = readable on its images)."""
+    return (*TEXT_QUESTIONS, "readable_image") if line.images else TEXT_QUESTIONS
+
+
 async def _aask_line(
     line: MenuLine,
     decider: DeciderClient,
@@ -132,17 +142,17 @@ async def _aask_line(
             requests, source = 2, "decider"
         else:
             readable = NoulAnswer(1.0 if line.has_name_and_price else 0.0)
-            answers["readable_code"] = readable
             source = "code"
     except (DeciderUnavailable, DeciderRequestError) as exc:
         return _Asked(error=exc)
-    return _Asked(answers, readable, source, DeciderTiming(client_ms, server_ms, requests))
+    timing = DeciderTiming(client_ms, server_ms, requests, questions_per_line(line))
+    return _Asked(answers, readable, source, timing)
 
 
 async def _aask_all(
-    lines: list[MenuLine], decider: DeciderClient, concurrency: int
+    lines: list[MenuLine], decider: DeciderClient, concurrency: int, criteria: CriteriaSet
 ) -> list[_Asked]:
-    text_questions = load_pattern_questions("ocr_text")
+    text_questions = load_pattern_questions("ocr_text", names=TEXT_QUESTIONS, criteria=criteria)
     image_questions = load_pattern_questions("image", names=["readable"])
     slots = asyncio.Semaphore(concurrency)
 
@@ -164,7 +174,10 @@ def _run(coro: Coroutine[Any, Any, list[_Asked]]) -> list[_Asked]:
 
 
 def ask_decider_for_all(
-    lines: list[MenuLine], decider: DeciderClient, concurrency: int = DEFAULT_CONCURRENCY
+    lines: list[MenuLine],
+    decider: DeciderClient,
+    concurrency: int = DEFAULT_CONCURRENCY,
+    criteria: CriteriaSet = "spike",
 ) -> tuple[list[_Asked], float]:
     """Ask Decider about every line, at most ``concurrency`` at a time.
 
@@ -174,7 +187,7 @@ def ask_decider_for_all(
     if concurrency < 1:
         raise ValueError(f"concurrency must be at least 1, got {concurrency}")
     started = time.perf_counter()
-    asked = _run(_aask_all(lines, decider, concurrency))
+    asked = _run(_aask_all(lines, decider, concurrency, criteria))
     return asked, (time.perf_counter() - started) * 1000.0
 
 
@@ -233,8 +246,10 @@ def _finish_line(
             answers=answers,
             action=LineAction(
                 outcome.route,
-                f"line {line.index}: {decision.reason}; tool={outcome.tool}; "
-                f"source={outcome.source}; verdict={outcome.verdict}",
+                f"line {line.index}: asked {', '.join(timing.questions)}; readable by "
+                f"{'code check' if asked.readable_source == 'code' else 'line image'}; "
+                f"{decision.reason}; tool={outcome.tool}; source={outcome.source}; "
+                f"verdict={outcome.verdict}",
             ),
             routes={"line": outcome.route},
             tool=outcome.tool,
@@ -330,17 +345,19 @@ def check_menu(
     nhtsa: NhtsaClient | None = None,
     ledger: Ledger | None = None,
     concurrency: int = DEFAULT_CONCURRENCY,
+    criteria: CriteriaSet = "spike",
 ) -> MenuReport:
     """Check every line of one menu for one vehicle. Lines are checked one after another.
 
     ``thresholds`` overrides some per-tool act thresholds (defaults in the pattern);
     ``act_threshold`` sets one threshold for every tool instead. Decider is asked about all
     lines first, ``concurrency`` at a time; then each line is routed, its tool run and its
-    ledger row written, in line order.
+    ledger row written, in line order. ``criteria`` picks the ``tool`` criteria sentences:
+    ``"spike"`` (the measured ones, default) or ``"short"`` (same meaning, not measured).
     """
     limits = resolve_thresholds(thresholds, act_threshold)
     lines = list(lines)
-    asked, wall_ms = ask_decider_for_all(lines, decider, concurrency)
+    asked, wall_ms = ask_decider_for_all(lines, decider, concurrency, criteria)
     outcomes = [
         _finish_line(line, result, vehicle, limits, llm_picker, nhtsa, ledger)
         for line, result in zip(lines, asked, strict=True)

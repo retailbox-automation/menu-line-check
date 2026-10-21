@@ -24,13 +24,13 @@ from pathlib import Path
 from typing import Any
 
 from decider_kit import DeciderClient, DeciderError, Ledger
-from menu_line_tool_selection import parse_thresholds, resolve_thresholds
+from menu_line_tool_selection import CRITERIA_SETS, parse_thresholds, resolve_thresholds
 
 from .llm import DEFAULT_REGION, FakeWriter
 from .models import LineOutcome, MenuLine, MenuReport, Vehicle
 from .nhtsa import NhtsaClient
 from .ocr import crop_line, parse_textract
-from .pipeline import DEFAULT_CONCURRENCY, check_menu
+from .pipeline import DEFAULT_CONCURRENCY, check_menu, questions_per_line
 
 DEFAULT_URL = "http://127.0.0.1:8099"
 NAME_WIDTH = 36
@@ -60,6 +60,16 @@ def attach_crops(lines: list[MenuLine], image_bytes: bytes) -> list[MenuLine]:
         images = crop_line(image_bytes, line, mode) if line.bbox else ()
         out.append(dataclasses.replace(line, images=images))
     return out
+
+
+def describe_questions(lines: list[MenuLine]) -> str:
+    """``2 (safety, tool; readable by code check)`` or ``3 (...; readable on the line image)``."""
+    counts = {len(questions_per_line(line)) for line in lines}
+    if counts == {3}:
+        return "3 (safety, tool; readable on the line image)"
+    if counts == {2} or not counts:
+        return "2 (safety, tool; readable by code check)"
+    return "2 or 3 (safety, tool; readable on the line image where there is one)"
 
 
 def _cut(text: str, width: int) -> str:
@@ -115,6 +125,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="per-tool act thresholds over the defaults, e.g. decline_addon=0.8,check_schedule=0.5",
     )
     limits.add_argument("--act-threshold", type=float, help="one act threshold for every tool")
+    p.add_argument(
+        "--criteria",
+        choices=list(CRITERIA_SETS),
+        default="spike",
+        help="tool criteria sentences: spike (measured, default) or short (same meaning, "
+        "not measured)",
+    )
     p.add_argument(
         "--concurrency",
         type=_positive_int,
@@ -200,16 +217,22 @@ def main(argv: Sequence[str] | None = None) -> int:
             nhtsa=nhtsa,
             ledger=ledger,
             concurrency=args.concurrency,
+            criteria=args.criteria,
         )
     finally:
         decider.close()
 
     limits = resolve_thresholds(args.thresholds, args.act_threshold)
     shown = ", ".join(f"{k} {v:g}" for k, v in limits.items())
-    header = (
-        f"Menu Line Check \u00b7 {args.vehicle.label} \u00b7 {len(lines)} lines \u00b7 "
-        f"Decider {args.decider_url} (up to {args.concurrency} at a time) \u00b7 act >= {shown}"
-        + ("" if args.allow_bedrock else " \u00b7 offline writer, no LLM picker")
+    header = "\n".join(
+        [
+            f"Menu Line Check \u00b7 {args.vehicle.label} \u00b7 {len(lines)} lines"
+            + ("" if args.allow_bedrock else " \u00b7 offline writer, no LLM picker"),
+            f"Decider {args.decider_url} (up to {args.concurrency} at a time) \u00b7 "
+            f"questions per line: {describe_questions(lines)} \u00b7 tool criteria: "
+            f"{args.criteria}",
+            f"act >= {shown}",
+        ]
     )
     print(render(report, header))
     if args.json_out:

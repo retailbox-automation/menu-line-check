@@ -129,6 +129,8 @@ class DeciderTiming:
     server_ms: float | None
     """Sum of server-reported ``latency_ms``; None if the server did not report it."""
     requests: int
+    questions: tuple[str, ...] = ()
+    """The Decider questions asked for this line (``readable_image`` = readable on its images)."""
 
 
 @dataclass(frozen=True)
