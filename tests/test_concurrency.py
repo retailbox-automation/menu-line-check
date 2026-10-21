@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import gc
 import json
 
 import httpx
@@ -64,7 +65,10 @@ def run(fake: AsyncDecider, **kwargs):
 
 
 def test_answers_arriving_out_of_order_keep_line_order_and_ledger_order(tmp_path):
-    fake = AsyncDecider(delay=lambda pos: 0.003 * (12 - pos))  # the last line answers first
+    # The last line answers first. Gaps of 10 ms and a collection first: a garbage-collector
+    # pause while the requests are being sent (13 ms measured) must not reorder the answers.
+    gc.collect()
+    fake = AsyncDecider(delay=lambda pos: 0.01 * (12 - pos))
     report = run(fake, ledger=Ledger(tmp_path / "l.jsonl"))
     assert fake.completed[0] == FRAGMENTS[-1] and fake.completed != FRAGMENTS  # really reordered
     assert [o.line.index for o in report.outcomes] == list(range(1, 13))
