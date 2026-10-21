@@ -150,11 +150,12 @@ The picker columns come from `menu-race --allow-bedrock` on 2026-10-21 (Nova Lit
 - We did not call Amazon Textract: our OCR is Apple Vision on the device, on redacted photos.
 - Decider is often unsure: at >= 0.9 it covers only about a fifth of the lines. The per-tool thresholds are a
   measured trade-off, not a free win.
-- Decider and the agent code run on our own Mac, outside AWS; only Amazon Bedrock (us-east-1) runs on AWS. The
-  account's GPU quotas for the official SageMaker deployment (ml.g6.xlarge) were zero during the hackathon. Asked
-  on the hackathon forum about hosting on EC2, the organiser answered: "The only requirement is Amazon Bedrock
-  and Strands Decider 2B. The rest is up to you." We did not ask about hosting outside AWS. The reference
-  Decider server answers one request at a time.
+- Decider runs on our own hardware (a Mac mini), not on AWS: the account's GPU quotas for the official SageMaker
+  deployment (ml.g6.xlarge) were zero during the hackathon. The agent runs on Amazon EC2 (a t4g.small in us-east-1,
+  next to Amazon Bedrock, with an IAM role that may only call Nova) and reaches Decider through a reverse SSH tunnel;
+  on the real sheet that run gave the same verdicts as on the Mac (4,848 ms for 11 lines from EC2, 4,012 ms on the
+  Mac). Most measurements here were taken with the agent on the Mac. The reference Decider server answers one
+  request at a time.
 - Decider 2B is labelled experimental by its authors, and its context window is 4,096 tokens.
 
 ## Platform findings
