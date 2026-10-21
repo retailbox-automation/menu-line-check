@@ -52,10 +52,10 @@ image:
       ask_about_fee: "a fee or surcharge rather than a service (shop supplies, disposal, handling, admin)"
       owner_decides: "brakes, tires, alignment, steering or another part that affects driving safety"
 
-# Shorter `tool` criteria with the same meaning, for fewer tokens per request. NOT MEASURED: the
-# accuracy figures in README.md come from the spike sentences above, which stay the default.
-# Select with load_pattern_questions(..., criteria="short") / --criteria short; measure with
-# menu-race before relying on them.
+# Shorter `tool` criteria with the same meaning, for fewer tokens per request. Measured 2026-10-21
+# (menu-race --criteria short, live): accuracy 0.87, the policy acts on 79/103 at 0.86, p50 348 ms
+# against 369 ms. The spike sentences above stay the default (they act on 90/103 at 0.89).
+# Select with load_pattern_questions(..., criteria="short") / --criteria short.
 criteria_short:
   decline_addon: "an optional add-on or treatment the schedule does not require (conditioners, cleanings, additives, nitrogen, protection packages)"
   check_schedule: "routine maintenance scheduled by mileage (oil and filter, filters, rotation, fluid changes, spark plugs, inspection)"

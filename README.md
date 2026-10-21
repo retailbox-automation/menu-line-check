@@ -18,7 +18,8 @@ came to $391.38. The maker's schedule for this car lists oil and filter, cabin a
 inspections at 20,000 miles. With the Nova picker on Amazon Bedrock taking the three lines Decider was unsure about,
 the agent said keep 3, decline 3, ask 4 (including the two charges) and your call 1. It agreed with 3 of the
 owner's 4 declines, asked about the 4th (a cabin filter sold with a sanitizer: it asked for the filter without the
-sanitizer), and declined nothing the owner kept. It also printed a recalls card ("Are there open recalls on my VIN?") and the two totals
+sanitizer), and declined nothing the owner kept. Without Bedrock (Decider alone) it said decline on 1 of the 4 (the
+conditioner) and ask on the other 3, and again declined nothing the owner kept. It also printed a recalls card ("Are there open recalls on my VIN?") and the two totals
 ($801.05 -> $391.38, $409.67 less). Line by line, free and paid runs: `docs/REAL-SHEET-RUN-2026-10-21.md`.
 
 How sure Decider must be depends on what a wrong action costs: a decline needs 0.8, a lookup or a question 0.5,
@@ -29,7 +30,7 @@ code has drafted, and may add one sentence to the summary.
 
 The accuracy measure is not that one sheet but 103 labelled lines on 10 synthetic menus (see Measurements). On the
 synthetic demo menu, "Replace fuel pump module $1,089.00" goes to the recall lookup, which finds campaign 23V858000
-for a 2019 Civic: "Is this covered by recall 23V858000?"
+for the demo's 2019 compact car: "Is this covered by recall 23V858000?"
 
 ## The decision handed to Decider 2B
 
@@ -61,7 +62,8 @@ owner. We know how well it does from 103 labelled menu lines (see Measurements).
    API, or a question for the advisor.
 5. Amazon Bedrock (Nova) writes the advisor question for each flagged line and may add one sentence to the summary;
    every decision goes to a JSONL ledger. The writer only rephrases a question code has drafted, and code rejects
-   any rephrasing that adds a topic, a make or model name, or a number; the card and the summary's numbers are
+   any rephrasing that mentions a recall the facts do not name, names the make or model, adds a number, is not a
+   question or is too long; the card and the summary's numbers are
    composed in code.
 
 The safety gate is `decider_kit`'s generic Strands intervention:
@@ -79,8 +81,9 @@ DeciderGate (InterventionHandler.before_tool_call)
 ledger.jsonl  (one line per decision: answers, confidences, action, latency, state hash)
 ```
 
-The model classifies, plain code decides. If the Decider server is unreachable the gate fails closed by default
-(`Confirm` at `before_tool_call`; the agent pauses for a human), and the ledger records why.
+The model classifies, plain code decides. If the Decider server is unreachable, the generic `DeciderGate` fails
+closed by default (`Confirm` at `before_tool_call`; the agent pauses for a human); the menu agent's safety gate
+denies the decline instead ("the safety check is unavailable; the owner decides"). The ledger records why.
 
 ## The reusable decision pattern
 
@@ -88,17 +91,25 @@ The model classifies, plain code decides. If the Decider server is unreachable t
 see `patterns/README.md`.
 `patterns/example_grounding/` is only a labelled example reproducing the official weather example's two yes/no questions.
 
-Using a pattern in another agent is meant to be one line:
+Using the pattern's safety gate in another agent is one line:
 
 ```python
 from strands import Agent
-agent = Agent(tools=[...], interventions=[build_gate(DeciderClient("http://decider-host:8099"))])
+from decider_kit import DeciderClient
+from menu_line_tool_selection import build_safety_gate
+agent = Agent(tools=[...], interventions=[build_safety_gate(DeciderClient("http://decider-host:8099"))])
 ```
+
+The gate checks calls to the guarded tools (`decline_addon` by default); they must take the line as a
+`line_text: str` argument, which is what the gate asks Decider about.
 
 ## Measurements
 
-103 labelled lines from 10 synthetic menus (3 fonts, clean / phone-photo / unreadable), live against
-Decider 2B on our Mac mini (MPS, `--vision` server), 2026-10-20/21; `menu-race` reproduces every number.
+103 readable labelled lines from 10 synthetic menus (3 fonts; 26 clean renders and 77 degraded to look like a
+phone photo; the 17 unreadable strips are left out), live against Decider 2B on our Mac mini (MPS, `--vision`
+server), 2026-10-20/21. `menu-race --replay-recorded` reproduces the accuracy and policy rows from the recorded
+answers; the 369 / 375 ms latency needs `menu-race --decider-url` against a live server (the replay prints the
+spike's 633 / 689 ms), and the Nova column needs `--allow-bedrock` (paid, and a general model's answers can vary).
 
 | Metric | Decider 2B | Keyword rules | LLM picker (Bedrock Nova Lite) |
 |---|---|---|---|
@@ -112,12 +123,13 @@ Decider 2B on our Mac mini (MPS, `--vision` server), 2026-10-20/21; `menu-race` 
 | Cost per 1,000 lines | self-hosted, no per-call price | $0 | $0.16 |
 
 Nova Micro as the picker, same 103 lines (2026-10-21): accuracy 0.63, safety lines missed 8/20, p50 / p90
-1,327 / 3,151 ms, $0.14 per 1,000 lines.
+1,327 / 3,151 ms, $0.14 per 1,000 lines (one of the 103 calls hit the 300-token limit and counts as wrong).
 
 Low confidence is handled by routing, not by a single cut-off: a decline needs 0.8 and a "no" on safety, lookups and
 questions need 0.5, and everything below goes to the LLM picker behind the safety gate. A single threshold of 0.8
-with "safety yes -> owner" decided only 76/103 lines at 0.76 and sent 10 ordinary lines to the owner, because the
-safety question says yes to every line with the word *tire*.
+with "safety yes -> owner" decided only 76/103 lines at 0.76 and sent 10 ordinary lines to the owner: nine tire
+lines (nitrogen fill, rotation), because the safety question says yes to every line with the word *tire*, and one
+multi-point inspection at 0.53.
 The picker columns come from `menu-race --allow-bedrock` on 2026-10-21 (Nova Lite and Nova Micro, us-east-1).
 
 ## What this does not show
@@ -138,8 +150,11 @@ The picker columns come from `menu-race --allow-bedrock` on 2026-10-21 (Nova Lit
 - We did not call Amazon Textract: our OCR is Apple Vision on the device, on redacted photos.
 - Decider is often unsure: at >= 0.9 it covers only about a fifth of the lines. The per-tool thresholds are a
   measured trade-off, not a free win.
-- Decider runs on our own Mac, outside AWS: the account's GPU quotas for the official SageMaker deployment
-  (ml.g6.xlarge) were zero during the hackathon. The reference server answers one request at a time.
+- Decider and the agent code run on our own Mac, outside AWS; only Amazon Bedrock (us-east-1) runs on AWS. The
+  account's GPU quotas for the official SageMaker deployment (ml.g6.xlarge) were zero during the hackathon. Asked
+  on the hackathon forum about hosting on EC2, the organiser answered: "The only requirement is Amazon Bedrock
+  and Strands Decider 2B. The rest is up to you." We did not ask about hosting outside AWS. The reference
+  Decider server answers one request at a time.
 - Decider 2B is labelled experimental by its authors, and its context window is 4,096 tokens.
 
 ## Platform findings
@@ -175,7 +190,7 @@ Found on the real sheet (2026-10-21):
   the maker's schedule lists there. Now only the maker's schedule for the car can produce a decline; a generic
   table only keeps or asks.
 * **A model writing for the owner adds topics and numbers.** In our first paid run Nova asked whether an oil change
-  "corresponds to any recall campaign", named the make, and wrote that the menu totals 80.28 USD (the sum of the
+  would "correspond to any recall campaign", named the make, and wrote that the menu totals 80.28 USD (the sum of the
   only two priced lines) instead of the sheet's $801.05. Now code drafts every question and every number, the
   model only rephrases, and code rejects a rephrasing that mentions a recall without a campaign number, names the
   make or model, adds a number, is not a question or is too long (the draft is used, and the reason recorded).
@@ -183,9 +198,10 @@ Found on the real sheet (2026-10-21):
 ## How AI was used
 
 The code, tests and documents were written with an AI coding assistant working under our direction. The
-decision design, the thresholds and every claim here were checked against measurements: each number comes from a
-script in this repository run on our own hardware (commands under "Run it"), and the 319 tests run without
-network access.
+decision design, the thresholds and every claim here were checked against measurements: each measured number
+comes from a script we ran (commands under "Run it"; the 19.10 platform figures from our spike scripts, not in
+this repository); the Nova column was measured on Amazon Bedrock, and the public latency figures, AWS prices and
+the sheet totals are labelled as such. The 321 tests run without network access.
 
 ## Run it
 
@@ -231,7 +247,7 @@ menu-check ... --thresholds decline_addon=0.85,check_schedule=0.6 --concurrency 
 menu-check --textract photo.jpg --allow-textract --vehicle "2019 Honda Civic 31200" --json out/report.json
 # questions per line: 2 (safety, tool on the OCR text; readable is the code check "name and price found"),
 # 3 with --image (readable asked on the line crops). --criteria short sends shorter tool criteria with the same
-# meaning (not measured); the default --criteria spike keeps the sentences our numbers come from.
+# meaning (measured 2026-10-21: accuracy 0.87, the policy acts on 79/103 at 0.86, p50 348 ms against 369 ms); the default --criteria spike keeps the sentences the table's numbers come from.
 ```
 
 Free OCR on a Mac instead of Textract: `scripts/vision_to_textract.swift` runs Apple Vision on the device and
@@ -267,7 +283,7 @@ Layout:
 ```
 src/decider_kit/       client.py  questions.py  policy.py  intervention.py  ledger.py  bench.py
 src/menu_line_check/  models.py  ocr.py  nhtsa.py  schedule.py  tools.py  baseline.py  pipeline.py  llm.py
-                      after.py  cli.py  race.py  data/ (maker schedule for one car, illustrative table for
+                      writing.py  spend.py  after.py  cli.py  race.py  data/ (maker schedule for one car, illustrative table for
                       the others, 103 labelled race lines)
 patterns/             README.md  menu_line_tool_selection/  example_grounding/
 scripts/              build_race_lines.py (race lines from the spike output), vision_to_textract.swift

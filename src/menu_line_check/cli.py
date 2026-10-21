@@ -221,8 +221,8 @@ def build_parser() -> argparse.ArgumentParser:
         "--criteria",
         choices=list(CRITERIA_SETS),
         default="spike",
-        help="tool criteria sentences: spike (measured, default) or short (same meaning, "
-        "not measured)",
+        help="tool criteria sentences: spike (default; policy acts on 90/103 at 0.89) or short "
+        "(same meaning; measured 2026-10-21: 79/103 at 0.86, p50 348 ms against 369 ms)",
     )
     p.add_argument(
         "--concurrency",

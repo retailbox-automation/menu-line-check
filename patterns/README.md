@@ -12,7 +12,8 @@ Each pattern lives here as:
 ```
 patterns/<name>/
   questions.yaml   typed questions (noul / choice / score) with option sets
-  handler.py       build_gate(...) -> DeciderGate, plus the decide(answers) policy
+  handler.py       a builder returning a DeciderGate (build_gate in example_grounding,
+                   build_safety_gate in menu_line_tool_selection), plus the decide(answers) policy
   README.md        what it decides, how to drop it into another agent, measured thresholds
 ```
 

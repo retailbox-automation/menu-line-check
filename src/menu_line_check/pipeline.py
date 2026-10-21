@@ -97,7 +97,8 @@ class LineAction:
 
 
 DEFAULT_CONCURRENCY = 12
-"""Lines asked at the same time. The Decider server on the mini has 24 slots."""
+"""Lines asked at the same time. Our reference Decider server answers one request at a time, so
+this only overlaps the network."""
 
 
 @dataclass(frozen=True)
@@ -378,7 +379,7 @@ def check_menu(
     ``act_threshold`` sets one threshold for every tool instead. Decider is asked about all
     lines first, ``concurrency`` at a time; then each line is routed, its tool run and its
     ledger row written, in line order. ``criteria`` picks the ``tool`` criteria sentences:
-    ``"spike"`` (the measured ones, default) or ``"short"`` (same meaning, not measured).
+    ``"spike"`` (default) or ``"short"`` (same meaning; measured 2026-10-21, acts on fewer lines).
     ``totals`` is the sheet's own totals block (``parse_sheet``), kept on the report and used
     by the summary. ``after_sheet`` (a ``parse_sheet`` result) is the sheet printed after the
     owner declined lines: the report's ``after`` block compares the two.

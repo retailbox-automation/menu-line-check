@@ -75,8 +75,9 @@ fewer and shorter questions are what makes a menu faster.
 
 The `tool` criteria sentences above are the ones the spike measured and stay the default
 (`criteria="spike"`). `load_pattern_questions(..., criteria="short")` swaps in shorter sentences
-with the same meaning (in `questions.yaml` under `criteria_short`); they are not measured yet, so
-measure them with `menu-race --criteria short` before relying on them.
+with the same meaning (in `questions.yaml` under `criteria_short`). Measured 2026-10-21: accuracy 0.87, the policy acts on 79/103 at 0.86, p50 348 ms against 369 ms
+(live, 2 questions per line, `menu-race --criteria short`). The spike sentences stay the default because
+they act on more lines.
 
 ## The safety gate
 

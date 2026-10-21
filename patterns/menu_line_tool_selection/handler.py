@@ -99,8 +99,9 @@ def load_pattern_questions(
     """Load the questions in one wording. ``names`` selects a subset, in the given order.
 
     ``criteria="spike"`` (default) keeps the ``tool`` criteria sentences the spike measured;
-    ``"short"`` swaps in shorter ones with the same meaning (not measured). Only the ``tool``
-    criteria change; every instruction and the yes/no criteria stay as they are.
+    ``"short"`` swaps in shorter ones with the same meaning (measured 2026-10-21: accuracy 0.87,
+    policy acts on 79/103 at 0.86). Only the ``tool`` criteria change; every instruction and the
+    yes/no criteria stay as they are.
     """
     data = yaml.safe_load(QUESTIONS_PATH.read_text(encoding="utf-8"))
     if mode not in INPUT_MODES:
