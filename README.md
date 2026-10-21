@@ -11,8 +11,8 @@ A car owner stands at a dealer's service counter with a printed service menu and
 splits the menu into lines and, for each line, Strands Decider 2B decides which tool fits: decline an optional
 add-on, check the maintenance schedule against the odometer, look up recalls for this car (public NHTSA API),
 ask about a fee, or leave a safety part (brakes, tires, alignment, steering) to the owner. How sure Decider must
-be depends on what a wrong action costs: a decline needs 0.8, a lookup or a question 0.5, and a decline on a line
-Decider flags as a safety item is never taken automatically. Lines below their threshold go to a general model on
+be depends on what a wrong action costs: a decline needs 0.8, a lookup or a question 0.5, and a decline from any
+tool on a line Decider flags as a safety item is never taken automatically (it becomes the owner's call). Lines below their threshold go to a general model on
 Amazon Bedrock; Bedrock also writes one plain question for the service advisor per flagged line and the summary
 card (Keep · Decline · Ask · Your call). On the demo menu the
 line "Replace fuel pump module $1,089.00" goes to the recall lookup, which finds recall campaign 23V858000 for a
@@ -20,9 +20,11 @@ line "Replace fuel pump module $1,089.00" goes to the recall lookup, which finds
 
 It also reads a real dealer sheet: the redacted sheet of a 2024 RX 350 at 20,000 miles, which prices no line
 (nine bullet services, then Menu Total, Shop Charges, Tax, Fees, TOTAL $801.05). Every line still gets a Decider
-decision, the report adds a recalls card for the car ("Are there open recalls on my VIN?") and, given the sheet
-printed after the owner declined four lines, compares the two totals ($801.05 -> $391.38, $409.67 less) and the
-owner's declines with the agent's verdicts. Live run, line by line: `docs/RX350-SHEET-RUN-2026-10-21.md`.
+decision, the schedule lines are checked against the maker's own schedule for that car (2024 RX 350 Warranty and
+Services Guide, printed page 50: oil and filter, cabin air filter, tire rotation and inspections at 20,000 miles),
+the report adds a recalls card for the car ("Are there open recalls on my VIN?") and, given the sheet printed after
+the owner declined four lines, compares the two totals ($801.05 -> $391.38, $409.67 less) and the owner's declines
+with the agent's verdicts. Live run, line by line: `docs/RX350-SHEET-RUN-2026-10-21.md`.
 
 ## The decision handed to Decider 2B
 
@@ -47,7 +49,8 @@ owner. We know how well it does from 103 labelled menu lines (see Measurements).
 2. One Decider 2B request per line answers "is this a driving-safety part?" and "which of the five tools?".
 3. Plain code routes by the cost of a wrong action (thresholds above). Lines below their threshold go to a Strands
    agent on Amazon Bedrock (Nova), whose `decline_addon` call passes a Decider safety gate first.
-4. The tools run: the maintenance table, the public NHTSA recalls API, or a question for the advisor.
+4. The tools run: the maintenance schedule (the maker's, where we have it for the car), the public NHTSA recalls
+   API, or a question for the advisor.
 5. Amazon Bedrock (Nova) writes the advisor question for each flagged line and the summary card; every decision
    goes to a JSONL ledger.
 
@@ -108,8 +111,15 @@ The Bedrock column waits for a spend approval: `menu-race --allow-bedrock` runs 
 - The menus are synthetic and the Textract response in `tests/fixtures/` is hand-made; the NHTSA data is a real,
   recorded response. One real sheet (11 lines, one visit, OCR by Apple Vision on redacted photos) was run as an
   example, not as a measure; no dealer has used this.
-- The maintenance table is illustrative, not any maker's schedule. A recall is matched to a line by part words,
-  not by VIN, so the agent asks "is this covered by…?" rather than claiming it is.
+- Only one car has the maker's schedule: the 20,000-mile service of a 2024 RX 350, from the maker's "2024 RX 350
+  Warranty and Services Guide", printed page 50 (PDF page 52), box "24 Months or 20,000 Miles"
+  (https://assets.sia.toyota.com/publications/en/omms-s/L-MMS-24RX350/pdf/L-MMS-24RX350.pdf), without the
+  special-operating-conditions items. Only that schedule can lead to a decline ("not in the maker's schedule at
+  20,000 mi"). Every other car gets an illustrative generic table, which is no maker's schedule: it keeps a
+  service that is due there and turns everything else into "Is this in the maker's schedule at N mi?", never a
+  decline.
+- A recall is matched to a line by part words, not by VIN, so the agent asks "is this covered by…?" rather than
+  claiming it is.
 - Decider is often unsure: at >= 0.9 it covers only about a fifth of the lines. The per-tool thresholds are a
   measured trade-off, not a free win.
 - Decider runs on our own Mac, outside AWS: the account's GPU quotas for the official SageMaker deployment
@@ -149,7 +159,7 @@ Found on the real sheet (2026-10-21):
 
 The code, tests and documents were written with an AI coding assistant working under our direction. The
 decision design, the thresholds and every claim here were checked against measurements: each number comes from a
-script in this repository run on our own hardware (commands under "Run it"), and the 283 tests run without
+script in this repository run on our own hardware (commands under "Run it"), and the 297 tests run without
 network access.
 
 ## Run it
@@ -184,7 +194,8 @@ menu-check --textract photo.jpg --allow-textract --vehicle "2019 Honda Civic 312
 menu-race --replay-recorded
 menu-race --decider-url http://127.0.0.1:8099 --out out/race.md
 # the real sheet of a 2024 RX 350 and the sheet printed after the owner's declines; NHTSA live, cached
-# (the make is the NHTSA parameter); prints the lines, the sheet totals, the recalls card and the after block
+# (the make is the NHTSA parameter); prints each line's verdict and reason (the maker's schedule for this car at
+# 20,000 mi), the sheet totals, the recalls card and the after block
 menu-check --ocr-json tests/fixtures/lexus_sheet_801_vision.json --after tests/fixtures/lexus_sheet_391_vision.json \
   --vehicle "2024 Lexus RX 350 20000" --decider-url http://127.0.0.1:8099 --nhtsa-cache out/nhtsa-cache \
   --json out/report-sheet.json
@@ -224,7 +235,8 @@ Layout:
 ```
 src/decider_kit/       client.py  questions.py  policy.py  intervention.py  ledger.py  bench.py
 src/menu_line_check/  models.py  ocr.py  nhtsa.py  schedule.py  tools.py  baseline.py  pipeline.py  llm.py
-                      after.py  cli.py  race.py  data/ (illustrative maintenance schedule, 103 labelled race lines)
+                      after.py  cli.py  race.py  data/ (maker schedule for one car, illustrative table for
+                      the others, 103 labelled race lines)
 patterns/             README.md  menu_line_tool_selection/  example_grounding/
 scripts/              build_race_lines.py (race lines from the spike output), vision_to_textract.swift
 tests/                fake-server tests, real Strands actions, real Agent loop with a scripted model
