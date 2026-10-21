@@ -12,7 +12,7 @@ from menu_line_tool_selection import TOOLS
 
 from .menu_fakes import FIXTURES, SHEET_391, SHEET_801, menu_server
 
-LABELS = json.loads((FIXTURES / "lexus_sheet_labels.json").read_text(encoding="utf-8"))
+LABELS = json.loads((FIXTURES / "sheet_labels.json").read_text(encoding="utf-8"))
 
 
 def sheet(path):

@@ -16,8 +16,8 @@ from menu_line_check.llm import FakePicker, FakeWriter
 from .conftest import FakeServer, ok_response
 from .menu_fakes import (
     NHTSA,
-    NHTSA_RX,
-    NHTSA_RX350_EMPTY,
+    NHTSA_FAMILY,
+    NHTSA_MODEL_EMPTY,
     SHEET_391,
     SHEET_801,
     TEXTRACT,
@@ -171,9 +171,9 @@ SHEET = [
     "--vehicle",
     "2024 Lexus RX 350 20000",
     "--nhtsa-recorded",
-    str(NHTSA_RX),
+    str(NHTSA_FAMILY),
     "--nhtsa-recorded",
-    f"{NHTSA_RX350_EMPTY}=LEXUS/RX 350/2024",
+    f"{NHTSA_MODEL_EMPTY}=LEXUS/RX 350/2024",
 ]
 
 

@@ -24,7 +24,7 @@ decision, the schedule lines are checked against the maker's own schedule for th
 Services Guide, printed page 50: oil and filter, cabin air filter, tire rotation and inspections at 20,000 miles),
 the report adds a recalls card for the car ("Are there open recalls on my VIN?") and, given the sheet printed after
 the owner declined four lines, compares the two totals ($801.05 -> $391.38, $409.67 less) and the owner's declines
-with the agent's verdicts. Live run, line by line: `docs/RX350-SHEET-RUN-2026-10-21.md`.
+with the agent's verdicts. Live run, line by line: `docs/REAL-SHEET-RUN-2026-10-21.md`.
 
 ## The decision handed to Decider 2B
 
@@ -197,11 +197,11 @@ menu-race --decider-url http://127.0.0.1:8099 --out out/race.md
 # the real sheet of a 2024 RX 350 and the sheet printed after the owner's declines; NHTSA live, cached
 # (the make is the NHTSA parameter); prints each line's verdict and reason (the maker's schedule for this car at
 # 20,000 mi), the sheet totals, the recalls card and the after block
-menu-check --ocr-json tests/fixtures/lexus_sheet_801_vision.json --after tests/fixtures/lexus_sheet_391_vision.json \
+menu-check --ocr-json tests/fixtures/sheet_801_vision.json --after tests/fixtures/sheet_391_vision.json \
   --vehicle "2024 Lexus RX 350 20000" --decider-url http://127.0.0.1:8099 --nhtsa-cache out/nhtsa-cache \
   --json out/report-sheet.json
-# offline: --nhtsa-recorded tests/fixtures/nhtsa_recalls_lexus_rx_2024.json \
-#   --nhtsa-recorded "tests/fixtures/nhtsa_recalls_lexus_rx350_2024_empty.json=LEXUS/RX 350/2024"
+# offline: --nhtsa-recorded tests/fixtures/nhtsa_recalls_family_2024.json \
+#   --nhtsa-recorded "tests/fixtures/nhtsa_recalls_model_2024_empty.json=LEXUS/RX 350/2024"
 ```
 
 Free OCR on a Mac instead of Textract: `scripts/vision_to_textract.swift` runs Apple Vision on the device and
@@ -241,7 +241,7 @@ src/menu_line_check/  models.py  ocr.py  nhtsa.py  schedule.py  tools.py  baseli
 patterns/             README.md  menu_line_tool_selection/  example_grounding/
 scripts/              build_race_lines.py (race lines from the spike output), vision_to_textract.swift
 tests/                fake-server tests, real Strands actions, real Agent loop with a scripted model
-docs/                 STRANDS-INTERVENTIONS-NOTES.md, RX350-SHEET-RUN-2026-10-21.md
+docs/                 STRANDS-INTERVENTIONS-NOTES.md, REAL-SHEET-RUN-2026-10-21.md
 ```
 
 ## Licence

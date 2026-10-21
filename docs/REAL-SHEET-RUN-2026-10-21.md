@@ -4,9 +4,9 @@ The owner's own printed sheet from the 20,000-mile service of a 2024 RX 350 (17.
 and redacted (VIN, dealer, service advisor, logos, product brands, lender and form code removed). Two
 sheets from the same visit:
 
-- the dealer's recommended sheet, TOTAL $801.05 (`tests/fixtures/lexus_sheet_801_vision.json`);
+- the dealer's recommended sheet, TOTAL $801.05 (`tests/fixtures/sheet_801_vision.json`);
 - the sheet printed after the owner declined four lines, TOTAL $391.38, with those four under a
-  "Declined" header (`tests/fixtures/lexus_sheet_391_vision.json`).
+  "Declined" header (`tests/fixtures/sheet_391_vision.json`).
 
 Neither sheet prices a single line: nine bullet lines, then Menu Total, Shop Charges, Tax, Fees, TOTAL.
 The OCR is Apple Vision on the Mac (free), written in the shape of an Amazon Textract
@@ -43,8 +43,8 @@ time) through `127.0.0.1:18299`, NHTSA live on the first run and from the disk c
 no Bedrock (template advisor questions, no LLM picker), default thresholds. Cost $0.
 
 ```bash
-menu-check --ocr-json tests/fixtures/lexus_sheet_801_vision.json \
-  --after tests/fixtures/lexus_sheet_391_vision.json \
+menu-check --ocr-json tests/fixtures/sheet_801_vision.json \
+  --after tests/fixtures/sheet_391_vision.json \
   --vehicle "2024 Lexus RX 350 20000" --decider-url http://127.0.0.1:18299 \
   --nhtsa-cache out/nhtsa-cache-rx350 --ledger out/ledger-rx350-1.jsonl --json out/report-rx350-1.json
 ```
@@ -78,7 +78,7 @@ Furgicide, Kills Odors)", "PERFORM Multi-Point Inspection", "ASK Your Service Ad
 Protection Planf", "PERFORM Wheel Alignment", "PERFORM Crankcase Cleaning Service", "PERFORM A/C Evaporator
 System Cleaning Service with Climate control disinfectant" ("Furgicide" and "Planf" are OCR misreads, passed
 to Decider as read). Confidences rounded from the report (`0.9608`, `0.8744`, `0.7887`, `0.518`, `0.7898`,
-`0.6803`, `0.8652`, `0.3912`, `0.6209`, `0.9781`, `0.9705`). Labels: `tests/fixtures/lexus_sheet_labels.json`.
+`0.6803`, `0.8652`, `0.3912`, `0.6209`, `0.9781`, `0.9705`). Labels: `tests/fixtures/sheet_labels.json`.
 
 Advisor questions as printed (offline templates; a paid run has Bedrock write them):
 

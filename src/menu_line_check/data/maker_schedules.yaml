@@ -15,7 +15,7 @@ schedules:
   - make: "LEXUS"
     model: "RX 350"
     year: 2024
-    source: "2024 RX 350 Warranty and Services Guide (the maker's official publication)"
+    source: "the maker's 2024 Warranty and Services Guide for this model (official publication)"
     url: "https://assets.sia.toyota.com/publications/en/omms-s/L-MMS-24RX350/pdf/L-MMS-24RX350.pdf"
     page: "printed page 50 (PDF page 52), box \"24 Months or 20,000 Miles\""
     checked: "2026-10-21"

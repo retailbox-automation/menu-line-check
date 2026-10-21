@@ -13,13 +13,13 @@ from .conftest import FakeServer, choice, noul, ok_response
 FIXTURES = Path(__file__).parent / "fixtures"
 TEXTRACT = FIXTURES / "textract_menu.json"
 NHTSA = FIXTURES / "nhtsa_recalls_civic_2019.json"
-SHEET_801 = FIXTURES / "lexus_sheet_801_vision.json"
-SHEET_391 = FIXTURES / "lexus_sheet_391_vision.json"
-NHTSA_RX = FIXTURES / "nhtsa_recalls_lexus_rx_2024.json"
-NHTSA_RX350_EMPTY = FIXTURES / "nhtsa_recalls_lexus_rx350_2024_empty.json"
-NHTSA_RX_RECORDED = (NHTSA_RX, (NHTSA_RX350_EMPTY, "LEXUS", "RX 350", 2024))
-"""Both recorded RX responses (model RX 350: empty; family RX: 4 campaigns), as
-``NhtsaClient.from_recorded(*NHTSA_RX_RECORDED)`` takes them."""
+SHEET_801 = FIXTURES / "sheet_801_vision.json"
+SHEET_391 = FIXTURES / "sheet_391_vision.json"
+NHTSA_FAMILY = FIXTURES / "nhtsa_recalls_family_2024.json"
+NHTSA_MODEL_EMPTY = FIXTURES / "nhtsa_recalls_model_2024_empty.json"
+NHTSA_SHEET_RECORDED = (NHTSA_FAMILY, (NHTSA_MODEL_EMPTY, "LEXUS", "RX 350", 2024))
+"""Both recorded responses for the sheet's car (model: empty; model family: 4 campaigns), as
+``NhtsaClient.from_recorded(*NHTSA_SHEET_RECORDED)`` takes them."""
 
 # line name fragment -> (tool choice, confidence, P(safety))
 MENU_ANSWERS: dict[str, tuple[str, float, float]] = {
@@ -37,7 +37,7 @@ MENU_ANSWERS: dict[str, tuple[str, float, float]] = {
     "Environmental disposal fee": ("ask_about_fee", 0.9, 0.02),
 }
 
-# Scripted (not measured) answers for the 11 lines of the real RX 350 sheet, for offline tests.
+# Scripted (not measured) answers for the 11 lines of the real sheet, for offline tests.
 SHEET_ANSWERS: dict[str, tuple[str, float, float]] = {
     "Engine Oil and Oil Filter": ("check_schedule", 0.9, 0.05),
     "Oil Conditioner": ("decline_addon", 0.92, 0.04),

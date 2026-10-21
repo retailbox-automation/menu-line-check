@@ -17,7 +17,7 @@ from menu_line_check.writing import question_problem, sentence_problem
 
 from .menu_fakes import SHEET_391, SHEET_801, menu_server
 
-RX350 = Vehicle.parse("2024 Lexus RX 350 20000")
+SHEET_CAR = Vehicle.parse("2024 Lexus RX 350 20000")
 
 # The texts Nova Lite wrote in the paid run of 2026-10-21 (out/run-rx350-nova-1.txt).
 BAD_KEEP = (
@@ -68,7 +68,7 @@ def run(client, tmp_path=None):
     ledger = Ledger(tmp_path / "l.jsonl") if tmp_path else None
     return check_menu(
         before.lines,
-        RX350,
+        SHEET_CAR,
         menu_server().client(),
         writer=writer,
         ledger=ledger,
@@ -188,7 +188,7 @@ def test_offline_and_bedrock_reports_have_the_same_structure(bad):
     ],
 )
 def test_question_checks(text, facts, problem):
-    assert question_problem(text, facts, RX350) == problem
+    assert question_problem(text, facts, SHEET_CAR) == problem
 
 
 @pytest.mark.parametrize(
@@ -201,13 +201,13 @@ def test_question_checks(text, facts, problem):
     ],
 )
 def test_summary_sentence_checks(text, problem):
-    assert sentence_problem(text, RX350) == problem
+    assert sentence_problem(text, SHEET_CAR) == problem
 
 
 def test_without_sheet_totals_the_summary_numbers_are_the_priced_lines(tmp_path):
     report = check_menu(
         sheet(SHEET_801).lines[9:],
-        RX350,
+        SHEET_CAR,
         menu_server().client(),
         writer=FakeWriter(),
         totals=SheetTotals(),
@@ -230,3 +230,10 @@ def test_offline_drafts_on_the_real_sheet():
     assert (
         questions[10] == "What does the shop charges line of $78.29 cover, and can it be removed?"
     )
+
+
+def test_the_fee_reason_is_neutral_for_charges_and_plans_alike():
+    report = run(None)
+    for index in (6, 10, 11):  # the protection plan and the two charges (scripted ask_about_fee)
+        outcome = next(o for o in report.outcomes if o.line.index == index)
+        assert outcome.tool_result["note"] == "Ask what it covers and whether it is optional."

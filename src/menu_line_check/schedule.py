@@ -4,10 +4,11 @@ Two sources, tried in this order:
 
 1. A MAKER schedule for this car (``data/maker_schedules.yaml``: make, model and year, with the
    maker's publication, URL and page). When the odometer is within ``window_mi`` of one of its
-   services (the 20,000-mile service of a 2024 RX 350), a line is ``due`` when the maker lists
-   it there, ``bundled`` when it is a listed item sold together with an extra the maker does not
-   list ("Cabin Filter, Incl. Sanitizer"), ``unclear`` when it names a listed item but also words
-   the schedule does not have ("Premium Engine Oil Conditioner"), and ``not_listed`` otherwise.
+   services (the 20,000-mile service of the real sheet's car), a line is ``due`` when the
+   maker lists it there, ``bundled`` when it is a listed item sold together with an extra the
+   maker does not list ("Cabin Filter, Incl. Sanitizer"), ``unclear`` when it names a listed
+   item but also words the schedule does not have ("Premium Engine Oil Conditioner"), and
+   ``not_listed`` otherwise.
    Only this source may lead to a decline.
 2. Otherwise the ILLUSTRATIVE generic table (``data/maintenance_schedule.yaml``), which is no
    maker's schedule. Without the car's service history the check assumes earlier services were

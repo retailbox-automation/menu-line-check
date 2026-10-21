@@ -13,9 +13,9 @@ from menu_line_check.nhtsa import NhtsaClient
 from menu_line_check.ocr import parse_sheet
 from menu_line_check.pipeline import check_menu
 
-from .menu_fakes import NHTSA_RX_RECORDED, SHEET_391, SHEET_801, menu_server
+from .menu_fakes import NHTSA_SHEET_RECORDED, SHEET_391, SHEET_801, menu_server
 
-RX350 = Vehicle.parse("2024 Lexus RX 350 20000")
+SHEET_CAR = Vehicle.parse("2024 Lexus RX 350 20000")
 
 
 def sheet(path):
@@ -27,9 +27,9 @@ def checked():
     before = sheet(SHEET_801)
     report = check_menu(
         before.lines,
-        RX350,
+        SHEET_CAR,
         menu_server().client(),
-        nhtsa=NhtsaClient.from_recorded(*NHTSA_RX_RECORDED),
+        nhtsa=NhtsaClient.from_recorded(*NHTSA_SHEET_RECORDED),
         totals=before.totals,
     )
     after = sheet(SHEET_391)

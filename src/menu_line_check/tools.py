@@ -94,7 +94,7 @@ def ask_about_fee(line: MenuLine) -> ToolResult:
     return {
         "tool": "ask_about_fee",
         "verdict": "ask",
-        "note": "A fee rather than a service: ask what it covers and whether it is optional.",
+        "note": "Ask what it covers and whether it is optional.",
     }
 
 

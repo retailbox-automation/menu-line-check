@@ -22,7 +22,7 @@ from menu_line_check.tools import check_schedule as schedule_tool
 from .conftest import FakeServer, noul, ok_response
 from .menu_fakes import SHEET_801, tool_answer
 
-RX350 = Vehicle.parse("2024 Lexus RX 350 20000")
+SHEET_CAR = Vehicle.parse("2024 Lexus RX 350 20000")
 SOURCE_URL = (
     "https://assets.sia.toyota.com/publications/en/omms-s/L-MMS-24RX350/pdf/L-MMS-24RX350.pdf"
 )
@@ -57,7 +57,7 @@ def test_the_maker_schedule_names_its_source_and_lists_the_20000_mile_items():
 
 
 def test_each_line_of_the_real_sheet_against_the_maker_schedule():
-    got = [(c.status, c.source) for c in (check_schedule(ln, RX350) for ln in sheet_lines())]
+    got = [(c.status, c.source) for c in (check_schedule(ln, SHEET_CAR) for ln in sheet_lines())]
     assert [s for s, _ in got] == [
         "due",  # engine oil and oil filter
         "unclear",  # premium engine oil conditioner: names "engine oil", is not the oil change
@@ -72,19 +72,19 @@ def test_each_line_of_the_real_sheet_against_the_maker_schedule():
         "not_listed",  # fees
     ]
     assert {source for _, source in got} == {"maker"}
-    cabin = check_schedule(sheet_lines()[3], RX350)
+    cabin = check_schedule(sheet_lines()[3], SHEET_CAR)
     assert cabin.extra == "sanitizer" and cabin.name == "a cabin air filter"
     assert SOURCE_URL in cabin.reference
 
 
 def test_tool_verdicts_and_reasons_with_the_maker_schedule():
     lines = sheet_lines()
-    oil = schedule_tool(lines[0], RX350)
+    oil = schedule_tool(lines[0], SHEET_CAR)
     assert (oil["verdict"], oil["note"]) == ("keep", "in the maker's schedule at 20,000 mi")
-    assert schedule_tool(lines[2], RX350)["verdict"] == "keep"
-    assert schedule_tool(lines[4], RX350)["verdict"] == "keep"
-    assert schedule_tool(lines[3], RX350)["verdict"] == "ask"
-    plan = schedule_tool(lines[5], RX350)
+    assert schedule_tool(lines[2], SHEET_CAR)["verdict"] == "keep"
+    assert schedule_tool(lines[4], SHEET_CAR)["verdict"] == "keep"
+    assert schedule_tool(lines[3], SHEET_CAR)["verdict"] == "ask"
+    plan = schedule_tool(lines[5], SHEET_CAR)
     assert (plan["verdict"], plan["note"]) == (
         "decline",
         "not in the maker's schedule at 20,000 mi",
@@ -94,7 +94,7 @@ def test_tool_verdicts_and_reasons_with_the_maker_schedule():
 def test_the_bundled_question_asks_for_the_listed_item_alone():
     report = check_menu(
         sheet_lines()[3:4],
-        RX350,
+        SHEET_CAR,
         _server({"Cabin": ("check_schedule", 0.9, 0.1)}),
         writer=FakeWriter(),
     )
@@ -162,7 +162,9 @@ def test_a_schedule_decline_on_a_safety_flagged_line_becomes_the_owners_call(tmp
     monkeypatch.setattr(schedule_mod, "MAKER_SCHEDULES_PATH", path)
 
     rotation = [ln for ln in sheet_lines() if "Tire Rotation" in ln.text]
-    report = check_menu(rotation, RX350, _server({"Tire Rotation": ("check_schedule", 0.79, 0.78)}))
+    report = check_menu(
+        rotation, SHEET_CAR, _server({"Tire Rotation": ("check_schedule", 0.79, 0.78)})
+    )
     (o,) = report.outcomes
     assert o.tool_result["schedule"]["status"] == "not_listed"
     assert (o.route, o.tool, o.verdict) == ("tool", "check_schedule", "your_call")
@@ -172,13 +174,17 @@ def test_a_schedule_decline_on_a_safety_flagged_line_becomes_the_owners_call(tmp
         "so the owner decides."
     )
     # the same line without the safety flag is declined
-    calm = check_menu(rotation, RX350, _server({"Tire Rotation": ("check_schedule", 0.79, 0.2)}))
+    calm = check_menu(
+        rotation, SHEET_CAR, _server({"Tire Rotation": ("check_schedule", 0.79, 0.2)})
+    )
     assert calm.outcomes[0].verdict == "decline"
 
 
 def test_with_the_real_schedule_the_rotation_is_kept_whatever_its_safety_answer():
     rotation = [ln for ln in sheet_lines() if "Tire Rotation" in ln.text]
-    report = check_menu(rotation, RX350, _server({"Tire Rotation": ("check_schedule", 0.79, 0.78)}))
+    report = check_menu(
+        rotation, SHEET_CAR, _server({"Tire Rotation": ("check_schedule", 0.79, 0.78)})
+    )
     assert report.outcomes[0].verdict == "keep"
 
 

@@ -1,4 +1,4 @@
-"""Dealer sheets with bullet lines and a totals block (the real RX 350 sheets, redacted)."""
+"""Dealer sheets with bullet lines and a totals block (the real sheets, redacted)."""
 
 from __future__ import annotations
 
@@ -39,12 +39,12 @@ def load(name: str) -> dict:
 
 @pytest.fixture(scope="module")
 def sheet_801():
-    return parse_sheet(load("lexus_sheet_801_vision.json"))
+    return parse_sheet(load("sheet_801_vision.json"))
 
 
 @pytest.fixture(scope="module")
 def sheet_391():
-    return parse_sheet(load("lexus_sheet_391_vision.json"))
+    return parse_sheet(load("sheet_391_vision.json"))
 
 
 def block(text, left, top, width=0.3, height=0.012):
@@ -136,7 +136,7 @@ def test_rows_split_by_blanked_words_come_back_as_one_line(sheet_391):
 
 
 def test_parse_textract_returns_the_sheet_lines(sheet_801):
-    lines = parse_textract(load("lexus_sheet_801_vision.json"))
+    lines = parse_textract(load("sheet_801_vision.json"))
     assert tuple(lines) == sheet_801.lines
 
 
