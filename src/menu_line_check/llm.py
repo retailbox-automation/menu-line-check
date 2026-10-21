@@ -102,11 +102,23 @@ class FakeWriter:
 
     def summary(self, report: MenuReport) -> str:
         c = report.counts
-        text = (
-            f"{report.summary}. The menu totals ${report.menu_total:,.2f}; the "
-            f"{_plural(c['decline'], 'line', 'lines')} to decline come to "
-            f"${report.total_for('decline'):,.2f}."
-        )
+        declines = _plural(c["decline"], "line", "lines")
+        sheet_total = report.totals.total if report.totals else None
+        if sheet_total is None:
+            text = (
+                f"{report.summary}. The menu totals ${report.menu_total:,.2f}; the "
+                f"{declines} to decline come to ${report.total_for('decline'):,.2f}."
+            )
+        elif any(o.line.price is None for o in report.outcomes if o.verdict == "decline"):
+            text = (
+                f"{report.summary}. The sheet totals ${sheet_total:,.2f}; it does not price the "
+                f"{declines} to decline one by one: ask what the total is without them."
+            )
+        else:
+            text = (
+                f"{report.summary}. The sheet totals ${sheet_total:,.2f}; the {declines} to "
+                f"decline come to ${report.total_for('decline'):,.2f}."
+            )
         if c["your_call"]:
             text += f" {_plural(c['your_call'], 'safety line is', 'safety lines are')} your call."
         if c["retake"]:

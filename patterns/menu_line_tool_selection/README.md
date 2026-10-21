@@ -68,7 +68,8 @@ reads the same from text, and `act_threshold=` sets one threshold for every tool
 Which input feeds which question (from the spike, see "Measured"): `safety` and `tool` are asked
 on the OCR text, in one request. `readable` is asked only on the line image (name crop + price
 crop), in a second request, when there is one; without an image it is not asked at all and the
-caller decides readability in code ("OCR found a name and a price"). So a line costs two
+caller decides readability in code ("OCR found a name and a price"; on a sheet that prints no
+per-line prices at all, only a totals block, "OCR found a name"). So a line costs two
 questions without a photo and three with one; on a server that answers one request at a time,
 fewer and shorter questions are what makes a menu faster.
 

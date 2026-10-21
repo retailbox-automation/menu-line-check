@@ -247,3 +247,65 @@ def test_short_criteria_are_sent_only_when_asked_for():
     assert sent["criteria"] == load_pattern_questions("ocr_text", criteria="short")["tool"].criteria
     assert sent["instructions"] == spike.requests[0]["questions"]["tool"]["instructions"]
     assert short.requests[0]["questions"]["safety"] == spike.requests[0]["questions"]["safety"]
+
+
+# ------------------------------------------------------------------ readability without prices
+
+
+def _sheet_lines(name: str) -> list[MenuLine]:
+    import json
+
+    from menu_line_check.ocr import parse_sheet
+
+    path = NHTSA.parent / name
+    return list(parse_sheet(json.loads(path.read_text(encoding="utf-8"))).lines)
+
+
+def test_on_a_sheet_without_line_prices_a_found_name_is_readable():
+    lexus = _sheet_lines("lexus_sheet_801_vision.json")
+    report = check_menu(lexus, Vehicle(2024, "Lexus", "RX 350", 20000), menu_server().client())
+    assert report.counts["retake"] == 0
+    assert all(o.p_readable == 1.0 for o in report.outcomes)
+    assert all(o.line.price is None for o in report.outcomes[:9])
+
+
+def test_on_a_priced_menu_a_missing_price_is_still_a_retake():
+    priced = parse_line_texts(["Oil change $89.95", "Wiper blades"])
+    report = check_menu(priced, CIVIC, menu_server().client())
+    assert [o.verdict for o in report.outcomes][1] == "retake"
+    assert report.outcomes[1].p_readable == 0.0
+    # the same two lines as bullets of a sheet that prices one of them: the rule is unchanged
+    bullets = [dataclasses.replace(ln, prices_listed=True) for ln in priced]
+    assert check_menu(bullets, CIVIC, menu_server().client()).outcomes[1].verdict == "retake"
+    unpriced = [dataclasses.replace(ln, price=None, prices_listed=False) for ln in priced]
+    assert check_menu(unpriced, CIVIC, menu_server().client()).counts["retake"] == 0
+
+
+def test_a_line_with_no_name_is_a_retake_even_without_line_prices():
+    (blank,) = parse_line_texts(["$12.00"])
+    line = dataclasses.replace(blank, price=None, price_text=None, prices_listed=False)
+    assert not line.readable_by_code
+    assert check_menu([line], CIVIC, menu_server().client()).outcomes[0].verdict == "retake"
+
+
+def test_the_report_carries_the_recalls_card_only_with_an_nhtsa_client():
+    report, _ = run()
+    assert report.recalls is not None and report.recalls.vehicle == "2019 Honda Civic"
+    assert report.to_dict()["recalls"]["advisor_question"] == "Are there open recalls on my VIN?"
+    assert run(nhtsa=None)[0].recalls is None
+
+
+def test_sheet_totals_go_into_the_summary_when_the_sheet_prints_them():
+    from menu_line_check.models import SheetTotals
+
+    lexus = _sheet_lines("lexus_sheet_801_vision.json")
+    totals = SheetTotals(672.0, 78.29, 48.77, 1.99, 801.05)
+    report = check_menu(
+        lexus,
+        Vehicle(2024, "Lexus", "RX 350", 20000),
+        menu_server().client(),
+        writer=FakeWriter(),
+        totals=totals,
+    )
+    assert report.totals == totals
+    assert "The sheet totals $801.05; it does not price the" in report.summary_text

@@ -4,10 +4,13 @@ Decider is asked about all lines first, concurrently (at most ``concurrency`` re
 time, default 12); everything after that runs per line, in line order. Per line:
 
 1. One Decider request with two questions, ``safety`` and ``tool``, in the OCR-text wording.
-   Without images, readability is the code check "OCR found a name and a price" (the spike
-   measured that check above Decider's OCR-text ``readable`` answer), so ``readable`` is not
-   asked: fewer questions is what makes a line faster on a server that answers one request at
-   a time. If the line has images, a second request asks ``readable`` in the image wording.
+   Without images, readability is the code check ``MenuLine.readable_by_code``: "OCR found a
+   name and a price" (the spike measured that check above Decider's OCR-text ``readable``
+   answer), so ``readable`` is not asked: fewer questions is what makes a line faster on a
+   server that answers one request at a time. On a sheet that prints no price for any service
+   line (bullet lines, prices only in the totals block; ``prices_listed`` False) the name alone
+   makes a line readable: a missing price there is the layout, not an unreadable photo. If the
+   line has images, a second request asks ``readable`` in the image wording.
 2. ``decide_line`` routes the line with per-tool act thresholds: retake / owner_decides / tool /
    ask_llm. A decline on a line Decider flags as a safety item is never taken here.
 3. ``ask_llm`` goes to ``llm_picker(line, vehicle) -> (tool, rationale)``. With no picker, or
@@ -20,7 +23,9 @@ time, default 12); everything after that runs per line, in line order. Per line:
    line becomes the owner's call (route ``unavailable``).
 
 Then ``writer`` (if given) writes an advisor question for every line the owner keeps, asks
-about or decides (not for declines, not-due lines or retakes), and a plain summary.
+about or decides (not for declines, not-due lines or retakes), and a plain summary. With an
+NHTSA client the report also carries the recalls card for the whole car
+(:func:`~menu_line_check.nhtsa.vehicle_recalls`), whatever the lines are.
 
 A :class:`~menu_line_check.spend.SpendCapReached` from the picker or the writer is not caught
 anywhere in here: it surfaces from ``check_menu`` and ends the run.
@@ -62,11 +67,12 @@ from .models import (
     LineOutcome,
     MenuLine,
     MenuReport,
+    SheetTotals,
     Vehicle,
     summary_card,
     summary_counts,
 )
-from .nhtsa import NhtsaClient
+from .nhtsa import NhtsaClient, vehicle_recalls
 from .spend import SpendCapReached
 from .tools import ask_advisor, retake_line, run_tool
 
@@ -145,7 +151,7 @@ async def _aask_line(
             )
             requests, source = 2, "decider"
         else:
-            readable = NoulAnswer(1.0 if line.has_name_and_price else 0.0)
+            readable = NoulAnswer(1.0 if line.readable_by_code else 0.0)
             source = "code"
     except (DeciderUnavailable, DeciderRequestError) as exc:
         return _Asked(error=exc)
@@ -352,6 +358,7 @@ def check_menu(
     ledger: Ledger | None = None,
     concurrency: int = DEFAULT_CONCURRENCY,
     criteria: CriteriaSet = "spike",
+    totals: SheetTotals | None = None,
 ) -> MenuReport:
     """Check every line of one menu for one vehicle. Lines are checked one after another.
 
@@ -360,6 +367,8 @@ def check_menu(
     lines first, ``concurrency`` at a time; then each line is routed, its tool run and its
     ledger row written, in line order. ``criteria`` picks the ``tool`` criteria sentences:
     ``"spike"`` (the measured ones, default) or ``"short"`` (same meaning, not measured).
+    ``totals`` is the sheet's own totals block (``parse_sheet``), kept on the report and used
+    by the summary.
     """
     limits = resolve_thresholds(thresholds, act_threshold)
     lines = list(lines)
@@ -377,7 +386,13 @@ def check_menu(
         ]
     counts = summary_counts(outcomes)
     report = MenuReport(
-        vehicle, tuple(outcomes), counts, summary_card(counts), decider_wall_ms=round(wall_ms, 1)
+        vehicle,
+        tuple(outcomes),
+        counts,
+        summary_card(counts),
+        decider_wall_ms=round(wall_ms, 1),
+        totals=totals,
+        recalls=vehicle_recalls(vehicle, nhtsa) if nhtsa is not None else None,
     )
     if writer is not None:
         report = replace(report, summary_text=writer.summary(report))
