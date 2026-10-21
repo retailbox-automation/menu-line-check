@@ -99,7 +99,7 @@ def test_recorded_spike_answers_reproduce_the_measured_numbers():
     assert cells[8] == f"{percentile(recorded_ms, 0.5):.0f}"
 
 
-def test_llm_contestant_has_no_confidence_and_price_not_set_by_default(monkeypatch):
+def test_llm_contestant_has_no_confidence_and_price_not_set_by_default():
     lines = slice10()
 
     class CountingPicker(FakePicker):
@@ -109,11 +109,19 @@ def test_llm_contestant_has_no_confidence_and_price_not_set_by_default(monkeypat
     table = race_table(lines, [("LLM picker", picks, None)])
     row = next(r for r in table.splitlines() if r.startswith("| LLM"))
     assert "n/a" in row and "price not set" in row
-    monkeypatch.setattr(race, "PRICE_IN_PER_M", 0.06)
-    monkeypatch.setattr(race, "PRICE_OUT_PER_M", 0.24)
-    priced = race_table(lines, [("LLM picker", picks, None)])
+    lite = race.bedrock_price("us.amazon.nova-lite-v1:0")
+    priced = race_table(lines, [("LLM picker", picks, lite)])
     cost = 1000 * (300 * 0.06 + 20 * 0.24) / 1e6
     assert f"${cost:.4f}" in priced
+
+
+def test_bedrock_prices_cover_the_default_models_and_nothing_is_guessed():
+    from menu_line_check.llm import DEFAULT_PICKER_MODEL, DEFAULT_WRITER_MODEL
+
+    assert race.bedrock_price(DEFAULT_PICKER_MODEL) == (0.06, 0.24)
+    assert race.bedrock_price(DEFAULT_WRITER_MODEL) == (0.06, 0.24)
+    assert race.bedrock_price("us.amazon.nova-micro-v1:0") == (0.035, 0.14)
+    assert race.bedrock_price("us.anthropic.claude-sonnet") is None
 
 
 def test_cli_runs_the_race_with_a_fake_decider(monkeypatch, tmp_path, capsys):

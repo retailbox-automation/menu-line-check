@@ -50,10 +50,18 @@ RACE_LINES_PATH = Path(__file__).parent / "data" / "race_lines.jsonl"
 DEFAULT_URL = "http://127.0.0.1:8099"
 THRESHOLDS = (0.5, 0.7, 0.8, 0.9)
 
-# USD per 1M tokens, us-east-1 on-demand — fill from https://aws.amazon.com/bedrock/pricing/
-# before publishing. While they are None the table prints "price not set".
-PRICE_IN_PER_M: float | None = None
-PRICE_OUT_PER_M: float | None = None
+# USD per 1M tokens (input, output), us-east-1 on-demand standard tier, read from the AWS Price List
+# API (service AmazonBedrock, usage types USE1-Nova*-input/output-tokens) on 2026-10-21. A model id
+# that is not listed prints "price not set".
+BEDROCK_PRICES_PER_M: dict[str, tuple[float, float]] = {
+    "us.amazon.nova-micro-v1:0": (0.035, 0.14),
+    "us.amazon.nova-lite-v1:0": (0.06, 0.24),
+    "us.amazon.nova-2-lite-v1:0": (0.33, 2.75),
+}
+
+
+def bedrock_price(model_id: str) -> tuple[float, float] | None:
+    return BEDROCK_PRICES_PER_M.get(model_id)
 
 
 @dataclass(frozen=True)
@@ -82,8 +90,11 @@ class Pick:
     """Decider's P(safety), for the pipeline-policy table."""
 
 
-Contestant = tuple[str, list[Pick], str | None]
-"""(name, picks, cost note). A None cost note means: price the tokens."""
+Cost = str | tuple[float, float] | None
+"""A fixed note, a (input, output) USD price per 1M tokens to price the tokens with, or None."""
+
+Contestant = tuple[str, list[Pick], Cost]
+"""(name, picks, cost)."""
 
 
 def load_race_lines(path: str | Path = RACE_LINES_PATH) -> list[RaceLine]:
@@ -216,14 +227,15 @@ def _ms(x: float | None) -> str:
     return f"{x:.2f}" if x < 10 else f"{x:.0f}"
 
 
-def _cost(picks: Sequence[Pick], note: str | None) -> str:
-    if note is not None:
-        return note
-    if PRICE_IN_PER_M is None or PRICE_OUT_PER_M is None or not picks:
+def _cost(picks: Sequence[Pick], cost: Cost) -> str:
+    if isinstance(cost, str):
+        return cost
+    if cost is None or not picks:
         return "price not set"
+    price_in, price_out = cost
     tokens_in = sum(p.input_tokens for p in picks)
     tokens_out = sum(p.output_tokens for p in picks)
-    usd = (tokens_in * PRICE_IN_PER_M + tokens_out * PRICE_OUT_PER_M) / 1_000_000
+    usd = (tokens_in * price_in + tokens_out * price_out) / 1_000_000
     return f"${usd / len(picks) * 1000:.4f}"
 
 
@@ -231,7 +243,7 @@ def race_row(
     name: str,
     lines: Sequence[RaceLine],
     picks: Sequence[Pick],
-    cost_note: str | None,
+    cost_note: Cost,
     thresholds: Sequence[float] = THRESHOLDS,
 ) -> list[str]:
     n = len(lines)
@@ -432,7 +444,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         from .llm import StrandsPicker
 
         picker = StrandsPicker(allow_bedrock=True)
-        contestants.append((f"LLM picker ({picker.model_id})", llm_picks(lines, picker), None))
+        contestants.append(
+            (
+                f"LLM picker ({picker.model_id})",
+                llm_picks(lines, picker),
+                bedrock_price(picker.model_id),
+            )
+        )
     name, decider, _ = contestants[0]
     policies = policy_table(
         lines,
