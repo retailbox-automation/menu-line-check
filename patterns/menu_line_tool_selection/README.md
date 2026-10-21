@@ -66,8 +66,16 @@ overrides some of the defaults (`{"decline_addon": 0.9}`); `parse_thresholds("de
 reads the same from text, and `act_threshold=` sets one threshold for every tool.
 
 Which input feeds which question (from the spike, see "Measured"): `safety` and `tool` are asked
-on the OCR text. `readable` is asked on the line image (name crop + price crop) when there is
-one; without an image the caller decides readability in code ("OCR found a name and a price").
+on the OCR text, in one request. `readable` is asked only on the line image (name crop + price
+crop), in a second request, when there is one; without an image it is not asked at all and the
+caller decides readability in code ("OCR found a name and a price"). So a line costs two
+questions without a photo and three with one; on a server that answers one request at a time,
+fewer and shorter questions are what makes a menu faster.
+
+The `tool` criteria sentences above are the ones the spike measured and stay the default
+(`criteria="spike"`). `load_pattern_questions(..., criteria="short")` swaps in shorter sentences
+with the same meaning (in `questions.yaml` under `criteria_short`); they are not measured yet, so
+measure them with `menu-race --criteria short` before relying on them.
 
 ## The safety gate
 
@@ -81,12 +89,14 @@ pass without a Decider call. If Decider is down, the gate denies as well.
 ## Using it in another agent
 
 ```python
-from decider_kit import DeciderClient
+from decider_kit import DeciderClient, NoulAnswer
 from menu_line_tool_selection import build_safety_gate, decide_line, load_pattern_questions, ocr_state
 
 decider = DeciderClient("http://decider-host:8099")
-answers = decider.ask(ocr_state(line_text), load_pattern_questions("ocr_text")).answers
-decision = decide_line(answers)            # retake | owner_decides | tool | ask_llm
+questions = load_pattern_questions("ocr_text", names=["safety", "tool"])
+answers = decider.ask(ocr_state(line_text), questions).answers
+readable = NoulAnswer(1.0 if name_and_price_found else 0.0)      # the code check, no question
+decision = decide_line({**answers, "readable": readable})        # retake | owner_decides | tool | ask_llm
 
 # where a general model picks the tool instead
 agent = Agent(tools=[...], interventions=[build_safety_gate(decider)])

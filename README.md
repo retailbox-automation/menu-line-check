@@ -130,6 +130,9 @@ menu-check --ocr-json tests/fixtures/textract_menu.json --vehicle "2019 Honda Ci
 # time, so 12 concurrent lines still took 6.7 s (server_ms grew 1.2 s -> 6.6 s); concurrency only overlaps the
 # network. What shortens a menu is fewer or shorter questions per line (1 yes/no ~100 ms, 3 long ~490 ms).
 menu-check ... --thresholds decline_addon=0.85,check_schedule=0.6 --concurrency 12
+# questions per line: 2 (safety, tool on the OCR text; readable is the code check "name and price found"),
+# 3 with --image (readable asked on the line crops). --criteria short sends shorter tool criteria with the same
+# meaning (not measured); the default --criteria spike keeps the sentences our numbers come from.
 # Decider vs keyword rules on the 103 labelled spike lines, plus what the pipeline policy does with
 # Decider's answers (per-tool thresholds vs the previous policy): recorded answers (no server) or live
 menu-race --replay-recorded
