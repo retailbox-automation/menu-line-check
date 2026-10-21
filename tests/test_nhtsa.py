@@ -12,11 +12,21 @@ import httpx
 import pytest
 
 from menu_line_check.models import Vehicle
-from menu_line_check.nhtsa import NhtsaClient, NhtsaError, Recall, match_recall
+from menu_line_check.nhtsa import (
+    VEHICLE_RECALLS_QUESTION,
+    NhtsaClient,
+    NhtsaError,
+    Recall,
+    match_recall,
+    vehicle_recalls,
+)
 from menu_line_check.ocr import parse_line_texts
+
+from .menu_fakes import NHTSA_LEXUS, NHTSA_RX, NHTSA_RX350_EMPTY
 
 FIXTURE = Path(__file__).parent / "fixtures" / "nhtsa_recalls_civic_2019.json"
 CIVIC = Vehicle(2019, "Honda", "Civic", 31200)
+RX350 = Vehicle.parse("2024 Lexus RX 350 20000")
 
 
 class Recorder:
@@ -139,3 +149,82 @@ def test_oxygen_sensor_spellings_match_each_other():
     for text in ("Replace upstream O2 sensor $412.00", "Replace upstream 02 sensor $412.00"):
         assert match_recall(line(text), [o2]) is o2
     assert match_recall(line("Cabin air filter $79.95"), [o2]) is None
+
+
+# --------------------------------------------------------------------------- the recalls card
+
+
+def test_recorded_responses_serve_several_vehicles_and_an_empty_one_needs_its_query():
+    nhtsa = NhtsaClient.from_recorded(FIXTURE, *NHTSA_LEXUS)
+    assert len(nhtsa.recalls(CIVIC)) == 4
+    assert nhtsa.recalls(RX350) == []
+    assert len(nhtsa.recalls(Vehicle(2024, "LEXUS", "rx", 1))) == 4
+    with pytest.raises(NhtsaError, match="no recorded response"):
+        nhtsa.recalls(Vehicle(2025, "Lexus", "RX 350", 10))
+    with pytest.raises(ValueError, match="needs its query"):
+        NhtsaClient.from_recorded(NHTSA_RX350_EMPTY)
+    with pytest.raises(ValueError):
+        NhtsaClient.from_recorded()
+
+
+def test_model_with_no_campaigns_falls_back_to_its_family_and_keeps_those_naming_it():
+    rec = Recorder(body=None)
+    bodies = {
+        "RX 350": json.loads(NHTSA_RX350_EMPTY.read_text()),
+        "RX": json.loads(NHTSA_RX.read_text()),
+    }
+
+    def handle(request):
+        rec.requests.append(request)
+        return httpx.Response(200, json=bodies[request.url.params["model"]])
+
+    card = vehicle_recalls(RX350, NhtsaClient(transport=httpx.MockTransport(handle)))
+    assert [r.url.params["model"] for r in rec.requests] == ["RX 350", "RX"]
+    assert card.family_fallback and card.family == "RX" and card.queried_model == "RX"
+    assert card.matched == ("24V482000", "25V059000", "26V162000")
+    assert card.unmatched == ("25V744000",)
+    assert [r.campaign for r in card.campaigns] == list(card.matched)
+    assert card.advisor_question == VEHICLE_RECALLS_QUESTION == "Are there open recalls on my VIN?"
+    assert card.vehicle == "2024 Lexus RX 350" and card.error is None
+    data = card.to_dict()
+    assert data["campaigns"][0] == {
+        "campaign": "24V482000",
+        "component": "SEATS:FRONT ASSEMBLY:HEAD RESTRAINT",
+        "report_date": "2024-06-27",
+        "summary": "The head restraints on the driver and front passenger seats may be "
+        "inadvertently removed without pressing the lock release button.",
+    }
+    assert data["campaigns"][2]["summary"] == (
+        "The rearview camera image may not display when the vehicle is placed in reverse."
+    )
+    assert 'no campaign for model "RX 350"' in data["note"] and "3 name the RX 350" in data["note"]
+
+
+def test_one_line_summary_skips_the_opening_and_the_report_pointer():
+    (camera,) = [
+        r
+        for r in NhtsaClient.from_recorded(NHTSA_RX).recalls(Vehicle(2024, "Lexus", "RX", 1))
+        if r.campaign == "25V744000"
+    ]
+    assert camera.one_line.startswith("A software error may cause the rearview camera")
+
+
+def test_no_fallback_when_the_model_has_campaigns_or_is_one_word():
+    civic = vehicle_recalls(CIVIC, NhtsaClient.from_recorded(FIXTURE))
+    assert not civic.family_fallback and len(civic.campaigns) == 4
+    assert civic.queried_model == "Civic" and civic.unmatched == ()
+    rec = Recorder(body={"Count": 0, "Message": "ok", "results": []})
+    card = vehicle_recalls(Vehicle(2024, "Acme", "Zed", 1), client(rec))
+    assert len(rec.requests) == 1 and card.campaigns == () and not card.family_fallback
+    assert "0 recall campaigns" in card.note
+
+
+def test_a_failed_lookup_is_on_the_card_not_raised():
+    card = vehicle_recalls(RX350, client(Recorder(status=500)))
+    assert card.error and "HTTP 500" in card.error and card.campaigns == ()
+    assert card.advisor_question == VEHICLE_RECALLS_QUESTION
+    assert "ask the advisor to check the VIN" in card.note
+    # the model itself answered nothing, then the family lookup failed
+    nhtsa = NhtsaClient.from_recorded(*NHTSA_LEXUS[1:])
+    card = vehicle_recalls(RX350, nhtsa)
+    assert card.family_fallback and card.error and "no recorded response" in card.error

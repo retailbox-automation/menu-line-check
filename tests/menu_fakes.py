@@ -13,6 +13,12 @@ from .conftest import FakeServer, choice, noul, ok_response
 FIXTURES = Path(__file__).parent / "fixtures"
 TEXTRACT = FIXTURES / "textract_menu.json"
 NHTSA = FIXTURES / "nhtsa_recalls_civic_2019.json"
+LEXUS_801 = FIXTURES / "lexus_sheet_801_vision.json"
+LEXUS_391 = FIXTURES / "lexus_sheet_391_vision.json"
+NHTSA_RX = FIXTURES / "nhtsa_recalls_lexus_rx_2024.json"
+NHTSA_RX350_EMPTY = FIXTURES / "nhtsa_recalls_lexus_rx350_2024_empty.json"
+NHTSA_LEXUS = (NHTSA_RX, (NHTSA_RX350_EMPTY, "LEXUS", "RX 350", 2024))
+"""Both recorded Lexus responses, as ``NhtsaClient.from_recorded(*NHTSA_LEXUS)`` takes them."""
 
 # line name fragment -> (tool choice, confidence, P(safety))
 MENU_ANSWERS: dict[str, tuple[str, float, float]] = {
@@ -28,6 +34,21 @@ MENU_ANSWERS: dict[str, tuple[str, float, float]] = {
     "Nitrogen tire fill": ("decline_addon", 0.78, 0.66),  # safety-flagged decline: ask_llm
     "Throttle body service": ("decline_addon", 0.83, 0.07),
     "Environmental disposal fee": ("ask_about_fee", 0.9, 0.02),
+}
+
+# Scripted (not measured) answers for the 11 lines of the Lexus sheet, for offline tests.
+LEXUS_ANSWERS: dict[str, tuple[str, float, float]] = {
+    "Engine Oil and Oil Filter": ("check_schedule", 0.9, 0.05),
+    "Oil Conditioner": ("decline_addon", 0.92, 0.04),
+    "Tire Rotation": ("check_schedule", 0.6, 0.7),
+    "Cabin Filter": ("check_schedule", 0.7, 0.03),
+    "Multi-Point Inspection": ("check_schedule", 0.85, 0.3),
+    "Lifetime Protection": ("ask_about_fee", 0.55, 0.05),
+    "Wheel Alignment": ("owner_decides", 0.8, 0.9),
+    "Crankcase": ("decline_addon", 0.88, 0.06),
+    "A/C Evaporator": ("decline_addon", 0.7, 0.05),
+    "Shop Charges": ("ask_about_fee", 0.95, 0.02),
+    "Fees": ("ask_about_fee", 0.93, 0.02),
 }
 
 
@@ -47,7 +68,9 @@ def menu_responder(readable_image: float = 0.97, p_readable_text: float = 0.9):
         if "images" in body:
             return ok_response({"readable": noul(readable_image)}, latency_ms=20.0)
         state = body["state"]
-        found = [v for fragment, v in MENU_ANSWERS.items() if fragment in state]
+        found = [
+            v for fragment, v in {**MENU_ANSWERS, **LEXUS_ANSWERS}.items() if fragment in state
+        ]
         tool, conf, p_safety = found[0] if found else ("decline_addon", 0.5, 0.1)
         answers = {
             "readable": noul(p_readable_text),
