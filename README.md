@@ -20,19 +20,32 @@ line "Replace fuel pump module $1,089.00" goes to the recall lookup, which finds
 
 ## The decision handed to Decider 2B
 
-TBD. Fill in: the one repeated decision, the workflow it lives in, what the agent must get right to be trusted, how we know it works.
+One decision, repeated for every line of the menu: which tool handles this line. It sits at the start of the
+agent's loop: nothing runs for a line (no lookup, no decline, no model call) until Decider has answered for it.
+To be trusted the agent must never decline a safety part on its own and must not push ordinary lines to the
+owner. We know how well it does from 103 labelled menu lines (see Measurements).
 
 | | |
 |---|---|
 | Decision | which tool fits one line of a printed service menu |
-| Question type(s) | `readable` (noul), `safety` (noul), `tool` (choice) |
+| Question type(s) | `safety` (noul) and `tool` (choice) in one request; `readable` (noul) only when line crops exist, otherwise a code check on the OCR text |
 | Option set | `decline_addon`, `check_schedule`, `check_recall_warranty`, `ask_about_fee`, `owner_decides` |
 | Where in the loop | per line before any tool runs; plus a `before_tool_call` gate on the LLM picker's `decline_addon` |
 | Plain-code policy | unreadable -> retake; tool owner_decides -> owner decides; decline with P(safety) >= 0.5 -> LLM picker, never declined; confidence >= the tool's threshold (decline 0.8, lookups and fee 0.5) -> run it; else LLM picker |
 
 ## How it works
 
-Diagram TBD.
+![Menu Line Check architecture](docs/architecture.png)
+
+1. Amazon Textract turns the photo into lines with boxes; plain code pairs each service name with its price.
+2. One Decider 2B request per line answers "is this a driving-safety part?" and "which of the five tools?".
+3. Plain code routes by the cost of a wrong action (thresholds above). Lines below their threshold go to a Strands
+   agent on Amazon Bedrock (Nova), whose `decline_addon` call passes a Decider safety gate first.
+4. The tools run: the maintenance table, the public NHTSA recalls API, or a question for the advisor.
+5. Amazon Bedrock (Nova) writes the advisor question for each flagged line and the summary card; every decision
+   goes to a JSONL ledger.
+
+The safety gate is `decider_kit`'s generic Strands intervention:
 
 ```
 agent (Strands + Bedrock model)
@@ -65,24 +78,36 @@ agent = Agent(tools=[...], interventions=[build_gate(DeciderClient("http://decid
 
 ## Measurements
 
-TBD. To fill with `decider-bench` on our own labelled cases:
+103 labelled lines from 10 synthetic menus (3 fonts, clean / phone-photo / unreadable), live against
+Decider 2B on our Mac mini (MPS, `--vision` server), 2026-10-20/21; `menu-race` reproduces every number.
 
-| Metric | Decider 2B | LLM baseline (Bedrock) |
-|---|---|---|
-| Latency p50 / p90 | TBD | TBD |
-| Cost per 1,000 decisions | TBD | TBD |
-| Accuracy | TBD | TBD |
-| Accuracy at confidence >= 0.9 / abstain rate | TBD | n/a |
-| Handling of low confidence (CONFIRM / HUMAN bands) | TBD | n/a |
+| Metric | Decider 2B | Keyword rules | LLM picker (Bedrock Nova) |
+|---|---|---|---|
+| Tool accuracy, all lines | 0.88 | 0.83 | TBD |
+| Accuracy at confidence >= 0.9 (lines kept) | 1.00 (21/103) | — | — |
+| Accuracy at confidence >= 0.7 (lines kept) | 0.90 (81/103) | — | — |
+| Pipeline policy: lines decided without an LLM, accuracy on those | 90/103 at 0.89 | — | — |
+| Safety lines auto-declined / false "your call" / wrong declines | 0/20 · 0 · 0 | — | — |
+| Latency per line, p50 / p90 | 369 / 375 ms (2 questions) | 0 ms | TBD |
+| Cost per 1,000 lines | self-hosted, no per-call price | $0 | TBD |
 
-The Bedrock baseline is behind `--baseline bedrock --model-id <id> --i-approve-spend` and has not been run (spend not approved).
-Thresholds in `ThresholdPolicy` (act >= 0.9, confirm 0.5 to 0.9, human < 0.5) are the convention from the Decider architecture docs, not
-a calibration: they must be measured on our own cases.
+Low confidence is handled by routing, not by a single cut-off: a decline needs 0.8 and a "no" on safety, lookups and
+questions need 0.5, and everything below goes to the LLM picker behind the safety gate. A single threshold of 0.8
+with "safety yes -> owner" decided only 76/103 lines at 0.76 and sent 10 ordinary lines to the owner, because the
+safety question says yes to every line with the word *tire*.
+The Bedrock column waits for a spend approval: `menu-race --allow-bedrock` runs it.
 
 ## What this does not show
 
-TBD. Candidates to state honestly once measured: no cost win if it does not appear; wall clock end to end; the 4096-token window; noul
-calibration (middle probabilities are common); `score` is not reliable on unseen tasks; the model is labelled experimental.
+- The menus are synthetic and the Textract response in `tests/fixtures/` is hand-made; the NHTSA data is a real,
+  recorded response. No dealer and no car owner has used this.
+- The maintenance table is illustrative, not any maker's schedule. A recall is matched to a line by part words,
+  not by VIN, so the agent asks "is this covered by…?" rather than claiming it is.
+- Decider is often unsure: at >= 0.9 it covers only about a fifth of the lines. The per-tool thresholds are a
+  measured trade-off, not a free win.
+- Decider runs on our own Mac, outside AWS: the account's GPU quotas for the official SageMaker deployment
+  (ml.g6.xlarge) were zero during the hackathon. The reference server answers one request at a time.
+- Decider 2B is labelled experimental by its authors, and its context window is 4,096 tokens.
 
 ## Platform findings
 
@@ -107,7 +132,10 @@ Found while building the toolkit:
 
 ## How AI was used
 
-TBD (state plainly which parts were written with AI assistance, and how the output was checked).
+The code, tests and documents were written with an AI coding assistant working under our direction. The
+decision design, the thresholds and every claim here were checked against measurements: each number comes from a
+script in this repository run on our own hardware (commands under "Run it"), and the 202 tests run without
+network access.
 
 ## Run it
 
