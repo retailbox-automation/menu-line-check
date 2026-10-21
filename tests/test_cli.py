@@ -188,7 +188,9 @@ def test_cli_two_sheets_prints_totals_recalls_and_the_after_block(fake_decider, 
     assert 'Ask: "Are there open recalls on my VIN?"' in out
     assert "TOTAL $801.05 -> $391.38, $409.67 less" in out
     assert "Owner declined 4 lines; the agent said decline on 2 of them:" in out
-    assert "in the maker's schedule at 20,000 mi" in row_after(out, "Engine Oil and Oil Filter")
+    assert "-> keep. In the maker's schedule at 20,000 mi. Ask:" in row_after(
+        out, "Engine Oil and Oil Filter"
+    )
     assert "retake" not in row(out, "Crankcase Cleaning Service")
 
     report = json.loads(report_path.read_text())

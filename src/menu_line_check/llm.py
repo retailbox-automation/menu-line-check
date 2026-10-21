@@ -132,9 +132,10 @@ class FakeWriter:
                 f"{declines} to decline come to ${report.total_for('decline'):,.2f}."
             )
         elif any(o.line.price is None for o in report.outcomes if o.verdict == "decline"):
+            them = "it" if c["decline"] == 1 else "them"
             text = (
                 f"{report.summary}. The sheet totals ${sheet_total:,.2f}; it does not price the "
-                f"{declines} to decline one by one: ask what the total is without them."
+                f"{declines} to decline one by one: ask what the total is without {them}."
             )
         else:
             text = (
