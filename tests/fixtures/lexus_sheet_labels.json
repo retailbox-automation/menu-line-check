@@ -1,0 +1,17 @@
+{
+  "sheet": "lexus_sheet_801_vision.json",
+  "label_source": "lane judgement 2026-10-21 from the line text; owner's actual declines from the second sheet",
+  "lines": [
+    {"index": 1, "match": "Engine Oil and Oil Filter", "name": "Engine oil and filter", "tools": ["check_schedule"], "reason": "routine maintenance scheduled by mileage", "owner_declined": false},
+    {"index": 2, "match": "Premium Engine Oil Conditioner", "name": "Premium engine oil conditioner (add-on)", "tools": ["decline_addon"], "reason": "an additive the maker's schedule does not require", "owner_declined": true},
+    {"index": 3, "match": "Tire Rotation", "name": "Tire rotation", "tools": ["check_schedule"], "reason": "routine maintenance scheduled by mileage", "owner_declined": false},
+    {"index": 4, "match": "Cabin Filter", "name": "Cabin filter + sanitizer", "tools": ["check_schedule", "decline_addon"], "reason": "ambiguous: the filter is scheduled maintenance, the sanitizer bundled with it is an add-on", "owner_declined": true},
+    {"index": 5, "match": "Multi-Point Inspection", "name": "Multi-point inspection", "tools": ["check_schedule"], "reason": "an inspection done at every visit", "owner_declined": false},
+    {"index": 6, "match": "Lifetime Protection Plan", "name": "Lifetime protection plan", "tools": ["decline_addon", "ask_about_fee"], "reason": "ambiguous: a protection package tied to buying add-ons, worded as a question for the advisor", "owner_declined": false},
+    {"index": 7, "match": "Wheel Alignment", "name": "Wheel alignment", "tools": ["owner_decides"], "reason": "alignment affects driving safety: the owner decides", "owner_declined": false},
+    {"index": 8, "match": "Crankcase Cleaning Service", "name": "Crankcase cleaning service", "tools": ["decline_addon"], "reason": "a chemical cleaning the maker's schedule does not require", "owner_declined": true},
+    {"index": 9, "match": "A/C Evaporator System Cleaning", "name": "A/C evaporator cleaning", "tools": ["decline_addon"], "reason": "a chemical cleaning the maker's schedule does not require", "owner_declined": true},
+    {"index": 10, "match": "Shop Charges", "name": "Shop charges", "tools": ["ask_about_fee"], "reason": "a charge rather than a service", "owner_declined": false},
+    {"index": 11, "match": "Fees", "name": "Fees", "tools": ["ask_about_fee"], "reason": "a charge rather than a service", "owner_declined": false}
+  ]
+}
