@@ -1,0 +1,329 @@
+{
+ "_source": "parse_textract at commit f903196 (before bullet sheets) on textract_menu.json",
+ "lines": [
+  {
+   "index": 1,
+   "text": "Oil & filter change, full synthetic ... $89.95",
+   "name": "Oil & filter change, full synthetic",
+   "price": 89.95,
+   "bbox": [
+    0.08,
+    0.125,
+    0.8400000000000001,
+    0.02479999999999999
+   ],
+   "images": [],
+   "price_text": "$89.95",
+   "description": null,
+   "name_bbox": [
+    0.08,
+    0.125,
+    0.392,
+    0.024
+   ],
+   "price_bbox": [
+    0.8528,
+    0.1258,
+    0.0672,
+    0.024
+   ]
+  },
+  {
+   "index": 2,
+   "text": "Engine oil conditioner ... $39.00",
+   "name": "Engine oil conditioner",
+   "price": 39.0,
+   "bbox": [
+    0.08,
+    0.1905,
+    0.8400000000000001,
+    0.02479999999999999
+   ],
+   "images": [],
+   "price_text": "$39.00",
+   "description": null,
+   "name_bbox": [
+    0.08,
+    0.1905,
+    0.2464,
+    0.024
+   ],
+   "price_bbox": [
+    0.8528,
+    0.1913,
+    0.0672,
+    0.024
+   ]
+  },
+  {
+   "index": 3,
+   "text": "Fuel injection cleaning ... $149.00",
+   "name": "Fuel injection cleaning",
+   "price": 149.0,
+   "bbox": [
+    0.08,
+    0.256,
+    0.8400000000000001,
+    0.02479999999999999
+   ],
+   "images": [],
+   "price_text": "$149.00",
+   "description": null,
+   "name_bbox": [
+    0.08,
+    0.256,
+    0.2576,
+    0.024
+   ],
+   "price_bbox": [
+    0.8416,
+    0.2568,
+    0.0784,
+    0.024
+   ]
+  },
+  {
+   "index": 4,
+   "text": "Tire rotation ... $39.95",
+   "name": "Tire rotation",
+   "price": 39.95,
+   "bbox": [
+    0.08,
+    0.317,
+    0.8400000000000001,
+    0.024800000000000044
+   ],
+   "images": [],
+   "price_text": "$39.95",
+   "description": null,
+   "name_bbox": [
+    0.08,
+    0.317,
+    0.1456,
+    0.024
+   ],
+   "price_bbox": [
+    0.8528,
+    0.3178,
+    0.0672,
+    0.024
+   ]
+  },
+  {
+   "index": 5,
+   "text": "Cabin air filter ... $79.95",
+   "name": "Cabin air filter",
+   "price": 79.95,
+   "bbox": [
+    0.08,
+    0.3825,
+    0.8400000000000001,
+    0.02479999999999999
+   ],
+   "images": [],
+   "price_text": "$79.95",
+   "description": null,
+   "name_bbox": [
+    0.08,
+    0.3825,
+    0.1792,
+    0.024
+   ],
+   "price_bbox": [
+    0.8528,
+    0.3833,
+    0.0672,
+    0.024
+   ]
+  },
+  {
+   "index": 6,
+   "text": "Replace fuel pump module ... $1,089.00",
+   "name": "Replace fuel pump module",
+   "price": 1089.0,
+   "bbox": [
+    0.08,
+    0.448,
+    0.8400000000000001,
+    0.02479999999999999
+   ],
+   "images": [],
+   "price_text": "$1,089.00",
+   "description": null,
+   "name_bbox": [
+    0.08,
+    0.448,
+    0.2688,
+    0.024
+   ],
+   "price_bbox": [
+    0.8192,
+    0.4488,
+    0.1008,
+    0.024
+   ]
+  },
+  {
+   "index": 7,
+   "text": "Tech diagnostic ... $189.00 Required before any repair",
+   "name": "Tech diagnostic",
+   "price": 189.0,
+   "bbox": [
+    0.08,
+    0.509,
+    0.8400000000000001,
+    0.04500000000000004
+   ],
+   "images": [],
+   "price_text": "$189.00",
+   "description": "Required before any repair",
+   "name_bbox": [
+    0.08,
+    0.509,
+    0.226267,
+    0.04500000000000004
+   ],
+   "price_bbox": [
+    0.8416,
+    0.5098,
+    0.0784,
+    0.024
+   ]
+  },
+  {
+   "index": 8,
+   "text": "Shop supplies ... $34.50",
+   "name": "Shop supplies",
+   "price": 34.5,
+   "bbox": [
+    0.08,
+    0.5745,
+    0.8400000000000001,
+    0.024800000000000044
+   ],
+   "images": [],
+   "price_text": "$34.50",
+   "description": null,
+   "name_bbox": [
+    0.08,
+    0.5745,
+    0.7608,
+    0.024
+   ],
+   "price_bbox": [
+    0.8528,
+    0.5753,
+    0.0672,
+    0.024
+   ]
+  },
+  {
+   "index": 9,
+   "text": "Front brake pads & rotors ... $489.00",
+   "name": "Front brake pads & rotors",
+   "price": 489.0,
+   "bbox": [
+    0.08,
+    0.64,
+    0.8400000000000001,
+    0.024800000000000044
+   ],
+   "images": [],
+   "price_text": "$489.00",
+   "description": null,
+   "name_bbox": [
+    0.08,
+    0.64,
+    0.28,
+    0.024
+   ],
+   "price_bbox": [
+    0.8416,
+    0.6408,
+    0.0784,
+    0.024
+   ]
+  },
+  {
+   "index": 10,
+   "text": "Nitrogen tire fill ... $29.95",
+   "name": "Nitrogen tire fill",
+   "price": 29.95,
+   "bbox": [
+    0.08,
+    0.701,
+    0.8400000000000001,
+    0.024800000000000044
+   ],
+   "images": [],
+   "price_text": "$29.95",
+   "description": null,
+   "name_bbox": [
+    0.08,
+    0.701,
+    0.2016,
+    0.024
+   ],
+   "price_bbox": [
+    0.8528,
+    0.7018,
+    0.0672,
+    0.024
+   ]
+  },
+  {
+   "index": 11,
+   "text": "Throttle body service ... $119.00",
+   "name": "Throttle body service",
+   "price": 119.0,
+   "bbox": [
+    0.08,
+    0.7665,
+    0.8400000000000001,
+    0.024800000000000044
+   ],
+   "images": [],
+   "price_text": "$119.00",
+   "description": null,
+   "name_bbox": [
+    0.08,
+    0.7665,
+    0.2352,
+    0.024
+   ],
+   "price_bbox": [
+    0.8416,
+    0.7673,
+    0.0784,
+    0.024
+   ]
+  },
+  {
+   "index": 12,
+   "text": "Environmental disposal fee ... $12.95",
+   "name": "Environmental disposal fee",
+   "price": 12.95,
+   "bbox": [
+    0.08,
+    0.832,
+    0.8400000000000001,
+    0.02400000000000002
+   ],
+   "images": [],
+   "price_text": "$12.95",
+   "description": null,
+   "name_bbox": [
+    0.08,
+    0.832,
+    0.229894,
+    0.02400000000000002
+   ],
+   "price_bbox": [
+    0.866947,
+    0.832,
+    0.053053,
+    0.024
+   ]
+  }
+ ]
+}

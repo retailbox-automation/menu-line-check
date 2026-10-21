@@ -7,6 +7,15 @@ separate LINE blocks on the same row; sometimes the leader or the price is glued
 leaders, attaches a smaller description line directly under a name, and skips header and footer
 lines that carry no price. A line without a price between priced lines is kept with
 ``price=None`` so it is flagged for a retake rather than silently dropped.
+
+Some dealer sheets print no price per line: a bulleted list of services, then a totals block
+(Menu Total, Shop Charges, Tax, Fees, TOTAL). :func:`parse_sheet` reads both layouts. When the
+page has bullet lines (``•``, ``·``, ``▪``, a leading ``- `` or ``* ``), the service lines are
+exactly the bullet rows (a bullet block joined with the text that continues it on its row, see
+:func:`_merge_bullet_rows`), in reading order, plus the Shop Charges and Fees rows of the totals
+block (a charge the owner can ask about); every other text (header fields, titles, promotion
+badges, financing offers, footers) is ignored. Bullet lines under a ``Declined`` section header
+are marked ``declined_on_sheet``. A page without bullets parses exactly as before.
 """
 
 from __future__ import annotations
@@ -18,9 +27,10 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
-from .models import BBox, MenuLine
+from .models import BBox, MenuLine, SheetTotals
 
 CropMode = Literal["strip", "cells"]
+Layout = Literal["priced", "bullets"]
 
 # "$1,089.00", "$29.95", "$12", "$0.00 (no charge)"; "S0.00" is a common OCR misread of "$0.00"
 # and is accepted only with cents, so "S60" in a name is not a price.
@@ -37,6 +47,24 @@ ROW_OVERLAP = 0.5
 """Minimum vertical overlap (share of the shorter box) for a name and a price to share a row."""
 DESCRIPTION_HEIGHT = 0.9
 """A description line is shorter than this share of the name line's height."""
+
+# A bullet at the start of a line: one bullet sign, or a dash / star followed by a space.
+_BULLET = re.compile(r"^\s*(?:[•·▪]|[-*](?=\s))\s*")
+# Totals-block row labels (lower case, words only) -> the SheetTotals field they fill.
+_TOTAL_LABELS: dict[str, str] = {
+    "menu total": "menu_total",
+    "subtotal": "menu_total",
+    "sub total": "menu_total",
+    "shop charges": "shop_charges",
+    "shop supplies": "shop_charges",
+    "tax": "tax",
+    "fees": "fees",
+    "fee": "fees",
+    "total": "total",
+}
+CHARGE_FIELDS = frozenset({"shop_charges", "fees"})
+"""Totals rows that are also menu lines on a bullet sheet: charges the owner can ask about."""
+DECLINED_HEADER = "declined"
 
 
 def parse_price(text: str) -> tuple[float, str] | None:
@@ -109,6 +137,19 @@ class _Frag:
     description: str | None = None
     desc_box: BBox | None = None
     extra: list[str] = field(default_factory=list)
+    bullet: bool = False
+    raw: str = ""
+    """The OCR text (bullet removed) before trimming, so a joined row keeps "Incl." whole."""
+
+
+def _words(text: str) -> str:
+    """Lower-case letters only, one space between words: ``"Shop Charges:"`` -> ``shop charges``."""
+    return " ".join(re.findall(r"[a-z]+", text.lower()))
+
+
+def total_field(text: str) -> str | None:
+    """The :class:`SheetTotals` field a totals-row label fills, or None."""
+    return _TOTAL_LABELS.get(_words(text))
 
 
 def _bbox(block: Mapping[str, Any]) -> BBox:
@@ -142,8 +183,24 @@ def _word_boxes(
     return name_box, price_box
 
 
-def parse_textract(response: Mapping[str, Any]) -> list[MenuLine]:
-    """Amazon Textract ``DetectDocumentText`` JSON -> priced menu lines, top to bottom."""
+@dataclass(frozen=True)
+class Sheet:
+    """One parsed page: its lines, its totals block and where a Declined section starts."""
+
+    lines: tuple[MenuLine, ...]
+    totals: SheetTotals
+    layout: Layout
+    """``priced``: a price on every line row; ``bullets``: bullet lines, prices in the totals."""
+    declined_from: int | None = None
+    """Index of the first line under a Declined header, or None."""
+
+    @property
+    def declined(self) -> tuple[MenuLine, ...]:
+        return tuple(line for line in self.lines if line.declined_on_sheet)
+
+
+def _fragments(response: Mapping[str, Any]) -> list[_Frag]:
+    """LINE blocks -> fragments; standalone prices paired with the text on their row."""
     blocks = response.get("Blocks") or []
     by_id = {b["Id"]: b for b in blocks if "Id" in b}
     texts: list[_Frag] = []
@@ -151,21 +208,41 @@ def parse_textract(response: Mapping[str, Any]) -> list[MenuLine]:
     for block in blocks:
         if block.get("BlockType") != "LINE":
             continue
-        cleaned = clean_text(str(block.get("Text", "")))
-        if not cleaned:
+        raw = str(block.get("Text", ""))
+        if not clean_text(raw):
             continue  # a dotted leader on its own
         box = _bbox(block)
+        bullet = _BULLET.match(raw)
+        if bullet:
+            raw = raw[bullet.end() :]
+        cleaned = clean_text(raw)
+        if not cleaned:
+            texts.append(_Frag("", box, bullet=True))  # a bullet sign read as its own block
+            continue
         name, price, description = _split(cleaned)
         if price and not name:
             prices.append(_Frag("", box, price, box))
         elif price:
             name_box, price_box = _word_boxes(block, by_id)
             texts.append(
-                _Frag(name, name_box or box, price, price_box, description, None, [cleaned])
+                _Frag(
+                    name,
+                    name_box or box,
+                    price,
+                    price_box,
+                    description,
+                    None,
+                    [cleaned],
+                    bullet=bool(bullet),
+                )
             )
         else:
-            texts.append(_Frag(cleaned, box))
+            texts.append(_Frag(cleaned, box, bullet=bool(bullet), raw=raw))
 
+    # On a bullet sheet a price belongs to a bullet line or a totals row, nothing else.
+    bullets = any(t.bullet for t in texts)
+    if bullets:
+        texts = _merge_bullet_rows(texts)
     # pair each price with the unpriced text on its row, to its left, with the most overlap
     for price in sorted(prices, key=lambda f: f.box.top):
         candidates = [
@@ -174,13 +251,78 @@ def parse_textract(response: Mapping[str, Any]) -> list[MenuLine]:
             if t.price is None
             and t.box.left < price.box.left
             and _overlap(t.box, price.box) >= ROW_OVERLAP
+            and (not bullets or t.bullet or total_field(t.text) is not None)
         ]
         if candidates:
             best = max(candidates, key=lambda t: _overlap(t.box, price.box))
             best.price, best.price_box = price.price, price.box
         else:
             texts.append(price)  # a price whose name could not be read
+    return texts
 
+
+ROW_HEIGHT_RATIO = 3.0
+"""Two blocks of one printed row differ in height by less than this factor."""
+
+
+def _merge_bullet_rows(texts: list[_Frag]) -> list[_Frag]:
+    """Join each bullet line with the unpriced text that continues it on the same row.
+
+    OCR splits one printed row into two LINE blocks where a word is blanked out or the gap
+    between words is wide ("• PERFORM" + "Crankcase Cleaning Service"). A block continues a
+    bullet row when it lies to the right of the bullet block, overlaps it vertically by
+    :data:`ROW_OVERLAP` (as a price pairs with its name), is of a similar height, has no price,
+    is not itself a bullet and is not a totals label. The pieces are joined left to right with
+    one space. Only bullet sheets are merged: priced menus keep name, leader and price apart.
+    """
+    merged: set[int] = set()
+    for frag in sorted((t for t in texts if t.bullet), key=lambda f: f.box.top):
+        if frag.price is not None:
+            continue
+        parts = sorted(
+            (
+                t
+                for t in texts
+                if id(t) not in merged
+                and not t.bullet
+                and t.price is None
+                and t.box.left > frag.box.left
+                and total_field(t.text) is None
+                and _overlap(t.box, frag.box) >= ROW_OVERLAP
+                and max(t.box.height, frag.box.height)
+                < ROW_HEIGHT_RATIO * max(min(t.box.height, frag.box.height), 1e-9)
+            ),
+            key=lambda f: f.box.left,
+        )
+        for part in parts:
+            frag.raw = f"{frag.raw} {part.raw}"
+            frag.text = clean_text(frag.raw)
+            frag.box = frag.box.union(part.box)
+            merged.add(id(part))
+    return [t for t in texts if id(t) not in merged and (t.text or not t.bullet)]
+
+
+def _line(index: int, f: _Frag, **extra: Any) -> MenuLine:
+    has_name = bool(f.text)
+    name_box = f.box.union(f.desc_box) if has_name else f.desc_box
+    whole = (name_box or f.price_box or f.box).union(f.price_box)
+    price_text = f.price[1] if f.price else None
+    return MenuLine(
+        index=index,
+        text=compose_text(f.text, price_text, f.description),
+        name=f.text,
+        price=f.price[0] if f.price else None,
+        bbox=whole,
+        price_text=price_text,
+        description=f.description,
+        name_bbox=name_box,
+        price_bbox=f.price_box,
+        **extra,
+    )
+
+
+def _priced_lines(texts: list[_Frag]) -> list[MenuLine]:
+    """A menu with a price on each row (the layout every synthetic menu uses)."""
     items = sorted((t for t in texts if t.price is not None), key=lambda f: f.box.top)
     loose = sorted((t for t in texts if t.price is None), key=lambda f: f.box.top)
     first_top = items[0].box.top if items else 0.0
@@ -202,26 +344,92 @@ def parse_textract(response: Mapping[str, Any]) -> list[MenuLine]:
         else:
             items.append(frag)  # a line whose price could not be read
 
-    lines = []
-    for i, f in enumerate(sorted(items, key=lambda f: f.box.top), 1):
-        has_name = bool(f.text)
-        name_box = f.box.union(f.desc_box) if has_name else f.desc_box
-        whole = (name_box or f.price_box or f.box).union(f.price_box)
-        price_text = f.price[1] if f.price else None
-        lines.append(
-            MenuLine(
-                index=i,
-                text=compose_text(f.text, price_text, f.description),
-                name=f.text,
-                price=f.price[0] if f.price else None,
-                bbox=whole,
-                price_text=price_text,
-                description=f.description,
-                name_bbox=name_box,
-                price_bbox=f.price_box,
-            )
-        )
-    return lines
+    return [_line(i, f) for i, f in enumerate(sorted(items, key=lambda f: f.box.top), 1)]
+
+
+def _same_row(a: BBox, b: BBox) -> bool:
+    """Both boxes sit on one text row: the overlap is most of the TALLER box.
+
+    Stricter than :func:`_overlap`: a tall box (sideways text in the margin, a logo) overlaps
+    many rows but shares none of them.
+    """
+    inter = min(a.bottom, b.bottom) - max(a.top, b.top)
+    return max(0.0, inter) / max(a.height, b.height, 1e-9) >= ROW_OVERLAP
+
+
+def _section_headers(texts: list[_Frag], bullets: list[_Frag]) -> list[_Frag]:
+    """Unpriced, non-bullet text alone on its row, between the first and the last bullet."""
+    first, last = bullets[0].box.top, bullets[-1].box.top
+    return sorted(
+        (
+            t
+            for t in texts
+            if not t.bullet
+            and t.price is None
+            and first < t.box.top < last
+            and not any(o is not t and _same_row(o.box, t.box) for o in texts)
+        ),
+        key=lambda f: f.box.top,
+    )
+
+
+def _bullet_lines(texts: list[_Frag]) -> tuple[list[MenuLine], int | None]:
+    """A sheet of bullet lines: the bullets, then the Shop Charges and Fees rows."""
+    bullets = sorted((t for t in texts if t.bullet), key=lambda f: f.box.top)
+    charges = sorted(
+        (
+            t
+            for t in texts
+            if not t.bullet and t.price is not None and total_field(t.text) in CHARGE_FIELDS
+        ),
+        key=lambda f: f.box.top,
+    )
+    prices_listed = any(b.price is not None for b in bullets)
+    headers = _section_headers(texts, bullets)
+    lines: list[MenuLine] = []
+    declined_from: int | None = None
+    for i, frag in enumerate(bullets, 1):
+        above = [h for h in headers if h.box.top < frag.box.top]
+        declined = bool(above) and _words(above[-1].text) == DECLINED_HEADER
+        if declined and declined_from is None:
+            declined_from = i
+        lines.append(_line(i, frag, declined_on_sheet=declined, prices_listed=prices_listed))
+    start = len(lines)
+    lines += [_line(start + i, frag) for i, frag in enumerate(charges, 1)]
+    return lines, declined_from
+
+
+def _totals(texts: list[_Frag]) -> SheetTotals:
+    """The first priced row for each totals label, top to bottom; bullet lines never count."""
+    found: dict[str, float] = {}
+    for frag in sorted(texts, key=lambda f: f.box.top):
+        key = None if frag.bullet or frag.price is None else total_field(frag.text)
+        if key is not None and key not in found:
+            found[key] = frag.price[0]  # type: ignore[index]
+    return SheetTotals(**found)
+
+
+def parse_sheet(response: Mapping[str, Any]) -> Sheet:
+    """Amazon Textract ``DetectDocumentText`` JSON -> lines, totals and the Declined section.
+
+    The totals block is read on both layouts (on a priced menu its rows may also be lines, as
+    they always were). A badge such as "up to $6,000" or a "$63.21 / month" financing offer
+    has no totals label and is neither a line on a bullet sheet nor a total.
+    """
+    texts = _fragments(response)
+    totals = _totals(texts)
+    if not any(t.bullet for t in texts):
+        return Sheet(tuple(_priced_lines(texts)), totals, "priced")
+    lines, declined_from = _bullet_lines(texts)
+    return Sheet(tuple(lines), totals, "bullets", declined_from)
+
+
+def parse_textract(response: Mapping[str, Any]) -> list[MenuLine]:
+    """Amazon Textract ``DetectDocumentText`` JSON -> menu lines, top to bottom.
+
+    The lines of :func:`parse_sheet`; kept for callers that need only the lines.
+    """
+    return list(parse_sheet(response).lines)
 
 
 def textract_detect(image_bytes: bytes, client: Any) -> dict[str, Any]:

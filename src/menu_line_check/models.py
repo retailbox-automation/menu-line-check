@@ -5,9 +5,13 @@ from __future__ import annotations
 import re
 from collections import Counter
 from dataclasses import asdict, dataclass, field
-from typing import Any, Literal, NamedTuple
+from typing import TYPE_CHECKING, Any, Literal, NamedTuple
 
 from menu_line_tool_selection import LineDecision
+
+if TYPE_CHECKING:
+    from .after import AfterBlock
+    from .nhtsa import VehicleRecalls
 
 __all__ = [
     "BBox",
@@ -17,6 +21,7 @@ __all__ = [
     "MenuLine",
     "MenuReport",
     "OutcomeRoute",
+    "SheetTotals",
     "Source",
     "Vehicle",
     "Verdict",
@@ -99,7 +104,7 @@ _LETTERS = re.compile(r"[A-Za-z]{2}")
 
 @dataclass(frozen=True)
 class MenuLine:
-    """One priced line of a service menu, as OCR read it."""
+    """One line of a service menu or service sheet, as OCR read it."""
 
     index: int
     """1-based position on the menu."""
@@ -115,11 +120,45 @@ class MenuLine:
     description: str | None = None
     name_bbox: BBox | None = None
     price_bbox: BBox | None = None
+    declined_on_sheet: bool = False
+    """The line is listed under a "Declined" section header of the sheet it was read from."""
+    prices_listed: bool = True
+    """False on a sheet that prints no price for any service line (bullet lines, totals only):
+    there a missing price is how the sheet is printed, not an OCR failure."""
 
     @property
     def has_name_and_price(self) -> bool:
-        """The code readability check: OCR found a name (two letters or more) and a price."""
+        """OCR found a name (two letters or more) and a price."""
         return self.price is not None and bool(_LETTERS.search(self.name))
+
+    @property
+    def readable_by_code(self) -> bool:
+        """The code readability check used when no line image is sent to Decider.
+
+        A name and a price, as on a priced menu. On a sheet that lists no per-line prices
+        (``prices_listed`` False) the name alone is enough.
+        """
+        if self.prices_listed:
+            return self.has_name_and_price
+        return bool(_LETTERS.search(self.name))
+
+
+@dataclass(frozen=True)
+class SheetTotals:
+    """The totals block of a sheet; None for a row the sheet does not print."""
+
+    menu_total: float | None = None
+    """Printed as Menu Total or Subtotal."""
+    shop_charges: float | None = None
+    """Printed as Shop Charges or Shop Supplies."""
+    tax: float | None = None
+    fees: float | None = None
+    """Printed as Fees or Fee."""
+    total: float | None = None
+    """Printed as TOTAL: what the owner pays."""
+
+    def to_dict(self) -> dict[str, float | None]:
+        return asdict(self)
 
 
 @dataclass(frozen=True)
@@ -178,9 +217,16 @@ class MenuReport:
     """Plain-English summary from the writer, if one was given."""
     decider_wall_ms: float | None = None
     """Wall clock of the Decider phase (all lines, asked concurrently)."""
+    totals: SheetTotals | None = None
+    """The sheet's own totals block, when the sheet prints one."""
+    recalls: VehicleRecalls | None = None
+    """Recall campaigns for the car's make, model and year (the recalls card)."""
+    after: AfterBlock | None = None
+    """The comparison with a second sheet printed after the owner declined lines."""
 
     @property
     def menu_total(self) -> float:
+        """Sum of the line prices (not the sheet's own totals, see ``totals``)."""
         return round(sum(o.line.price or 0.0 for o in self.outcomes), 2)
 
     def total_for(self, verdict: Verdict) -> float:
@@ -201,5 +247,8 @@ class MenuReport:
             "menu_total": self.menu_total,
             "declined_total": self.total_for("decline"),
             "decider_wall_ms": self.decider_wall_ms,
+            "totals": self.totals.to_dict() if self.totals else None,
+            "recalls": self.recalls.to_dict() if self.recalls else None,
+            "after": self.after.to_dict() if self.after else None,
             "outcomes": [outcome(o) for o in self.outcomes],
         }
