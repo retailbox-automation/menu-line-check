@@ -1,30 +1,35 @@
 # decider-agent
 
 > Entry **N2 Menu Line Check** for the AWS Builder Center "Agent Experience Hackathon: Strands Decider"
-> (deadline 23.10.2026 23:59 PT). Sections still marked **TBD** are filled in before submission.
+> (deadline 23.10.2026 23:59 PT).
 > `decider_kit` is the concept-agnostic toolkit, `menu_line_check` is the agent, and
 > `patterns/menu_line_tool_selection/` is the reusable decision pattern.
 
 ## What it does
 
-A car owner stands at a dealer's service counter with a printed service menu and takes one photo. The agent
-splits the menu into lines and, for each line, Strands Decider 2B decides which tool fits: decline an optional
-add-on, check the maintenance schedule against the odometer, look up recalls for this car (public NHTSA API),
-ask about a fee, or leave a safety part (brakes, tires, alignment, steering) to the owner. How sure Decider must
-be depends on what a wrong action costs: a decline needs 0.8, a lookup or a question 0.5, and a decline from any
-tool on a line Decider flags as a safety item is never taken automatically (it becomes the owner's call). Lines below their threshold go to a general model on
-Amazon Bedrock; Bedrock also writes one plain question for the service advisor per flagged line and the summary
-card (Keep · Decline · Ask · Your call). On the demo menu the
-line "Replace fuel pump module $1,089.00" goes to the recall lookup, which finds recall campaign 23V858000 for a
-2019 Civic: "Is this covered by recall 23V858000?"
+A car owner stands at a dealer's service counter with a printed service sheet. The agent reads it line by line
+and, for each line, Strands Decider 2B decides which tool fits: decline an optional add-on, check the maker's
+maintenance schedule against the odometer, look up recalls (public NHTSA API), ask about a charge, or leave a
+safety part (brakes, tires, alignment, steering) to the owner.
 
-It also reads a real dealer sheet: the redacted sheet of a 2024 RX 350 at 20,000 miles, which prices no line
-(nine bullet services, then Menu Total, Shop Charges, Tax, Fees, TOTAL $801.05). Every line still gets a Decider
-decision, the schedule lines are checked against the maker's own schedule for that car (2024 RX 350 Warranty and
-Services Guide, printed page 50: oil and filter, cabin air filter, tire rotation and inspections at 20,000 miles),
-the report adds a recalls card for the car ("Are there open recalls on my VIN?") and, given the sheet printed after
-the owner declined four lines, compares the two totals ($801.05 -> $391.38, $409.67 less) and the owner's declines
-with the agent's verdicts. Live run, line by line: `docs/REAL-SHEET-RUN-2026-10-21.md`.
+We ran it on a real sheet: the owner's own, redacted, from the 20,000-mile service of a 2024 SUV. It prices none
+of its nine service lines; the total is $801.05. The owner declined four lines, and the sheet printed after that
+came to $391.38. The maker's schedule for this car lists oil and filter, cabin air filter, tire rotation and
+inspections at 20,000 miles. With the Nova picker on Amazon Bedrock taking the three lines Decider was unsure about,
+the agent said keep 3, decline 3, ask 4 (including the two charges) and your call 1. It agreed with 3 of the
+owner's 4 declines, asked about the 4th (a cabin filter sold with a sanitizer: it asked for the filter without the
+sanitizer), and declined nothing the owner kept. It also printed a recalls card ("Are there open recalls on my VIN?") and the two totals
+($801.05 -> $391.38, $409.67 less). Line by line, free and paid runs: `docs/REAL-SHEET-RUN-2026-10-21.md`.
+
+How sure Decider must be depends on what a wrong action costs: a decline needs 0.8, a lookup or a question 0.5,
+and a decline from any tool on a line Decider flags as a safety item is never taken automatically (it becomes the
+owner's call). Lines below their threshold go to a general model on Amazon Bedrock (Nova); Bedrock also writes
+the plain question for the service advisor on each line the owner still has to act on, by rephrasing a question
+code has drafted, and may add one sentence to the summary.
+
+The accuracy measure is not that one sheet but 103 labelled lines on 10 synthetic menus (see Measurements). On the
+synthetic demo menu, "Replace fuel pump module $1,089.00" goes to the recall lookup, which finds campaign 23V858000
+for a 2019 Civic: "Is this covered by recall 23V858000?"
 
 ## The decision handed to Decider 2B
 
@@ -39,21 +44,25 @@ owner. We know how well it does from 103 labelled menu lines (see Measurements).
 | Question type(s) | `safety` (noul) and `tool` (choice) in one request; `readable` (noul) only when line crops exist, otherwise a code check on the OCR text |
 | Option set | `decline_addon`, `check_schedule`, `check_recall_warranty`, `ask_about_fee`, `owner_decides` |
 | Where in the loop | per line before any tool runs; plus a `before_tool_call` gate on the LLM picker's `decline_addon` |
-| Plain-code policy | unreadable -> retake; tool owner_decides -> owner decides; decline with P(safety) >= 0.5 -> LLM picker, never declined; confidence >= the tool's threshold (decline 0.8, lookups and fee 0.5) -> run it; else LLM picker |
+| Plain-code policy | unreadable -> retake; tool owner_decides -> owner decides; decline with P(safety) >= 0.5 -> LLM picker, never declined; confidence >= the tool's threshold (decline 0.8, lookups and fee 0.5) -> run it; else LLM picker; any decline a tool returns on a line with P(safety) >= 0.5 -> owner decides |
 
 ## How it works
 
 ![Menu Line Check architecture](docs/architecture.png)
 
-1. Amazon Textract turns the photo into lines with boxes; plain code pairs each service name with its price.
+1. OCR turns the photo into lines with boxes, and plain code turns those into sheet lines: a service name with its
+   price, or the bullet lines of a sheet that prices only its totals. Our runs use Apple Vision on the device,
+   written in Amazon Textract's response format (`scripts/vision_to_textract.swift`); with `--textract` the same
+   parser takes Amazon Textract (paid, not called in our runs).
 2. One Decider 2B request per line answers "is this a driving-safety part?" and "which of the five tools?".
 3. Plain code routes by the cost of a wrong action (thresholds above). Lines below their threshold go to a Strands
    agent on Amazon Bedrock (Nova), whose `decline_addon` call passes a Decider safety gate first.
 4. The tools run: the maintenance schedule (the maker's, where we have it for the car), the public NHTSA recalls
    API, or a question for the advisor.
-5. Amazon Bedrock (Nova) writes the advisor question for each flagged line and the summary card; every decision
-   goes to a JSONL ledger. The writer only rephrases a question code has drafted, and code rejects any rephrasing
-   that adds a topic, a make or model name, or a number; the summary's numbers are composed in code.
+5. Amazon Bedrock (Nova) writes the advisor question for each flagged line and may add one sentence to the summary;
+   every decision goes to a JSONL ledger. The writer only rephrases a question code has drafted, and code rejects
+   any rephrasing that adds a topic, a make or model name, or a number; the card and the summary's numbers are
+   composed in code.
 
 The safety gate is `decider_kit`'s generic Strands intervention:
 
@@ -91,36 +100,42 @@ agent = Agent(tools=[...], interventions=[build_gate(DeciderClient("http://decid
 103 labelled lines from 10 synthetic menus (3 fonts, clean / phone-photo / unreadable), live against
 Decider 2B on our Mac mini (MPS, `--vision` server), 2026-10-20/21; `menu-race` reproduces every number.
 
-| Metric | Decider 2B | Keyword rules | LLM picker (Bedrock Nova) |
+| Metric | Decider 2B | Keyword rules | LLM picker (Bedrock Nova Lite) |
 |---|---|---|---|
-| Tool accuracy, all lines | 0.88 | 0.83 | TBD |
+| Tool accuracy, all lines | 0.88 | 0.83 | 0.81 |
 | Accuracy at confidence >= 0.9 (lines kept) | 1.00 (21/103) | — | — |
 | Accuracy at confidence >= 0.7 (lines kept) | 0.90 (81/103) | — | — |
 | Pipeline policy: lines decided without an LLM, accuracy on those | 90/103 at 0.89 | — | — |
-| Safety lines auto-declined / false "your call" / wrong declines | 0/20 · 0 · 0 | — | — |
-| Latency per line, p50 / p90 | 369 / 375 ms (2 questions) | 0 ms | TBD |
-| Cost per 1,000 lines | self-hosted, no per-call price | $0 | TBD |
+| Safety lines missed (raw answers) | 0/20 | 0/20 | 2/20 |
+| Safety lines auto-declined / false "your call" / wrong declines (pipeline) | 0/20 · 0 · 0 | — | — |
+| Latency per line, p50 / p90 | 369 / 375 ms (2 questions) | 0 ms | 1,478 / 1,885 ms |
+| Cost per 1,000 lines | self-hosted, no per-call price | $0 | $0.16 |
+
+Nova Micro as the picker, same 103 lines (2026-10-21): accuracy 0.63, safety lines missed 8/20, p50 / p90
+1,327 / 3,151 ms, $0.14 per 1,000 lines.
 
 Low confidence is handled by routing, not by a single cut-off: a decline needs 0.8 and a "no" on safety, lookups and
 questions need 0.5, and everything below goes to the LLM picker behind the safety gate. A single threshold of 0.8
 with "safety yes -> owner" decided only 76/103 lines at 0.76 and sent 10 ordinary lines to the owner, because the
 safety question says yes to every line with the word *tire*.
-The Bedrock column waits for a spend approval: `menu-race --allow-bedrock` runs it.
+The picker columns come from `menu-race --allow-bedrock` on 2026-10-21 (Nova Lite and Nova Micro, us-east-1).
 
 ## What this does not show
 
-- The menus are synthetic and the Textract response in `tests/fixtures/` is hand-made; the NHTSA data is a real,
-  recorded response. One real sheet (11 lines, one visit, OCR by Apple Vision on redacted photos) was run as an
-  example, not as a measure; no dealer has used this.
-- Only one car has the maker's schedule: the 20,000-mile service of a 2024 RX 350, from the maker's "2024 RX 350
-  Warranty and Services Guide", printed page 50 (PDF page 52), box "24 Months or 20,000 Miles"
+- One real sheet (11 lines, one visit) is an example, not a measure. The accuracy numbers come from 103 labelled
+  lines on 10 synthetic menus, and the Textract response in `tests/fixtures/textract_menu.json` is hand-made.
+- The labels on the real sheet are our judgement from the line text; the owner's declines are one owner's
+  choices on one day.
+- The maintenance schedule is the maker's for that one car at 20,000 miles: the maker's 2024 Warranty and
+  Services Guide for this model, printed page 50 (PDF page 52), box "24 Months or 20,000 Miles"
   (https://assets.sia.toyota.com/publications/en/omms-s/L-MMS-24RX350/pdf/L-MMS-24RX350.pdf), without the
   special-operating-conditions items. Only that schedule can lead to a decline ("not in the maker's schedule at
   20,000 mi"). Every other car gets an illustrative generic table, which is no maker's schedule: it keeps a
   service that is due there and turns everything else into "Is this in the maker's schedule at N mi?", never a
   decline.
-- A recall is matched to a line by part words, not by VIN, so the agent asks "is this covered by…?" rather than
-  claiming it is.
+- Recalls are listed per model and year, not per VIN, so the agent asks ("Are there open recalls on my VIN?",
+  "Is this covered by recall N?") rather than claiming a recall is open.
+- We did not call Amazon Textract: our OCR is Apple Vision on the device, on redacted photos.
 - Decider is often unsure: at >= 0.9 it covers only about a fifth of the lines. The per-tool thresholds are a
   measured trade-off, not a free win.
 - Decider runs on our own Mac, outside AWS: the account's GPU quotas for the official SageMaker deployment
@@ -155,12 +170,21 @@ Found on the real sheet (2026-10-21):
   which name the 2024 RX 350 in their summary, although "RX 350" is in NHTSA's own model list for that year. An agent
   asking naively would tell the owner "no recalls" (or "lookup failed"). The recalls card retries with the family
   and keeps only the campaigns whose summary names the model, and says it did.
+* **A generic schedule is not good enough to decline.** With an illustrative table (oil and rotation every
+  7,500 mi) the agent told the owner to decline the oil change and the tire rotation at 20,000 mi, both of which
+  the maker's schedule lists there. Now only the maker's schedule for the car can produce a decline; a generic
+  table only keeps or asks.
+* **A model writing for the owner adds topics and numbers.** In our first paid run Nova asked whether an oil change
+  "corresponds to any recall campaign", named the make, and wrote that the menu totals 80.28 USD (the sum of the
+  only two priced lines) instead of the sheet's $801.05. Now code drafts every question and every number, the
+  model only rephrases, and code rejects a rephrasing that mentions a recall without a campaign number, names the
+  make or model, adds a number, is not a question or is too long (the draft is used, and the reason recorded).
 
 ## How AI was used
 
 The code, tests and documents were written with an AI coding assistant working under our direction. The
 decision design, the thresholds and every claim here were checked against measurements: each number comes from a
-script in this repository run on our own hardware (commands under "Run it"), and the 318 tests run without
+script in this repository run on our own hardware (commands under "Run it"), and the 319 tests run without
 network access.
 
 ## Run it
@@ -174,7 +198,25 @@ ruff check .
 The real Decider model runs on another machine; this code only talks HTTP.
 
 ```bash
-# the menu check on the demo menu (hand-made Textract JSON), NHTSA served from the recorded response
+# 1. the real sheet and the sheet printed after the owner's declines, offline: recorded NHTSA responses,
+#    no Bedrock (questions are the code-made drafts, low-confidence lines become "ask the advisor").
+#    The make and model are the NHTSA parameters and the key of the maker's schedule.
+menu-check --ocr-json tests/fixtures/sheet_801_vision.json --after tests/fixtures/sheet_391_vision.json \
+  --vehicle "2024 Lexus RX 350 20000" --decider-url http://127.0.0.1:8099 \
+  --nhtsa-recorded tests/fixtures/nhtsa_recalls_family_2024.json \
+  --nhtsa-recorded "tests/fixtures/nhtsa_recalls_model_2024_empty.json=LEXUS/RX 350/2024" \
+  --ledger out/ledger-sheet.jsonl --json out/report-sheet.json
+# (live NHTSA instead of the recordings: --nhtsa-cache out/nhtsa-cache)
+
+# 2. Decider vs keyword rules on the 103 labelled lines, plus what the pipeline policy does with Decider's
+#    answers: recorded answers (no server) or live
+menu-race --replay-recorded
+menu-race --decider-url http://127.0.0.1:8099 --out out/race.md
+
+# 3. paid: the Bedrock picker and writer (Nova Lite), capped; add to any menu-check or menu-race command
+#    --allow-bedrock --max-usd 0.10
+
+# the synthetic demo menu (hand-made Textract JSON), NHTSA served from the recorded response
 menu-check --ocr-json tests/fixtures/textract_menu.json --vehicle "2019 Honda Civic 31200" \
   --decider-url http://127.0.0.1:8099 --nhtsa-recorded tests/fixtures/nhtsa_recalls_civic_2019.json \
   --ledger out/ledger.jsonl --json out/report.json
@@ -190,18 +232,6 @@ menu-check --textract photo.jpg --allow-textract --vehicle "2019 Honda Civic 312
 # questions per line: 2 (safety, tool on the OCR text; readable is the code check "name and price found"),
 # 3 with --image (readable asked on the line crops). --criteria short sends shorter tool criteria with the same
 # meaning (not measured); the default --criteria spike keeps the sentences our numbers come from.
-# Decider vs keyword rules on the 103 labelled spike lines, plus what the pipeline policy does with
-# Decider's answers (per-tool thresholds vs the previous policy): recorded answers (no server) or live
-menu-race --replay-recorded
-menu-race --decider-url http://127.0.0.1:8099 --out out/race.md
-# the real sheet of a 2024 RX 350 and the sheet printed after the owner's declines; NHTSA live, cached
-# (the make is the NHTSA parameter); prints each line's verdict and reason (the maker's schedule for this car at
-# 20,000 mi), the sheet totals, the recalls card and the after block
-menu-check --ocr-json tests/fixtures/sheet_801_vision.json --after tests/fixtures/sheet_391_vision.json \
-  --vehicle "2024 Lexus RX 350 20000" --decider-url http://127.0.0.1:8099 --nhtsa-cache out/nhtsa-cache \
-  --json out/report-sheet.json
-# offline: --nhtsa-recorded tests/fixtures/nhtsa_recalls_family_2024.json \
-#   --nhtsa-recorded "tests/fixtures/nhtsa_recalls_model_2024_empty.json=LEXUS/RX 350/2024"
 ```
 
 Free OCR on a Mac instead of Textract: `scripts/vision_to_textract.swift` runs Apple Vision on the device and
@@ -213,8 +243,9 @@ are read by the same parser: the bullet rows are the lines, Shop Charges and Fee
 Nothing calls Bedrock without `--allow-bedrock` (paid; model ids from `N2_PICKER_MODEL` / `N2_WRITER_MODEL`,
 default `us.amazon.nova-lite-v1:0`), and every paid run also stops at a spend cap (`--max-usd`, default $1,
 env `N2_MAX_USD`) that is checked before each call (Bedrock and Textract share it; exit code 4) and prints what
-it spent. Without it the advisor questions come from templates and low-confidence
-lines become "ask the advisor".
+it spent. Without it the advisor questions are the code-made drafts and low-confidence lines become "ask the
+advisor"; the report has the same fields either way, with `question_source` / `summary_source` saying which text
+was used.
 
 On the recorded spike answers (synthetic menus, 2026-10-20) the per-tool policy acts on 90 of 103 lines at 0.89
 accuracy with no safety line declined, no false "your call" and no wrong decline; the previous single-threshold
