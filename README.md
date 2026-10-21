@@ -134,7 +134,7 @@ Found while building the toolkit:
 
 The code, tests and documents were written with an AI coding assistant working under our direction. The
 decision design, the thresholds and every claim here were checked against measurements: each number comes from a
-script in this repository run on our own hardware (commands under "Run it"), and the 202 tests run without
+script in this repository run on our own hardware (commands under "Run it"), and the 203 tests run without
 network access.
 
 ## Run it
