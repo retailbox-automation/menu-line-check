@@ -2,6 +2,8 @@
 
 > Entry **N2 Menu Line Check** for the AWS Builder Center "Agent Experience Hackathon: Strands Decider"
 > (deadline 23.10.2026 23:59 PT).
+> Article: [Menu Line Check: a 2B decision model reads my $801 service sheet, one line at a time](https://builder.aws.com/content/3L0OYjUJDGgzhiKpztVKgCCyNwK/menu-line-check-a-2b-decision-model-reads-my-dollar801-service-sheet-one-line-at-a-time)
+> · Video (1:51): https://youtu.be/C_a6AQ0HK98
 > `decider_kit` is the concept-agnostic toolkit, `menu_line_check` is the agent, and
 > `patterns/menu_line_tool_selection/` is the reusable decision pattern.
 
