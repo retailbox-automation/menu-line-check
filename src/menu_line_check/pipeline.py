@@ -42,7 +42,7 @@ import time
 from collections.abc import Callable, Coroutine, Iterable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
-from typing import Any, Protocol
+from typing import Any
 
 from decider_kit import (
     Answer,
@@ -65,6 +65,7 @@ from menu_line_tool_selection import (
     resolve_thresholds,
 )
 
+from .after import compare_sheets
 from .models import (
     DeciderTiming,
     LineOutcome,
@@ -78,6 +79,7 @@ from .models import (
 from .nhtsa import NhtsaClient, vehicle_recalls
 from .spend import SpendCapReached
 from .tools import ask_advisor, retake_line, run_tool
+from .writing import Writer, needs_advisor_question, write_question, write_summary
 
 logger = logging.getLogger(__name__)
 
@@ -86,22 +88,12 @@ LEDGER_GATE = "menu-line-check"
 Picker = Callable[[MenuLine, Vehicle], tuple[str | None, str]]
 
 
-class Writer(Protocol):
-    def advisor_question(self, line: MenuLine, outcome: LineOutcome, vehicle: Vehicle) -> str: ...
-
-    def summary(self, report: MenuReport) -> str: ...
-
-
 @dataclass(frozen=True)
 class LineAction:
     """What the ledger records as the action for one line (``type`` = the route)."""
 
     type: str
     reason: str
-
-
-def needs_advisor_question(outcome: LineOutcome) -> bool:
-    return outcome.verdict in ("keep", "ask", "your_call")
 
 
 DEFAULT_CONCURRENCY = 12
@@ -378,6 +370,7 @@ def check_menu(
     concurrency: int = DEFAULT_CONCURRENCY,
     criteria: CriteriaSet = "spike",
     totals: SheetTotals | None = None,
+    after_sheet: Any = None,
 ) -> MenuReport:
     """Check every line of one menu for one vehicle. Lines are checked one after another.
 
@@ -387,7 +380,13 @@ def check_menu(
     ledger row written, in line order. ``criteria`` picks the ``tool`` criteria sentences:
     ``"spike"`` (the measured ones, default) or ``"short"`` (same meaning, not measured).
     ``totals`` is the sheet's own totals block (``parse_sheet``), kept on the report and used
-    by the summary.
+    by the summary. ``after_sheet`` (a ``parse_sheet`` result) is the sheet printed after the
+    owner declined lines: the report's ``after`` block compares the two.
+
+    With a ``writer``, every ``ask`` / ``your_call`` line gets an advisor question and the report
+    gets its summary (:mod:`menu_line_check.writing`): code drafts both, the writer may only
+    rephrase, and text that fails the checks is replaced by the draft. Sources and fallback
+    reasons are on the report and, per line, in the ledger (stage ``question``).
     """
     limits = resolve_thresholds(thresholds, act_threshold)
     lines = list(lines)
@@ -397,12 +396,7 @@ def check_menu(
         for line, result in zip(lines, asked, strict=True)
     ]
     if writer is not None:
-        outcomes = [
-            replace(o, advisor_question=writer.advisor_question(o.line, o, vehicle))
-            if needs_advisor_question(o)
-            else o
-            for o in outcomes
-        ]
+        outcomes = [_with_question(o, writer, vehicle, ledger) for o in outcomes]
     counts = summary_counts(outcomes)
     report = MenuReport(
         vehicle,
@@ -413,6 +407,41 @@ def check_menu(
         totals=totals,
         recalls=vehicle_recalls(vehicle, nhtsa) if nhtsa is not None else None,
     )
+    if after_sheet is not None:
+        report = replace(
+            report, after=compare_sheets(report, after_sheet.lines, after_sheet.totals)
+        )
     if writer is not None:
-        report = replace(report, summary_text=writer.summary(report))
+        summary = write_summary(writer, report)
+        report = replace(
+            report,
+            summary_text=summary.text,
+            summary_source=summary.source,
+            summary_fallback=summary.fallback,
+        )
     return report
+
+
+def _with_question(
+    outcome: LineOutcome, writer: Writer, vehicle: Vehicle, ledger: Ledger | None
+) -> LineOutcome:
+    if not needs_advisor_question(outcome):
+        return outcome
+    written = write_question(writer, outcome.line, outcome, vehicle)
+    if ledger is not None:
+        reason = f"line {outcome.line.index}: question_source={written.source}"
+        if written.fallback:
+            reason += f"; writer text rejected: {written.fallback}"
+        ledger.record(
+            gate=LEDGER_GATE,
+            stage="question",
+            state=written.text,
+            answers=None,
+            action=LineAction("question", reason),
+        )
+    return replace(
+        outcome,
+        advisor_question=written.text,
+        question_source=written.source,
+        question_fallback=written.fallback,
+    )

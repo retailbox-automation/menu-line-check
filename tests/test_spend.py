@@ -24,7 +24,7 @@ from menu_line_check.spend import (
 )
 
 from .menu_fakes import NHTSA, TEXTRACT, menu_server, textract_response
-from .test_llm import CIVIC, FakeConverse, ScriptedModel, fuel_outcome, line
+from .test_llm import CIVIC, FakeConverse, ScriptedModel, line
 from .test_pipeline import lines as menu_lines
 from .test_race import slice10, truthful_server
 
@@ -97,12 +97,12 @@ def test_writer_adds_up_usage_and_stops_before_the_call_that_would_be_over_the_c
     client = FakeConverse("Is this covered?")  # usage 50 in / 12 out = $0.00000588 a call
     spend = SpendCap(0.00001)
     writer = BedrockWriter(client, allow_bedrock=True, spend=spend)
-    outcome = fuel_outcome()
+    facts = {"draft": "Is this covered?"}
     for _ in range(2):  # 0.00000588 < cap: allowed; 0.00001176 >= cap after the second
-        writer.advisor_question(outcome.line, outcome, CIVIC)
+        writer.rephrase_question(facts)
     assert spend.calls == 2 and spend.usd == pytest.approx(2 * 5.88e-6)
     with pytest.raises(SpendCapReached):
-        writer.advisor_question(outcome.line, outcome, CIVIC)
+        writer.rephrase_question(facts)
     assert len(client.calls) == 2  # the third call never reached the client
 
 

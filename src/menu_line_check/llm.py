@@ -2,8 +2,9 @@
 
 * :class:`StrandsPicker` - a Strands ``Agent`` on Amazon Bedrock (Nova by default) that picks
   exactly one tool for a menu line Decider was not sure about, behind the pattern's safety gate.
-* :class:`BedrockWriter` - Bedrock Converse: one plain question for the service advisor per
-  flagged line, and a two-sentence summary. The numbers on the summary card come from code.
+* :class:`BedrockWriter` - Bedrock Converse: rephrases the code-made question for the service
+  advisor on each flagged line, and may add one sentence (no digits) to the code-made summary.
+  Code rejects any new topic, make or model name, or number (:mod:`menu_line_check.writing`).
 * :class:`FakePicker` / :class:`FakeWriter` - deterministic stand-ins for tests and the offline
   demo; no network.
 
@@ -25,9 +26,10 @@ from decider_kit import DeciderClient, Ledger
 from menu_line_tool_selection import build_safety_gate
 
 from .baseline import keyword_tool
-from .models import LineOutcome, MenuLine, MenuReport, Vehicle
+from .models import MenuLine, Vehicle
 from .spend import SpendCap
 from .tools import make_picker_tools
+from .writing import TextSource
 
 DEFAULT_PICKER_MODEL = "us.amazon.nova-lite-v1:0"
 DEFAULT_WRITER_MODEL = "us.amazon.nova-lite-v1:0"
@@ -39,23 +41,22 @@ PICKER_SYSTEM_PROMPT = (
     "number and the line text exactly as given. Brakes, tires, alignment and steering are "
     "always the owner's decision. After the tool call, say in one short sentence why it fits."
 )
-ADVISOR_SYSTEM_PROMPT = (
-    "You write one short, polite question that a car owner can ask the service advisor about "
-    "one line of a service menu. Use only the facts given. If a recall campaign number is "
-    "given, ask whether the recall covers this line. One sentence, no greeting, no new numbers."
+REPHRASE_SYSTEM_PROMPT = (
+    "You get the facts about one line of a car service menu and a draft question the owner will "
+    "ask the service advisor. Rewrite the draft as one short, polite question the owner says at "
+    "the counter. Keep the same meaning. Add no new topics. Mention a recall only if a recall "
+    "campaign number is in the facts. Use no brand, make or model names. Use no numbers that "
+    "are not in the facts. Reply with the question only."
 )
 SUMMARY_SYSTEM_PROMPT = (
-    "You write two plain sentences for a car owner about their service menu, from the facts "
-    "given. Do not change, add or round any number. No greeting, no advice beyond the facts."
+    "You get a car owner's service menu summary, already written. Add ONE plain sentence of "
+    "advice for the owner at the counter, from the facts only. No digits and no numbers at all, "
+    "no brand, make or model names, no greeting. Reply with the sentence only."
 )
 
 
 class BedrockNotAllowed(RuntimeError):  # noqa: N818 - reads as a sentence at the raise site
     """A Bedrock-backed object was requested without ``allow_bedrock=True``."""
-
-
-def _plural(n: int, one: str, many: str) -> str:
-    return f"{n} {one if n == 1 else many}"
 
 
 # ---------------------------------------------------------------------------------- offline
@@ -73,80 +74,17 @@ class FakePicker:
         return keyword_tool(line.text), "keyword rule (offline stand-in for the LLM picker)"
 
 
-def _schedule_question(name: str, schedule: dict, vehicle: Vehicle) -> str:
-    """The advisor question for a check_schedule line, from the schedule result."""
-    status = schedule.get("status")
-    if schedule.get("source") == "maker":
-        listed, at = schedule.get("name"), f"{schedule.get('due_at_mi') or vehicle.odometer_mi:,}"
-        if status == "bundled":
-            return (
-                f"The maker's schedule lists {listed} at {at} mi: can you do just that, "
-                f"without the {schedule.get('extra')}?"
-            )
-        if status == "unclear":
-            return f"The maker's schedule lists {listed} at {at} mi: is this line that service?"
-        if status == "due" and listed and listed.startswith("the inspections"):
-            return f"The maker's schedule lists {listed} at {at} mi: what did they find?"
-        if status == "due":
-            return f"The maker's schedule lists {listed} at {at} mi: is this that service?"
-        return (
-            f"The maker's schedule does not list the {name} at {vehicle.odometer_mi:,} mi: "
-            "why do you recommend it?"
-        )
-    if status == "due" and schedule.get("every_visit"):
-        return f"The {name} is done at every visit: what did it find?"
-    if status == "due":
-        return (
-            f"My schedule has {schedule['service']} due at {schedule['due_at_mi']:,} mi: "
-            "is this that service, and what does it include?"
-        )
-    return f"Is this in the maker's schedule at {vehicle.odometer_mi:,} mi?"
-
-
 class FakeWriter:
-    """Template questions and summary. Same inputs, same text."""
+    """The offline writer: it rephrases nothing, so every question is the code-made draft and
+    the summary is the code-made one (sources ``template``). Same structure as with Bedrock."""
 
-    def advisor_question(self, line: MenuLine, outcome: LineOutcome, vehicle: Vehicle) -> str:
-        name = (line.name or f"line {line.index}").lower()
-        result = outcome.tool_result
-        if outcome.tool == "check_recall_warranty":
-            if result.get("recall"):
-                return f"Is this covered by recall {result['recall']['campaign']}?"
-            return f"Could the warranty cover the {name}, and what exactly failed?"
-        if outcome.tool == "ask_about_fee":
-            price = line.price_text or "this"
-            return f"What does the {price} {name} cover, and can it be removed?"
-        if outcome.tool == "check_schedule":
-            return _schedule_question(name, result.get("schedule") or {}, vehicle)
-        if outcome.tool == "owner_decides":
-            return f"What did the inspection find on the {name}, and how soon does it need doing?"
-        return f"What is the {name} for, and is it required by the maker's schedule?"
+    source: TextSource = "template"
 
-    def summary(self, report: MenuReport) -> str:
-        c = report.counts
-        declines = _plural(c["decline"], "line", "lines")
-        sheet_total = report.totals.total if report.totals else None
-        if sheet_total is None:
-            text = (
-                f"{report.summary}. The menu totals ${report.menu_total:,.2f}; the "
-                f"{declines} to decline come to ${report.total_for('decline'):,.2f}."
-            )
-        elif any(o.line.price is None for o in report.outcomes if o.verdict == "decline"):
-            them = "it" if c["decline"] == 1 else "them"
-            text = (
-                f"{report.summary}. The sheet totals ${sheet_total:,.2f}; it does not price the "
-                f"{declines} to decline one by one: ask what the total is without {them}."
-            )
-        else:
-            text = (
-                f"{report.summary}. The sheet totals ${sheet_total:,.2f}; the {declines} to "
-                f"decline come to ${report.total_for('decline'):,.2f}."
-            )
-        if c["your_call"]:
-            text += f" {_plural(c['your_call'], 'safety line is', 'safety lines are')} your call."
-        if c["retake"]:
-            text += f" Retake {_plural(c['retake'], 'line', 'lines')} before deciding."
-        return text
+    def rephrase_question(self, facts: dict[str, Any]) -> str | None:
+        return None
+
+    def summary_sentence(self, facts: dict[str, Any]) -> str | None:
+        return None
 
 
 # ---------------------------------------------------------------------------------- Bedrock
@@ -243,13 +181,17 @@ def _was_denied(messages: list[dict[str, Any]]) -> bool:
 
 
 class BedrockWriter:
-    """Advisor questions and the summary through the Bedrock Converse API.
+    """Rephrases code-made advisor questions, and adds one sentence to the code-made summary,
+    through the Bedrock Converse API. It writes no fact of its own: the pipeline checks every
+    text it returns (:mod:`menu_line_check.writing`) and keeps the draft when the check fails.
 
     ``client`` is a boto3 ``bedrock-runtime`` client created by the caller. Model id from
     ``N2_WRITER_MODEL`` (default Nova Lite). Refuses to be built without ``allow_bedrock=True``.
     Every call is checked against ``spend`` first and counted after; without one passed, a
     default ``SpendCap()`` is made, so a writer is never uncapped.
     """
+
+    source: TextSource = "bedrock"
 
     def __init__(
         self,
@@ -286,30 +228,13 @@ class BedrockWriter:
         blocks = response["output"]["message"]["content"]
         return "".join(b.get("text", "") for b in blocks).strip()
 
-    def advisor_question(self, line: MenuLine, outcome: LineOutcome, vehicle: Vehicle) -> str:
-        result = outcome.tool_result
-        facts = {
-            "vehicle": vehicle.label,
-            "menu_line": line.text,
-            "price": line.price_text,
-            "decision": outcome.verdict,
-            "tool": outcome.tool,
-            "tool_note": result.get("note"),
-            "recall_campaign": (result.get("recall") or {}).get("campaign"),
-            "recall_component": (result.get("recall") or {}).get("component"),
-            "schedule": result.get("schedule"),
-        }
-        return self._converse(ADVISOR_SYSTEM_PROMPT, facts, 120)
+    def rephrase_question(self, facts: dict[str, Any]) -> str | None:
+        """The model's rephrasing of ``facts["draft"]``; the caller validates it."""
+        return self._converse(REPHRASE_SYSTEM_PROMPT, facts, 100)
 
-    def summary(self, report: MenuReport) -> str:
-        facts = {
-            "card": report.summary,
-            "counts": report.counts,
-            "menu_total_usd": report.menu_total,
-            "declined_total_usd": report.total_for("decline"),
-            "your_call_lines": [o.line.name for o in report.outcomes if o.verdict == "your_call"],
-        }
-        return f"{report.summary}. {self._converse(SUMMARY_SYSTEM_PROMPT, facts, 160)}"
+    def summary_sentence(self, facts: dict[str, Any]) -> str | None:
+        """One sentence to add to the code-made summary; the caller validates it."""
+        return self._converse(SUMMARY_SYSTEM_PROMPT, facts, 80)
 
 
 __all__ = [

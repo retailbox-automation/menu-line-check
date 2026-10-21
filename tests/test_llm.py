@@ -20,6 +20,7 @@ from menu_line_check.llm import BedrockNotAllowed, BedrockWriter, FakeWriter, St
 from menu_line_check.models import LineOutcome, Vehicle
 from menu_line_check.ocr import parse_line_texts
 from menu_line_check.tools import make_picker_tools
+from menu_line_check.writing import draft_question, question_facts
 from menu_line_tool_selection import SAFETY_DENY_REASON, build_safety_gate
 
 from .conftest import FakeServer, noul, ok_response
@@ -231,19 +232,24 @@ def test_bedrock_writer_sends_the_facts_and_returns_the_text(monkeypatch):
     client = FakeConverse("Is this covered by recall 23V858000?")
     writer = BedrockWriter(client, allow_bedrock=True)
     outcome = fuel_outcome()
-    assert writer.advisor_question(outcome.line, outcome, CIVIC) == (
-        "Is this covered by recall 23V858000?"
+    facts = question_facts(
+        outcome.line, outcome, CIVIC, draft_question(outcome.line, outcome, CIVIC)
     )
+    assert writer.rephrase_question(facts) == "Is this covered by recall 23V858000?"
     call = client.calls[0]
     assert call["modelId"] == "us.amazon.nova-lite-v1:0"
-    facts = json.loads(call["messages"][0]["content"][0]["text"])
-    assert facts["recall_campaign"] == "23V858000" and facts["price"] == "$1,089.00"
-    assert "recall campaign number" in call["system"][0]["text"]
+    sent = json.loads(call["messages"][0]["content"][0]["text"])
+    assert sent["recall_campaign"] == "23V858000" and sent["price"] == "$1,089.00"
+    assert sent["draft"] == "Is this covered by recall 23V858000?"
+    assert sent["vehicle"] == "2019 Civic"  # year and model, never the make
+    assert "Honda" not in call["messages"][0]["content"][0]["text"]
+    assert "Rewrite the draft" in call["system"][0]["text"]
     assert writer.usage == {"inputTokens": 50, "outputTokens": 12}
+    assert writer.source == "bedrock" and FakeWriter.source == "template"
 
 
-def test_fake_writer_questions_are_templates():
+def test_fake_writer_rephrases_nothing_so_drafts_are_used():
     outcome = fuel_outcome()
-    assert FakeWriter().advisor_question(outcome.line, outcome, CIVIC) == (
-        "Is this covered by recall 23V858000?"
-    )
+    assert FakeWriter().rephrase_question({}) is None
+    assert FakeWriter().summary_sentence({}) is None
+    assert draft_question(outcome.line, outcome, CIVIC) == "Is this covered by recall 23V858000?"

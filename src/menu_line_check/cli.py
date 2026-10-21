@@ -17,8 +17,10 @@ uses the photo for the line crops. Textract and Bedrock share one spend cap.
 declined lines: the report then compares the totals and the owner's declines with the agent's
 verdicts. The recalls card (campaigns for the car's make, model and year) is printed after the
 lines whenever NHTSA is available.
-Without ``--allow-bedrock`` no Bedrock call is made: the advisor questions come from templates
-(``FakeWriter``) and low-confidence lines go to "ask the advisor" instead of an LLM picker.
+Without ``--allow-bedrock`` no Bedrock call is made: the advisor questions are the code-made
+drafts (``FakeWriter``) and low-confidence lines go to "ask the advisor" instead of an LLM
+picker. With it, Bedrock only rephrases those drafts, and code rejects any rephrasing that adds
+a topic, a make or model name, or a number (``menu_line_check.writing``).
 With it, every Bedrock call is checked against a spend cap (``--max-usd``, default env
 ``N2_MAX_USD`` or 1.0): the run stops with exit code 4 once the cap is reached, and the spend is
 printed after the report.
@@ -38,7 +40,7 @@ from typing import Any
 from decider_kit import DeciderClient, DeciderError, Ledger
 from menu_line_tool_selection import CRITERIA_SETS, parse_thresholds, resolve_thresholds
 
-from .after import AfterBlock, compare_sheets
+from .after import AfterBlock
 from .llm import DEFAULT_REGION, FakeWriter
 from .models import LineOutcome, MenuLine, MenuReport, Vehicle
 from .nhtsa import NhtsaClient, Recording, VehicleRecalls
@@ -408,11 +410,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             concurrency=args.concurrency,
             criteria=args.criteria,
             totals=sheet.totals if sheet is not None else None,
+            after_sheet=after,
         )
-        if after is not None:
-            report = dataclasses.replace(
-                report, after=compare_sheets(report, after.lines, after.totals)
-            )
     except SpendCapReached as exc:
         print(f"error: {exc}", file=sys.stderr)
         if spend is not None:

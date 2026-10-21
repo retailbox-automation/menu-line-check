@@ -62,7 +62,11 @@ def test_cli_prints_the_table_and_the_summary(fake_decider, capsys, tmp_path):
     assert "ask_advisor" in nitrogen_row and "code" in nitrogen_row
     report = json.loads(report_path.read_text())
     assert report["counts"] == {"keep": 3, "decline": 3, "ask": 5, "your_call": 1, "retake": 0}
-    assert len(read_ledger(ledger_path)) == 12
+    rows = read_ledger(ledger_path)
+    assert [r["stage"] for r in rows].count("line") == 12
+    questions = [r for r in rows if r["stage"] == "question"]  # 5 ask + 1 your call
+    assert len(questions) == 6
+    assert all("question_source=template" in r["action"]["reason"] for r in questions)
 
 
 def row(out, name):
@@ -188,8 +192,9 @@ def test_cli_two_sheets_prints_totals_recalls_and_the_after_block(fake_decider, 
     assert 'Ask: "Are there open recalls on my VIN?"' in out
     assert "TOTAL $801.05 -> $391.38, $409.67 less" in out
     assert "Owner declined 4 lines; the agent said decline on 2 of them:" in out
-    assert "-> keep. In the maker's schedule at 20,000 mi. Ask:" in row_after(
-        out, "Engine Oil and Oil Filter"
+    # a keep line has its reason and no question
+    assert row_after(out, "Engine Oil and Oil Filter").strip() == (
+        "-> keep. In the maker's schedule at 20,000 mi."
     )
     assert "retake" not in row(out, "Crankcase Cleaning Service")
 

@@ -308,4 +308,7 @@ def test_sheet_totals_go_into_the_summary_when_the_sheet_prints_them():
         totals=totals,
     )
     assert report.totals == totals
-    assert "The sheet totals $801.05; it does not price the" in report.summary_text
+    assert report.summary_text == (
+        "Keep 3 · Decline 2 · Ask 5 · Your call 1. Sheet total $801.05. 1 safety line is your call."
+    )
+    assert report.summary_source == "template" and report.summary_fallback is None

@@ -190,6 +190,10 @@ class LineOutcome:
     p_safety: float | None = None
     decider_choice: str | None = None
     rationale: str | None = None
+    question_source: str | None = None
+    """``bedrock`` or ``template``; None when the line gets no advisor question."""
+    question_fallback: str | None = None
+    """Why the writer's question was not used (the draft was), when it was not."""
 
 
 def summary_counts(outcomes: tuple[LineOutcome, ...] | list[LineOutcome]) -> dict[str, int]:
@@ -214,7 +218,12 @@ class MenuReport:
     summary: str
     """The card line, computed by code."""
     summary_text: str | None = None
-    """Plain-English summary from the writer, if one was given."""
+    """The summary: card and numbers composed in code, plus at most one sentence from the
+    writer (no digits)."""
+    summary_source: str | None = None
+    """``bedrock`` when the writer's sentence was used, else ``template``."""
+    summary_fallback: str | None = None
+    """Why the writer's sentence was dropped, when it was."""
     decider_wall_ms: float | None = None
     """Wall clock of the Decider phase (all lines, asked concurrently)."""
     totals: SheetTotals | None = None
@@ -243,6 +252,8 @@ class MenuReport:
             "vehicle": asdict(self.vehicle),
             "summary": self.summary,
             "summary_text": self.summary_text,
+            "summary_source": self.summary_source,
+            "summary_fallback": self.summary_fallback,
             "counts": dict(self.counts),
             "menu_total": self.menu_total,
             "declined_total": self.total_for("decline"),
