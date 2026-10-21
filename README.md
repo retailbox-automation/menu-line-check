@@ -52,7 +52,8 @@ owner. We know how well it does from 103 labelled menu lines (see Measurements).
 4. The tools run: the maintenance schedule (the maker's, where we have it for the car), the public NHTSA recalls
    API, or a question for the advisor.
 5. Amazon Bedrock (Nova) writes the advisor question for each flagged line and the summary card; every decision
-   goes to a JSONL ledger.
+   goes to a JSONL ledger. The writer only rephrases a question code has drafted, and code rejects any rephrasing
+   that adds a topic, a make or model name, or a number; the summary's numbers are composed in code.
 
 The safety gate is `decider_kit`'s generic Strands intervention:
 
@@ -159,7 +160,7 @@ Found on the real sheet (2026-10-21):
 
 The code, tests and documents were written with an AI coding assistant working under our direction. The
 decision design, the thresholds and every claim here were checked against measurements: each number comes from a
-script in this repository run on our own hardware (commands under "Run it"), and the 297 tests run without
+script in this repository run on our own hardware (commands under "Run it"), and the 318 tests run without
 network access.
 
 ## Run it
