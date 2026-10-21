@@ -2,7 +2,8 @@
 
 Each plain tool returns a small dict with at least ``tool``, ``verdict`` (the summary bucket:
 keep / decline / ask / your_call / retake) and ``note``. Only two tools look anything up:
-``check_schedule`` (the illustrative schedule) and ``check_recall_warranty`` (NHTSA recalls).
+``check_schedule`` (the maker's schedule for the car, else the illustrative table) and
+``check_recall_warranty`` (NHTSA recalls).
 
 The Strands wrappers (:func:`make_picker_tools`) only record which tool the LLM picked for which
 line; the pipeline then runs the plain tool with the vehicle and the NHTSA client.
@@ -30,14 +31,31 @@ def decline_addon(line: MenuLine) -> ToolResult:
     }
 
 
+MAKER_VERDICTS = {"due": "keep", "bundled": "ask", "unclear": "ask", "not_listed": "decline"}
+"""Maker schedule for the car: listed -> keep; listed but sold with an extra, or naming more than
+the listed item -> ask; not listed at this mileage -> decline."""
+
+
 def check_schedule(line: MenuLine, vehicle: Vehicle) -> ToolResult:
+    """The maker's schedule decides keep / ask / decline. The illustrative table is no maker's
+    schedule, so with it a line is kept when due and is otherwise a question, never a decline."""
     result = schedule_mod.check_schedule(line, vehicle)
-    verdict = {"due": "keep", "not_due": "decline", "unknown": "ask"}[result.status]
+    if result.source == "maker":
+        verdict = MAKER_VERDICTS[result.status]
+        note = result.note
+    elif result.status == "due":
+        verdict, note = "keep", result.note
+    else:
+        verdict = "ask"
+        note = (
+            f"{result.note}; ask whether the maker's schedule lists it at "
+            f"{vehicle.odometer_mi:,} mi"
+        )
     return {
         "tool": "check_schedule",
         "verdict": verdict,
         "schedule": result.to_dict(),
-        "note": result.note,
+        "note": note,
     }
 
 

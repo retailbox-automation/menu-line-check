@@ -73,6 +73,36 @@ class FakePicker:
         return keyword_tool(line.text), "keyword rule (offline stand-in for the LLM picker)"
 
 
+def _schedule_question(name: str, schedule: dict, vehicle: Vehicle) -> str:
+    """The advisor question for a check_schedule line, from the schedule result."""
+    status = schedule.get("status")
+    if schedule.get("source") == "maker":
+        listed, at = schedule.get("name"), f"{schedule.get('due_at_mi') or vehicle.odometer_mi:,}"
+        if status == "bundled":
+            return (
+                f"The maker's schedule lists {listed} at {at} mi: can you do just that, "
+                f"without the {schedule.get('extra')}?"
+            )
+        if status == "unclear":
+            return f"The maker's schedule lists {listed} at {at} mi: is this line that service?"
+        if status == "due" and listed and listed.startswith("the inspections"):
+            return f"The maker's schedule lists {listed} at {at} mi: what did they find?"
+        if status == "due":
+            return f"The maker's schedule lists {listed} at {at} mi: is this that service?"
+        return (
+            f"The maker's schedule does not list the {name} at {vehicle.odometer_mi:,} mi: "
+            "why do you recommend it?"
+        )
+    if status == "due" and schedule.get("every_visit"):
+        return f"The {name} is done at every visit: what did it find?"
+    if status == "due":
+        return (
+            f"My schedule has {schedule['service']} due at {schedule['due_at_mi']:,} mi: "
+            "is this that service, and what does it include?"
+        )
+    return f"Is this in the maker's schedule at {vehicle.odometer_mi:,} mi?"
+
+
 class FakeWriter:
     """Template questions and summary. Same inputs, same text."""
 
@@ -87,15 +117,7 @@ class FakeWriter:
             price = line.price_text or "this"
             return f"What does the {price} {name} cover, and can it be removed?"
         if outcome.tool == "check_schedule":
-            schedule = result.get("schedule") or {}
-            if schedule.get("status") == "due" and schedule.get("every_visit"):
-                return f"The {name} is done at every visit: what did it find?"
-            if schedule.get("status") == "due":
-                return (
-                    f"My schedule has {schedule['service']} due at {schedule['due_at_mi']:,} mi: "
-                    "is this that service, and what does it include?"
-                )
-            return f"Where does the maker's schedule list the {name}, and at what mileage?"
+            return _schedule_question(name, result.get("schedule") or {}, vehicle)
         if outcome.tool == "owner_decides":
             return f"What did the inspection find on the {name}, and how soon does it need doing?"
         return f"What is the {name} for, and is it required by the maker's schedule?"

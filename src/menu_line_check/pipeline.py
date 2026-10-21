@@ -19,6 +19,9 @@ time, default 12); everything after that runs per line, in line order. Per line:
    applied either: the line becomes "ask the advisor" (the Strands picker's gate already
    denies that call; this keeps the rule for any other picker).
 4. The chosen tool runs (NHTSA for check_recall_warranty, the schedule for check_schedule).
+   Whatever tool says "decline" (an add-on, or a service the maker's schedule does not list),
+   the decline is not taken on a line with P(safety) >= 0.5: it becomes the owner's call, with
+   the reason in the note (:func:`guard_decline`).
 5. One ledger row per line. If Decider is unreachable for a line, nothing is declined: the
    line becomes the owner's call (route ``unavailable``).
 
@@ -269,6 +272,22 @@ def _finish_line(
     return outcome
 
 
+def guard_decline(result: dict[str, Any], p_safety: float | None) -> dict[str, Any]:
+    """A decline from any tool on a safety-flagged line becomes the owner's call."""
+    if result.get("verdict") != "decline" or p_safety is None or p_safety < SAFETY_YES:
+        return result
+    note = str(result.get("note", "")).strip()
+    if note and not note.endswith((".", "!", "?")):
+        note += "."
+    return {
+        **result,
+        "verdict": "your_call",
+        "guarded": "decline",
+        "note": f"{note} Not declined: P(safety)={p_safety:.2f} >= {SAFETY_YES}, so the owner "
+        "decides.".strip(),
+    }
+
+
 def _resolve(
     line: MenuLine,
     vehicle: Vehicle,
@@ -296,7 +315,7 @@ def _resolve(
         )
     if decision.route in ("owner_decides", "tool"):
         assert decision.tool is not None
-        result = run_tool(decision.tool, line, vehicle, nhtsa)
+        result = guard_decline(run_tool(decision.tool, line, vehicle, nhtsa), decision.p_safety)
         return LineOutcome(
             route=decision.route,
             tool=decision.tool,
@@ -324,7 +343,7 @@ def _resolve(
             "not declined automatically"
         )
     if picked in TOOLS:
-        result = run_tool(picked, line, vehicle, nhtsa)
+        result = guard_decline(run_tool(picked, line, vehicle, nhtsa), decision.p_safety)
         return LineOutcome(
             route="ask_llm",
             tool=picked,

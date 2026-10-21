@@ -61,17 +61,14 @@ def test_each_owner_decline_is_matched_to_its_first_sheet_line(checked):
 def test_agreement_with_the_scripted_answers(checked):
     report, block = checked
     # scripted fakes: conditioner and crankcase decline at >= 0.8; the cabin filter goes to the
-    # illustrative schedule (every 15,000 mi: not due at 20,000); the A/C cleaning at 0.7 is
-    # below the decline threshold (ask the advisor)
-    assert [d.agent_verdict for d in block.declined] == ["decline", "decline", "decline", "ask"]
-    assert block.agreed == 3
-    # oil and rotation: every 7,500 mi in the illustrative table, so not due at 20,000
-    assert block.agent_declined_owner_kept == (
-        "REPLACE Engine Oil and Oil Filter",
-        "PERFORM Tire Rotation",
-    )
+    # maker's schedule, which lists the filter but not the sanitizer sold with it (ask); the A/C
+    # cleaning at 0.7 is below the decline threshold (ask the advisor)
+    assert [d.agent_verdict for d in block.declined] == ["decline", "ask", "decline", "ask"]
+    assert block.agreed == 2
+    # oil and rotation are in the maker's schedule at 20,000 mi: kept, as the owner did
+    assert block.agent_declined_owner_kept == ()
     data = block.to_dict()
-    assert data["owner_declined"] == 4 and data["agent_said_decline_on_owner_declined"] == 3
+    assert data["owner_declined"] == 4 and data["agent_said_decline_on_owner_declined"] == 2
     assert data["difference"] == 409.67
 
 

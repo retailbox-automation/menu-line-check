@@ -69,6 +69,12 @@ def row(out, name):
     return next(r for r in out.splitlines() if name in r)
 
 
+def row_after(out, name):
+    """The detail line printed under the table row of ``name``."""
+    lines = out.splitlines()
+    return lines[lines.index(row(out, name)) + 1]
+
+
 def test_cli_thresholds_change_the_route(fake_decider, capsys):
     assert cli.main([*OFFLINE, "--thresholds", "check_schedule=0.6"]) == 0
     out = capsys.readouterr().out
@@ -181,7 +187,8 @@ def test_cli_two_sheets_prints_totals_recalls_and_the_after_block(fake_decider, 
     assert 'NHTSA returns no campaign for model "RX 350"' in out
     assert 'Ask: "Are there open recalls on my VIN?"' in out
     assert "TOTAL $801.05 -> $391.38, $409.67 less" in out
-    assert "Owner declined 4 lines; the agent said decline on 3 of them:" in out
+    assert "Owner declined 4 lines; the agent said decline on 2 of them:" in out
+    assert "in the maker's schedule at 20,000 mi" in row_after(out, "Engine Oil and Oil Filter")
     assert "retake" not in row(out, "Crankcase Cleaning Service")
 
     report = json.loads(report_path.read_text())
@@ -225,3 +232,25 @@ def test_cli_civic_report_keeps_its_numbers_and_gets_the_new_keys(fake_decider, 
 def test_cli_rejects_a_bad_recorded_query(fake_decider):
     with pytest.raises(SystemExit):
         cli.main([*ARGS, "--nhtsa-recorded", "x.json=LEXUS/RX 350"])
+
+
+def test_cli_paid_flags_on_the_real_sheet_are_wired_with_fakes_only(monkeypatch, capsys):
+    """`--allow-bedrock --max-usd 0.10` on the sheet fixtures: the Bedrock parts get the cap; the
+    fakes stand in for them, so nothing is called and nothing is spent."""
+    server = menu_server()
+    monkeypatch.setattr(cli, "make_decider_client", lambda url, timeout=30.0: server.client())
+    built = []
+
+    def parts(decider, ledger, region, spend):
+        built.append((region, spend.max_usd))
+        return FakeWriter(), FakePicker()
+
+    monkeypatch.setattr(cli, "make_bedrock_parts", parts)
+    rc = cli.main([*SHEET, "--after", str(SHEET_391), "--allow-bedrock", "--max-usd", "0.10"])
+    out = capsys.readouterr().out
+    assert rc == 0 and built == [("us-east-1", 0.10)]
+    assert "offline writer" not in out.splitlines()[0]
+    assert "TOTAL $801.05 -> $391.38, $409.67 less" in out
+    assert "Bedrock spend: $0.0000 of $0.10 cap, 0 calls" in out  # fakes spend nothing
+    a_c = row(out, "A/C Evaporator")  # 0.70 decline: below 0.8, goes to the picker
+    assert "ask_llm" in a_c and "llm" in a_c

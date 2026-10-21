@@ -1,0 +1,55 @@
+# MAKER schedules: what the car maker's own maintenance guide lists at one service, for one car.
+#
+# Only these entries may turn a schedule check into "decline" (a line the maker's schedule does not
+# list at this mileage). Cars without an entry here use maintenance_schedule.yaml, an ILLUSTRATIVE
+# generic table that never declines anything.
+#
+# Keyed by make (as NHTSA spells it), model and model year. Each interval lists the items printed
+# for that service; `match` holds the phrases looked for at a word start in a menu line (lower
+# case, longest wins). `inspection_match` maps a dealer's "multi-point inspection" to the
+# interval's inspect / check items.
+# Special operating conditions (off-road, towing, road salt) and region-only items are not listed:
+# a menu line for them gets "not in the maker's schedule" and the owner can say why it applies.
+
+schedules:
+  - make: "LEXUS"
+    model: "RX 350"
+    year: 2024
+    source: "2024 RX 350 Warranty and Services Guide (the maker's official publication)"
+    url: "https://assets.sia.toyota.com/publications/en/omms-s/L-MMS-24RX350/pdf/L-MMS-24RX350.pdf"
+    page: "printed page 50 (PDF page 52), box \"24 Months or 20,000 Miles\""
+    checked: "2026-10-21"
+    intervals:
+      - mileage: 20000
+        months: 24
+        items:
+          - item: "replace engine oil with 0W-20; replace oil filter"
+            name: "an engine oil and oil filter change"
+            match: ["engine oil", "oil filter", "oil change", "oil and filter", "oil & filter", "lube oil"]
+            note: "footnote 1: replace the engine oil and oil filter every 12 months or 10,000 miles, or when the oil maintenance reminder appears, whichever comes first"
+          - item: "replace cabin air filter"
+            name: "a cabin air filter"
+            match: ["cabin air filter", "cabin filter", "pollen filter"]
+          - item: "reset oil maintenance reminder if oil was changed"
+            name: "an oil maintenance reminder reset"
+            match: ["oil maintenance reminder"]
+          - item: "reset scheduled maintenance reminder"
+            name: "a maintenance reminder reset"
+            match: ["maintenance reminder"]
+          - item: "rotate tires"
+            name: "a tire rotation"
+            match: ["tire rotation", "rotate tires", "rotate tire"]
+          - item: "inspect brake linings, drums, pads and discs"
+            name: "a brake inspection"
+            match: ["brake inspection", "inspect brake", "brake linings"]
+          - item: "inspect wiper blades"
+            name: "a wiper blade inspection"
+            match: ["inspect wiper", "wiper blade inspection"]
+          - item: "check installation of driver's floor mat"
+            name: "a floor mat check"
+            match: ["floor mat"]
+          - item: "road test vehicle"
+            name: "a road test"
+            match: ["road test"]
+        inspection_match: ["multi-point inspection", "multipoint inspection", "multi point inspection", "vehicle inspection"]
+        inspection_name: "the inspections (brakes, wiper blades, floor mat, road test)"

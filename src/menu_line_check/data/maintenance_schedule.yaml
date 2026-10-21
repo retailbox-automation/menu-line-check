@@ -1,6 +1,8 @@
 # ILLUSTRATIVE generic maintenance schedule for the N2 Menu Line Check demo.
 # It is NOT any car maker's official schedule. Real intervals depend on the maker, the engine, the
 # oil and the driving conditions: the owner's manual is the source of truth for a real car.
+# Used only for cars without an entry in maker_schedules.yaml, and it never leads to a decline: a
+# service due here is kept, anything else becomes a question for the advisor.
 #
 # every_mi: a mileage interval; every_months: a time interval; every_visit: checked each visit.
 # match: phrases looked for in the menu line name (lower case, at a word start; longest wins).

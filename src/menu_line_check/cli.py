@@ -107,9 +107,12 @@ def format_row(o: LineOutcome) -> str:
 
 
 def format_detail(o: LineOutcome) -> str:
+    """The verdict, the tool's reason, and the advisor question when there is one."""
+    note = str(o.tool_result.get("note", "")).strip()
+    text = f"    -> {o.verdict}. {note}".rstrip()
     if o.advisor_question:
-        return f'    -> {o.verdict}. Ask: "{o.advisor_question}"'
-    return f"    -> {o.verdict}. {o.tool_result.get('note', '')}".rstrip()
+        text += f' Ask: "{o.advisor_question}"'
+    return text
 
 
 def _money(value: float | None) -> str:
