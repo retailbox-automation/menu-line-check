@@ -3,8 +3,8 @@
     menu-check (--ocr-json menu.json | --textract menu.jpg --allow-textract) \\
         --vehicle "<year> <make> <model> <odometer>" \\
         [--decider-url URL] [--thresholds decline_addon=0.8,check_schedule=0.5] \\
-        [--image menu.jpg] \\
-        [--nhtsa-recorded recalls.json | --nhtsa-cache DIR] [--allow-bedrock] \\
+        [--image menu.jpg] [--after after.json] \\
+        [--nhtsa-recorded recalls.json ... | --nhtsa-cache DIR] [--allow-bedrock] \\
         [--max-usd 1.0] [--ledger out/ledger.jsonl] [--json out/report.json]
 
 ``--ocr-json`` is an Amazon Textract ``DetectDocumentText`` response. ``--image`` is the photo
@@ -13,6 +13,10 @@ it came from: the name and price crops of each line are then sent to Decider for
 ``--allow-textract``), saves the raw response as ``textract-<photo>.json`` next to ``--json`` /
 ``--ledger`` (or in the current directory) so later runs replay it free with ``--ocr-json``, and
 uses the photo for the line crops. Textract and Bedrock share one spend cap.
+``--after`` is the OCR JSON of a second sheet of the same visit, printed after the owner
+declined lines: the report then compares the totals and the owner's declines with the agent's
+verdicts. The recalls card (campaigns for the car's make, model and year) is printed after the
+lines whenever NHTSA is available.
 Without ``--allow-bedrock`` no Bedrock call is made: the advisor questions come from templates
 (``FakeWriter``) and low-confidence lines go to "ask the advisor" instead of an LLM picker.
 With it, every Bedrock call is checked against a spend cap (``--max-usd``, default env
@@ -34,10 +38,11 @@ from typing import Any
 from decider_kit import DeciderClient, DeciderError, Ledger
 from menu_line_tool_selection import CRITERIA_SETS, parse_thresholds, resolve_thresholds
 
+from .after import AfterBlock, compare_sheets
 from .llm import DEFAULT_REGION, FakeWriter
 from .models import LineOutcome, MenuLine, MenuReport, Vehicle
-from .nhtsa import NhtsaClient
-from .ocr import crop_line, parse_textract, textract_detect
+from .nhtsa import NhtsaClient, Recording, VehicleRecalls
+from .ocr import Sheet, crop_line, parse_sheet, textract_detect
 from .pipeline import DEFAULT_CONCURRENCY, check_menu, questions_per_line
 from .spend import SpendCap, SpendCapReached
 
@@ -107,6 +112,52 @@ def format_detail(o: LineOutcome) -> str:
     return f"    -> {o.verdict}. {o.tool_result.get('note', '')}".rstrip()
 
 
+def _money(value: float | None) -> str:
+    return "?" if value is None else f"${value:,.2f}"
+
+
+def format_recalls(card: VehicleRecalls, width: int = 120) -> list[str]:
+    rows = [f"Recalls \u00b7 {card.vehicle} \u00b7 NHTSA, by model, not by VIN", f"  {card.note}"]
+    if card.family_fallback and not card.error:
+        kept = ", ".join(card.matched) or "none"
+        rows.append(
+            f'  family "{card.family}": kept {kept}; not naming the {card.model}: '
+            f"{', '.join(card.unmatched) or 'none'}"
+        )
+    for r in card.campaigns:
+        date = r.report_date.isoformat() if r.report_date else "?"
+        rows.append(_cut(f"  {r.campaign}  {date}  {r.component}", width))
+        rows.append(_cut(f"             {r.one_line}", width))
+    rows.append(f'  Ask: "{card.advisor_question}"')
+    return rows
+
+
+def format_after(after: AfterBlock, width: int = 120) -> list[str]:
+    diffs = after.row_differences()
+    parts = ", ".join(
+        f"{row.replace('_', ' ')} {_money(diffs[row])}"
+        for row in ("menu_total", "shop_charges", "tax", "fees")
+        if diffs[row] is not None
+    )
+    rows = [
+        f"After the owner's declines: TOTAL {_money(after.before_total)} -> "
+        f"{_money(after.after_total)}, {_money(after.difference)} less"
+        + (f" ({parts})" if parts else ""),
+        f"Owner declined {len(after.declined)} lines; the agent said decline on "
+        f"{after.agreed} of them:",
+    ]
+    for d in after.declined:
+        said = (
+            "no matching line on the first sheet"
+            if d.before_index is None
+            else f"line {d.before_index}: {d.agent_verdict} ({d.agent_tool or d.agent_route})"
+        )
+        rows.append(_cut(f"  {said} \u00b7 {d.text}", width))
+    for text in after.agent_declined_owner_kept:
+        rows.append(_cut(f"  agent said decline, owner kept \u00b7 {text}", width))
+    return rows
+
+
 def render(report: MenuReport, header: str) -> str:
     head = (
         f"{'#':>2}  {'line':<{NAME_WIDTH}}  {'price':>10}  {'route':<13}  {'tool':<21}  "
@@ -121,6 +172,17 @@ def render(report: MenuReport, header: str) -> str:
     rows.append(report.summary_text or report.summary)
     if report.decider_wall_ms is not None:
         rows.append(f"{len(report.outcomes)} lines decided in {report.decider_wall_ms:.0f} ms")
+    t = report.totals
+    if t is not None and t.total is not None:
+        rows.append(
+            f"Sheet totals: menu {_money(t.menu_total)} \u00b7 shop charges "
+            f"{_money(t.shop_charges)} \u00b7 tax {_money(t.tax)} \u00b7 fees {_money(t.fees)} "
+            f"\u00b7 TOTAL {_money(t.total)}"
+        )
+    if report.recalls is not None:
+        rows += ["", *format_recalls(report.recalls)]
+    if report.after is not None:
+        rows += ["", *format_after(report.after)]
     return "\n".join(rows)
 
 
@@ -161,8 +223,21 @@ def build_parser() -> argparse.ArgumentParser:
         help=f"lines asked of Decider at the same time (default {DEFAULT_CONCURRENCY})",
     )
     p.add_argument("--image", help="the menu photo the OCR JSON came from (adds line crops)")
+    p.add_argument(
+        "--after",
+        metavar="AFTER_OCR_JSON",
+        help="OCR JSON of the sheet printed after the owner declined lines (same visit): "
+        "compare totals and declines with the agent's verdicts",
+    )
     nhtsa = p.add_mutually_exclusive_group()
-    nhtsa.add_argument("--nhtsa-recorded", help="serve this recorded NHTSA response (offline)")
+    nhtsa.add_argument(
+        "--nhtsa-recorded",
+        action="append",
+        type=_recording,
+        metavar="PATH[=MAKE/MODEL/YEAR]",
+        help="serve this recorded NHTSA response (offline; repeatable); a response with no "
+        'results needs its query, e.g. "empty.json=LEXUS/RX 350/2024"',
+    )
     nhtsa.add_argument("--nhtsa-cache", help="disk cache directory for live NHTSA lookups")
     p.add_argument(
         "--allow-bedrock",
@@ -213,6 +288,16 @@ def _thresholds(text: str) -> dict[str, float]:
         raise argparse.ArgumentTypeError(str(exc)) from exc
 
 
+def _recording(text: str) -> Recording:
+    path, sep, query = text.rpartition("=")
+    if not sep:
+        return text
+    parts = query.split("/")
+    if len(parts) != 3 or not parts[2].isdigit():
+        raise argparse.ArgumentTypeError(f"expected PATH or PATH=MAKE/MODEL/YEAR, got {text!r}")
+    return (path, parts[0], parts[1], int(parts[2]))
+
+
 def _vehicle(text: str) -> Vehicle:
     try:
         return Vehicle.parse(text)
@@ -229,7 +314,7 @@ def make_textract_client(region: str) -> Any:
 
 def textract_menu(
     photo_bytes: bytes, photo: Path, spend: SpendCap, region: str, out_dir: Path
-) -> tuple[list[MenuLine], Path]:
+) -> tuple[Sheet, Path]:
     """One paid Textract call on the photo: guard, call, count, save the raw response, parse.
 
     The raw response is saved before it is parsed, so a paid answer is never lost; replay it
@@ -241,7 +326,7 @@ def textract_menu(
     saved = out_dir / f"textract-{photo.stem}.json"
     out_dir.mkdir(parents=True, exist_ok=True)
     saved.write_text(json.dumps(response, indent=2, ensure_ascii=False), "utf-8")
-    return parse_textract(response), saved
+    return parse_sheet(response), saved
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -255,21 +340,26 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         return 2
     lines: list[MenuLine] = []
+    sheet: Sheet | None = None
+    after: Sheet | None = None
     photo_bytes: bytes | None = None
     try:
         if args.textract:
             photo_bytes = Path(args.textract).read_bytes()
         else:
-            lines = parse_textract(json.loads(Path(args.ocr_json).read_text(encoding="utf-8")))
+            sheet = parse_sheet(json.loads(Path(args.ocr_json).read_text(encoding="utf-8")))
+            lines = list(sheet.lines)
             if args.image:
                 lines = attach_crops(lines, Path(args.image).read_bytes())
+        if args.after:
+            after = parse_sheet(json.loads(Path(args.after).read_text(encoding="utf-8")))
         spend = SpendCap(args.max_usd) if args.allow_bedrock or args.textract else None
     except (OSError, ValueError) as exc:  # includes a bad N2_MAX_USD
         print(f"error: {exc}", file=sys.stderr)
         return 2
 
     nhtsa = (
-        NhtsaClient.from_recorded(args.nhtsa_recorded)
+        NhtsaClient.from_recorded(*args.nhtsa_recorded)
         if args.nhtsa_recorded
         else NhtsaClient(cache_dir=args.nhtsa_cache)
     )
@@ -289,9 +379,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             assert spend is not None
             anchor = Path(args.json_out).parent if args.json_out else None
             anchor = anchor or (Path(args.ledger).parent if args.ledger else Path.cwd())
-            lines, saved = textract_menu(
+            sheet, saved = textract_menu(
                 photo_bytes, Path(args.textract), spend, args.region, anchor
             )
+            lines = list(sheet.lines)
             print(f"Textract response saved to {saved} (replay free: --ocr-json {saved})")
             crops = Path(args.image).read_bytes() if args.image else photo_bytes
             lines = attach_crops(lines, crops)
@@ -310,7 +401,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             ledger=ledger,
             concurrency=args.concurrency,
             criteria=args.criteria,
+            totals=sheet.totals if sheet is not None else None,
         )
+        if after is not None:
+            report = dataclasses.replace(
+                report, after=compare_sheets(report, after.lines, after.totals)
+            )
     except SpendCapReached as exc:
         print(f"error: {exc}", file=sys.stderr)
         if spend is not None:

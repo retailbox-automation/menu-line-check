@@ -14,7 +14,15 @@ from menu_line_check import cli
 from menu_line_check.llm import FakePicker, FakeWriter
 
 from .conftest import FakeServer, ok_response
-from .menu_fakes import NHTSA, TEXTRACT, menu_server
+from .menu_fakes import (
+    LEXUS_391,
+    LEXUS_801,
+    NHTSA,
+    NHTSA_RX,
+    NHTSA_RX350_EMPTY,
+    TEXTRACT,
+    menu_server,
+)
 
 ARGS = ["--ocr-json", str(TEXTRACT), "--vehicle", "2019 Honda Civic 31200"]
 OFFLINE = [*ARGS, "--nhtsa-recorded", str(NHTSA)]
@@ -145,3 +153,75 @@ def test_cli_criteria_switch(fake_decider, capsys):
     )
     with pytest.raises(SystemExit):
         cli.main([*OFFLINE, "--criteria", "long"])
+
+
+SHEET = [
+    "--ocr-json",
+    str(LEXUS_801),
+    "--vehicle",
+    "2024 Lexus RX 350 20000",
+    "--nhtsa-recorded",
+    str(NHTSA_RX),
+    "--nhtsa-recorded",
+    f"{NHTSA_RX350_EMPTY}=LEXUS/RX 350/2024",
+]
+
+
+def test_cli_two_sheets_prints_totals_recalls_and_the_after_block(fake_decider, capsys, tmp_path):
+    report_path = tmp_path / "report.json"
+    rc = cli.main([*SHEET, "--after", str(LEXUS_391), "--json", str(report_path)])
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "2024 Lexus RX 350, 20,000 mi · 11 lines" in out
+    assert re.search(r"^11 lines decided in \d+ ms$", out, re.MULTILINE)
+    assert (
+        "Sheet totals: menu $672.00 · shop charges $78.29 · tax $48.77 · fees $1.99 · "
+        "TOTAL $801.05" in out
+    )
+    assert 'NHTSA returns no campaign for model "RX 350"' in out
+    assert 'Ask: "Are there open recalls on my VIN?"' in out
+    assert "TOTAL $801.05 -> $391.38, $409.67 less" in out
+    assert "Owner declined 4 lines; the agent said decline on 3 of them:" in out
+    assert "retake" not in row(out, "Crankcase Cleaning Service")
+
+    report = json.loads(report_path.read_text())
+    assert {"totals", "recalls", "after", "outcomes", "counts"} <= set(report)
+    assert report["totals"] == {
+        "menu_total": 672.0,
+        "shop_charges": 78.29,
+        "tax": 48.77,
+        "fees": 1.99,
+        "total": 801.05,
+    }
+    assert report["recalls"]["matched"] == ["24V482000", "25V059000", "26V162000"]
+    assert report["recalls"]["advisor_question"] == "Are there open recalls on my VIN?"
+    after = report["after"]
+    assert (after["before_total"], after["after_total"], after["difference"]) == (
+        801.05,
+        391.38,
+        409.67,
+    )
+    assert [d["before_index"] for d in after["declined"]] == [2, 4, 8, 9]
+    assert report["outcomes"][0]["line"]["prices_listed"] is False
+    assert report["counts"]["retake"] == 0
+
+
+def test_cli_without_after_has_no_after_block(fake_decider, capsys, tmp_path):
+    report_path = tmp_path / "report.json"
+    assert cli.main([*SHEET, "--json", str(report_path)]) == 0
+    assert "After the owner's declines" not in capsys.readouterr().out
+    assert json.loads(report_path.read_text())["after"] is None
+
+
+def test_cli_civic_report_keeps_its_numbers_and_gets_the_new_keys(fake_decider, tmp_path):
+    report_path = tmp_path / "report.json"
+    assert cli.main([*OFFLINE, "--json", str(report_path)]) == 0
+    report = json.loads(report_path.read_text())
+    assert report["after"] is None and report["totals"]["shop_charges"] == 34.5
+    assert report["totals"]["total"] is None and report["menu_total"] == 2361.25
+    assert len(report["recalls"]["campaigns"]) == 4 and not report["recalls"]["family_fallback"]
+
+
+def test_cli_rejects_a_bad_recorded_query(fake_decider):
+    with pytest.raises(SystemExit):
+        cli.main([*ARGS, "--nhtsa-recorded", "x.json=LEXUS/RX 350"])
