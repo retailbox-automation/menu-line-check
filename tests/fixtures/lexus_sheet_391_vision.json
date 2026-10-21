@@ -1,0 +1,722 @@
+{
+  "_source" : "Apple Vision VNRecognizeTextRequest (accurate), local; Textract-shaped",
+  "Blocks" : [
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 30.000001192092896,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.21651442050933833,
+          "Left" : 0.12021100621772028,
+          "Top" : 0.24027749441705826,
+          "Width" : 0.062939922014872238
+        }
+      },
+      "Id" : "vision-0",
+      "Text" : "aoumuanm"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.012499999999999956,
+          "Left" : 0.23958333319444444,
+          "Top" : 0.16093749994791673,
+          "Width" : 0.033333333333333298
+        }
+      },
+      "Id" : "vision-1",
+      "Text" : "VIN:"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.010937500000000044,
+          "Left" : 0.20208333331041667,
+          "Top" : 0.17656249998906248,
+          "Width" : 0.18958333333333333
+        }
+      },
+      "Id" : "vision-2",
+      "Text" : "Customer: OSKOLA, MIKHAIL"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.012499999999999956,
+          "Left" : 0.22500000034226192,
+          "Top" : 0.19218749991071427,
+          "Width" : 0.097916666666666652
+        }
+      },
+      "Id" : "vision-3",
+      "Text" : "Model: RX 350"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.01066308468580246,
+          "Left" : 0.21845311987710614,
+          "Top" : 0.20983115142546716,
+          "Width" : 0.056805106004079231
+        }
+      },
+      "Id" : "vision-4",
+      "Text" : "Advisor:"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.012500000000000067,
+          "Left" : 0.51458333338541662,
+          "Top" : 0.1546874998958333,
+          "Width" : 0.039583333333333304
+        }
+      },
+      "Id" : "vision-5",
+      "Text" : "RO #:"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.01622433736920359,
+          "Left" : 0.51619022896370959,
+          "Top" : 0.16749285323052876,
+          "Width" : 0.11135438283284504
+        }
+      },
+      "Id" : "vision-6",
+      "Text" : "Date: 10\/17\/2026"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.013198072463274091,
+          "Left" : 0.5165660024565889,
+          "Top" : 0.18558846408962171,
+          "Width" : 0.075201328595479344
+        }
+      },
+      "Id" : "vision-7",
+      "Text" : "Year: 2024"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.015317449718713849,
+          "Left" : 0.48691082346855491,
+          "Top" : 0.20067519708055004,
+          "Width" : 0.11572869618733722
+        }
+      },
+      "Id" : "vision-8",
+      "Text" : "Odometer: 20,000"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.019018600881099745,
+          "Left" : 0.20176370614257239,
+          "Top" : 0.22722446863467693,
+          "Width" : 0.28189004262288408
+        }
+      },
+      "Id" : "vision-9",
+      "Text" : "Recommended Maintenance - Modified"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.024594959616661027,
+          "Left" : 0.20366724677715881,
+          "Top" : 0.24133701165416943,
+          "Width" : 0.39485915501912433
+        }
+      },
+      "Id" : "vision-10",
+      "Text" : "20,000 MILE INTERVAL SCHEDULED MAINTENANCE"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.015581303834915183,
+          "Left" : 0.20601895934840808,
+          "Top" : 0.26228302829729677,
+          "Width" : 0.17339884440104164
+        }
+      },
+      "Id" : "vision-11",
+      "Text" : "PREFERRED SERVICE"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.010937499999999933,
+          "Left" : 0.220833333269121,
+          "Top" : 0.28593749999250861,
+          "Width" : 0.21458333333333332
+        }
+      },
+      "Id" : "vision-12",
+      "Text" : "• REPLACE Engine Oil and Oil Filter"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.011786058917641729,
+          "Left" : 0.22482115371086936,
+          "Top" : 0.3027966341294388,
+          "Width" : 0.15661218961079915
+        }
+      },
+      "Id" : "vision-13",
+      "Text" : "• PERFORM Tire Rotation"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.01277635246515274,
+          "Left" : 0.224844137945513,
+          "Top" : 0.32007544683183087,
+          "Width" : 0.20447503725687666
+        }
+      },
+      "Id" : "vision-14",
+      "Text" : "• PERFORM Multi-Point Inspection"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.014954077452421277,
+          "Left" : 0.22686284538019905,
+          "Top" : 0.33577063997576384,
+          "Width" : 0.25462093353271487
+        }
+      },
+      "Id" : "vision-15",
+      "Text" : "• ASK Your Service Advisor about the FREE"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.015354202687740348,
+          "Left" : 0.4996281129413867,
+          "Top" : 0.33092775110491335,
+          "Width" : 0.146699873606364
+        }
+      },
+      "Id" : "vision-16",
+      "Text" : "Lifetime Protection Plan!"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.010937499999999933,
+          "Left" : 0.22916666656004903,
+          "Top" : 0.35624999999356621,
+          "Width" : 0.18124999999999997
+        }
+      },
+      "Id" : "vision-17",
+      "Text" : "• PERFORM Wheel Alignment"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.010937500000000044,
+          "Left" : 0.22083333322916665,
+          "Top" : 0.37812499997896631,
+          "Width" : 0.058333333333333348
+        }
+      },
+      "Id" : "vision-18",
+      "Text" : "Declined"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.010937500000000044,
+          "Left" : 0.23333333333111703,
+          "Top" : 0.40468749998836429,
+          "Width" : 0.24374999999999999
+        }
+      },
+      "Id" : "vision-19",
+      "Text" : "• INSTALL Premium Engine Oil Conditioner"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.0093750000000000222,
+          "Left" : 0.2354166665714286,
+          "Top" : 0.42187499999330358,
+          "Width" : 0.16666666666666666
+        }
+      },
+      "Id" : "vision-20",
+      "Text" : "• REPLACE Cabin Filter, Incl."
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.018453767895698525,
+          "Left" : 0.46228397852942799,
+          "Top" : 0.41490984268432751,
+          "Width" : 0.34843095143636066
+        }
+      },
+      "Id" : "vision-21",
+      "Text" : "Sanitizer (EPA Registered Virucide, Fungicide, Kills Odors)"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.0116435267031193,
+          "Left" : 0.23741132812746593,
+          "Top" : 0.43714698662212026,
+          "Width" : 0.075177343686421733
+        }
+      },
+      "Id" : "vision-22",
+      "Text" : "• PERFORM"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.010937499999999933,
+          "Left" : 0.33958333322150736,
+          "Top" : 0.43749999999195777,
+          "Width" : 0.16041666666666665
+        }
+      },
+      "Id" : "vision-23",
+      "Text" : "Crankcase Cleaning Service"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.014734907448291756,
+          "Left" : 0.23744263852312422,
+          "Top" : 0.45220273583826665,
+          "Width" : 0.48766171137491865
+        }
+      },
+      "Id" : "vision-24",
+      "Text" : "• PERFORM A\/C Evaporator System Cleaning Service with Climate control disinfectant"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.014062499999999978,
+          "Left" : 0.72083333316666665,
+          "Top" : 0.69531249997187494,
+          "Width" : 0.08333333333333337
+        }
+      },
+      "Id" : "vision-25",
+      "Text" : "Menu Total:"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.014348031580448062,
+          "Left" : 0.70125979718420439,
+          "Top" : 0.71095157247445528,
+          "Width" : 0.10124837557474764
+        }
+      },
+      "Id" : "vision-26",
+      "Text" : "Shop Charges:"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.010937500000000044,
+          "Left" : 0.77083333387535524,
+          "Top" : 0.72656249981770826,
+          "Width" : 0.031249998013178515
+        }
+      },
+      "Id" : "vision-27",
+      "Text" : "Tax:"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.010937499999999933,
+          "Left" : 0.76249999978009264,
+          "Top" : 0.74374999993923618,
+          "Width" : 0.039583333333333304
+        }
+      },
+      "Id" : "vision-28",
+      "Text" : "Fees:"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.014330753684043906,
+          "Left" : 0.71598626447999847,
+          "Top" : 0.76349062712629245,
+          "Width" : 0.059767091274261497
+        }
+      },
+      "Id" : "vision-29",
+      "Text" : "TOTAL:"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.014062499999999978,
+          "Left" : 0.84791666650219299,
+          "Top" : 0.69999999996299345,
+          "Width" : 0.066666666666666652
+        }
+      },
+      "Id" : "vision-30",
+      "Text" : "$ 309.85"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.013032148778438613,
+          "Left" : 0.85822628691178671,
+          "Top" : 0.7153589255110665,
+          "Width" : 0.054380758603413848
+        }
+      },
+      "Id" : "vision-31",
+      "Text" : "$ 55.77"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.011278550326824122,
+          "Left" : 0.86035392067065142,
+          "Top" : 0.73107947479874646,
+          "Width" : 0.0522088249524435
+        }
+      },
+      "Id" : "vision-32",
+      "Text" : "$ 23.77"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.013513123244047076,
+          "Left" : 0.86415893566554847,
+          "Top" : 0.74742437657804506,
+          "Width" : 0.04873303572336829
+        }
+      },
+      "Id" : "vision-33",
+      "Text" : "$ 1.99"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.013654817640781358,
+          "Left" : 0.8495838737676521,
+          "Top" : 0.76875706698078994,
+          "Width" : 0.063254316647847419
+        }
+      },
+      "Id" : "vision-34",
+      "Text" : "$ 391.38"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.019016855955123813,
+          "Left" : 0.49022472152542845,
+          "Top" : 0.80707514022627191,
+          "Width" : 0.098473787307739313
+        }
+      },
+      "Id" : "vision-35",
+      "Text" : "Pay as low as:"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.019660832732915856,
+          "Left" : 0.599045078955312,
+          "Top" : 0.8130602616356335,
+          "Width" : 0.11052277088165285
+        }
+      },
+      "Id" : "vision-36",
+      "Text" : "$ 30.88 \/ month"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.057756873965263411,
+          "Left" : 0.22345041734374055,
+          "Top" : 0.80714046140806806,
+          "Width" : 0.67355251312255859
+        }
+      },
+      "Id" : "vision-37",
+      "Text" : "Based on 12 monthiy peyments, APR 32.34% and a 20% down payment of the purchase price including tax. Subject to approval. APR, down"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.054550313949584983,
+          "Left" : 0.22348279727271259,
+          "Top" : 0.81648066202311109,
+          "Width" : 0.60624936421712239
+        }
+      },
+      "Id" : "vision-38",
+      "Text" : "psyment and other terms displayed here are an example only. Actual approval amount. APR and required down naument —d"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.010727895423769951,
+          "Left" : 0.86969004303003361,
+          "Top" : 0.86025152503176694,
+          "Width" : 0.029141257206598992
+        }
+      },
+      "Id" : "vision-39",
+      "Text" : "1 on"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.0093750000000000222,
+          "Left" : 0.87083333320312495,
+          "Top" : 0.87031249994140614,
+          "Width" : 0.025000000000000022
+        }
+      },
+      "Id" : "vision-40",
+      "Text" : "hích"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.042384505271911621,
+          "Left" : 0.22140501364916243,
+          "Top" : 0.82499742404576748,
+          "Width" : 0.39194831848144529
+        }
+      },
+      "Id" : "vision-41",
+      "Text" : "credtworthiness, APR ranges from 9.99% to 35.99%. Any financing offored is made by"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.018687500059604623,
+          "Left" : 0.1105999997244039,
+          "Top" : 0.82638749982311133,
+          "Width" : 0.058066666126251221
+        }
+      },
+      "Id" : "vision-42",
+      "Text" : "ACCEPTED"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.031132340431213379,
+          "Left" : 0.2232445950640452,
+          "Top" : 0.83337721775920026,
+          "Width" : 0.2072317123413086
+        }
+      },
+      "Id" : "vision-43",
+      "Text" : "determines quasifications for and terms of credit."
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.065351685881614774,
+          "Left" : 0.10943429926943177,
+          "Top" : 0.8406038626369543,
+          "Width" : 0.43798576990763344
+        }
+      },
+      "Id" : "vision-44",
+      "Text" : "scecus espotled in this mentenancs schodule are this doaler's recommaraatians. Although this"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.06686069965362551,
+          "Left" : 0.10744314514323736,
+          "Top" : 0.84901677392709973,
+          "Width" : 0.43993307749430333
+        }
+      },
+      "Id" : "vision-45",
+      "Text" : "schedule may contan manulacuters gentral recommendations our maintanance schodatas are dasianed"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.070375663042068437,
+          "Left" : 0.10683357375582563,
+          "Top" : 0.85683181611944692,
+          "Width" : 0.44030733108520509
+        }
+      },
+      "Id" : "vision-46",
+      "Text" : "to meet the demands of area weather and driving conditions. Prices do not include sales tax. Some prices"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.049844542145728976,
+          "Left" : 0.10595463460984653,
+          "Top" : 0.86389937792040628,
+          "Width" : 0.23198545773824056
+        }
+      },
+      "Id" : "vision-47",
+      "Text" : "may vary by model and are subedt to change without notice."
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.031551519036293052,
+          "Left" : 0.65422494070388193,
+          "Top" : 0.91800461525932808,
+          "Width" : 0.1498161951700846
+        }
+      },
+      "Id" : "vision-48",
+      "Text" : "Customer Signature"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.010909705609083109,
+          "Left" : 0.42877415580637968,
+          "Top" : 0.94164619487417522,
+          "Width" : 0.059224112828572595
+        }
+      },
+      "Id" : "vision-49",
+      "Text" : "Page 1 of 1"
+    },
+    {
+      "BlockType" : "LINE",
+      "Confidence" : 100,
+      "Geometry" : {
+        "BoundingBox" : {
+          "Height" : 0.015667229890823364,
+          "Left" : 0.73481650944644583,
+          "Top" : 0.96208714216130742,
+          "Width" : 0.13239467144012451
+        }
+      },
+      "Id" : "vision-50",
+      "Text" : "Printed: 10\/17\/2026 8:17 AM"
+    }
+  ],
+  "DocumentMetadata" : {
+    "Pages" : 1
+  }
+}
