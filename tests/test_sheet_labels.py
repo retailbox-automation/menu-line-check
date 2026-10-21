@@ -10,7 +10,7 @@ from menu_line_check.ocr import parse_sheet
 from menu_line_check.pipeline import check_menu
 from menu_line_tool_selection import TOOLS
 
-from .menu_fakes import FIXTURES, LEXUS_391, LEXUS_801, menu_server
+from .menu_fakes import FIXTURES, SHEET_391, SHEET_801, menu_server
 
 LABELS = json.loads((FIXTURES / "lexus_sheet_labels.json").read_text(encoding="utf-8"))
 
@@ -30,9 +30,9 @@ def test_one_label_per_parsed_line_matched_by_index_and_text():
 
 def test_owner_declined_flags_are_the_second_sheet_declines():
     report = check_menu(
-        sheet(LEXUS_801).lines, Vehicle(2024, "Lexus", "RX 350", 20000), menu_server().client()
+        sheet(SHEET_801).lines, Vehicle(2024, "Lexus", "RX 350", 20000), menu_server().client()
     )
-    after = sheet(LEXUS_391)
+    after = sheet(SHEET_391)
     declined = {d.before_index for d in compare_sheets(report, after.lines, after.totals).declined}
     assert declined == {label["index"] for label in LABELS["lines"] if label["owner_declined"]}
     assert declined == {2, 4, 8, 9}

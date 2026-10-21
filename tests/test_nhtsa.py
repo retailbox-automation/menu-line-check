@@ -22,7 +22,7 @@ from menu_line_check.nhtsa import (
 )
 from menu_line_check.ocr import parse_line_texts
 
-from .menu_fakes import NHTSA_LEXUS, NHTSA_RX, NHTSA_RX350_EMPTY
+from .menu_fakes import NHTSA_RX, NHTSA_RX350_EMPTY, NHTSA_RX_RECORDED
 
 FIXTURE = Path(__file__).parent / "fixtures" / "nhtsa_recalls_civic_2019.json"
 CIVIC = Vehicle(2019, "Honda", "Civic", 31200)
@@ -155,7 +155,7 @@ def test_oxygen_sensor_spellings_match_each_other():
 
 
 def test_recorded_responses_serve_several_vehicles_and_an_empty_one_needs_its_query():
-    nhtsa = NhtsaClient.from_recorded(FIXTURE, *NHTSA_LEXUS)
+    nhtsa = NhtsaClient.from_recorded(FIXTURE, *NHTSA_RX_RECORDED)
     assert len(nhtsa.recalls(CIVIC)) == 4
     assert nhtsa.recalls(RX350) == []
     assert len(nhtsa.recalls(Vehicle(2024, "LEXUS", "rx", 1))) == 4
@@ -225,6 +225,6 @@ def test_a_failed_lookup_is_on_the_card_not_raised():
     assert card.advisor_question == VEHICLE_RECALLS_QUESTION
     assert "ask the advisor to check the VIN" in card.note
     # the model itself answered nothing, then the family lookup failed
-    nhtsa = NhtsaClient.from_recorded(*NHTSA_LEXUS[1:])
+    nhtsa = NhtsaClient.from_recorded(*NHTSA_RX_RECORDED[1:])
     card = vehicle_recalls(RX350, nhtsa)
     assert card.family_fallback and card.error and "no recorded response" in card.error

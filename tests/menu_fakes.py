@@ -13,12 +13,13 @@ from .conftest import FakeServer, choice, noul, ok_response
 FIXTURES = Path(__file__).parent / "fixtures"
 TEXTRACT = FIXTURES / "textract_menu.json"
 NHTSA = FIXTURES / "nhtsa_recalls_civic_2019.json"
-LEXUS_801 = FIXTURES / "lexus_sheet_801_vision.json"
-LEXUS_391 = FIXTURES / "lexus_sheet_391_vision.json"
+SHEET_801 = FIXTURES / "lexus_sheet_801_vision.json"
+SHEET_391 = FIXTURES / "lexus_sheet_391_vision.json"
 NHTSA_RX = FIXTURES / "nhtsa_recalls_lexus_rx_2024.json"
 NHTSA_RX350_EMPTY = FIXTURES / "nhtsa_recalls_lexus_rx350_2024_empty.json"
-NHTSA_LEXUS = (NHTSA_RX, (NHTSA_RX350_EMPTY, "LEXUS", "RX 350", 2024))
-"""Both recorded Lexus responses, as ``NhtsaClient.from_recorded(*NHTSA_LEXUS)`` takes them."""
+NHTSA_RX_RECORDED = (NHTSA_RX, (NHTSA_RX350_EMPTY, "LEXUS", "RX 350", 2024))
+"""Both recorded RX responses (model RX 350: empty; family RX: 4 campaigns), as
+``NhtsaClient.from_recorded(*NHTSA_RX_RECORDED)`` takes them."""
 
 # line name fragment -> (tool choice, confidence, P(safety))
 MENU_ANSWERS: dict[str, tuple[str, float, float]] = {
@@ -36,8 +37,8 @@ MENU_ANSWERS: dict[str, tuple[str, float, float]] = {
     "Environmental disposal fee": ("ask_about_fee", 0.9, 0.02),
 }
 
-# Scripted (not measured) answers for the 11 lines of the Lexus sheet, for offline tests.
-LEXUS_ANSWERS: dict[str, tuple[str, float, float]] = {
+# Scripted (not measured) answers for the 11 lines of the real RX 350 sheet, for offline tests.
+SHEET_ANSWERS: dict[str, tuple[str, float, float]] = {
     "Engine Oil and Oil Filter": ("check_schedule", 0.9, 0.05),
     "Oil Conditioner": ("decline_addon", 0.92, 0.04),
     "Tire Rotation": ("check_schedule", 0.6, 0.7),
@@ -69,7 +70,7 @@ def menu_responder(readable_image: float = 0.97, p_readable_text: float = 0.9):
             return ok_response({"readable": noul(readable_image)}, latency_ms=20.0)
         state = body["state"]
         found = [
-            v for fragment, v in {**MENU_ANSWERS, **LEXUS_ANSWERS}.items() if fragment in state
+            v for fragment, v in {**MENU_ANSWERS, **SHEET_ANSWERS}.items() if fragment in state
         ]
         tool, conf, p_safety = found[0] if found else ("decline_addon", 0.5, 0.1)
         answers = {

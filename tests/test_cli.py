@@ -15,11 +15,11 @@ from menu_line_check.llm import FakePicker, FakeWriter
 
 from .conftest import FakeServer, ok_response
 from .menu_fakes import (
-    LEXUS_391,
-    LEXUS_801,
     NHTSA,
     NHTSA_RX,
     NHTSA_RX350_EMPTY,
+    SHEET_391,
+    SHEET_801,
     TEXTRACT,
     menu_server,
 )
@@ -157,7 +157,7 @@ def test_cli_criteria_switch(fake_decider, capsys):
 
 SHEET = [
     "--ocr-json",
-    str(LEXUS_801),
+    str(SHEET_801),
     "--vehicle",
     "2024 Lexus RX 350 20000",
     "--nhtsa-recorded",
@@ -169,7 +169,7 @@ SHEET = [
 
 def test_cli_two_sheets_prints_totals_recalls_and_the_after_block(fake_decider, capsys, tmp_path):
     report_path = tmp_path / "report.json"
-    rc = cli.main([*SHEET, "--after", str(LEXUS_391), "--json", str(report_path)])
+    rc = cli.main([*SHEET, "--after", str(SHEET_391), "--json", str(report_path)])
     out = capsys.readouterr().out
     assert rc == 0
     assert "2024 Lexus RX 350, 20,000 mi · 11 lines" in out

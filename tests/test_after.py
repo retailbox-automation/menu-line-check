@@ -13,7 +13,7 @@ from menu_line_check.nhtsa import NhtsaClient
 from menu_line_check.ocr import parse_sheet
 from menu_line_check.pipeline import check_menu
 
-from .menu_fakes import LEXUS_391, LEXUS_801, NHTSA_LEXUS, menu_server
+from .menu_fakes import NHTSA_RX_RECORDED, SHEET_391, SHEET_801, menu_server
 
 RX350 = Vehicle.parse("2024 Lexus RX 350 20000")
 
@@ -24,15 +24,15 @@ def sheet(path):
 
 @pytest.fixture(scope="module")
 def checked():
-    before = sheet(LEXUS_801)
+    before = sheet(SHEET_801)
     report = check_menu(
         before.lines,
         RX350,
         menu_server().client(),
-        nhtsa=NhtsaClient.from_recorded(*NHTSA_LEXUS),
+        nhtsa=NhtsaClient.from_recorded(*NHTSA_RX_RECORDED),
         totals=before.totals,
     )
-    after = sheet(LEXUS_391)
+    after = sheet(SHEET_391)
     return report, compare_sheets(report, after.lines, after.totals)
 
 
@@ -77,7 +77,7 @@ def test_agreement_with_the_scripted_answers(checked):
 
 def test_an_agent_decline_the_owner_kept_is_listed(checked):
     report, _ = checked
-    after = sheet(LEXUS_391)
+    after = sheet(SHEET_391)
     kept_all = [dataclasses.replace(ln, declined_on_sheet=False) for ln in after.lines]
     block = compare_sheets(report, kept_all, after.totals)
     assert block.declined == () and block.agreed == 0
@@ -94,7 +94,7 @@ def test_missing_totals_give_no_difference(checked):
 def test_a_declined_line_with_no_counterpart_is_kept_unmatched(checked):
     report, _ = checked
     stray = dataclasses.replace(
-        sheet(LEXUS_391).lines[0], text="Replace timing belt", declined_on_sheet=True
+        sheet(SHEET_391).lines[0], text="Replace timing belt", declined_on_sheet=True
     )
     (only,) = compare_sheets(report, [stray], SheetTotals()).declined
     assert only.before_index is None and only.agent_verdict is None

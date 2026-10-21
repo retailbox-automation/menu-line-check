@@ -262,8 +262,8 @@ def _sheet_lines(name: str) -> list[MenuLine]:
 
 
 def test_on_a_sheet_without_line_prices_a_found_name_is_readable():
-    lexus = _sheet_lines("lexus_sheet_801_vision.json")
-    report = check_menu(lexus, Vehicle(2024, "Lexus", "RX 350", 20000), menu_server().client())
+    rx_sheet = _sheet_lines("lexus_sheet_801_vision.json")
+    report = check_menu(rx_sheet, Vehicle(2024, "Lexus", "RX 350", 20000), menu_server().client())
     assert report.counts["retake"] == 0
     assert all(o.p_readable == 1.0 for o in report.outcomes)
     assert all(o.line.price is None for o in report.outcomes[:9])
@@ -298,10 +298,10 @@ def test_the_report_carries_the_recalls_card_only_with_an_nhtsa_client():
 def test_sheet_totals_go_into_the_summary_when_the_sheet_prints_them():
     from menu_line_check.models import SheetTotals
 
-    lexus = _sheet_lines("lexus_sheet_801_vision.json")
+    rx_sheet = _sheet_lines("lexus_sheet_801_vision.json")
     totals = SheetTotals(672.0, 78.29, 48.77, 1.99, 801.05)
     report = check_menu(
-        lexus,
+        rx_sheet,
         Vehicle(2024, "Lexus", "RX 350", 20000),
         menu_server().client(),
         writer=FakeWriter(),

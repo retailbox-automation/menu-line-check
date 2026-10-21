@@ -6,10 +6,10 @@ open for one particular car: that needs the VIN, which the service advisor can c
 advisor question is "is this covered by recall N?", not "this is covered".
 
 :func:`vehicle_recalls` builds the recalls card for the whole car. The API matches the model
-name exactly: for a 2024 Lexus "RX 350" it returns no campaign at all, while "RX" returns four,
-three of which name the 2024 RX 350 in their summary (live, 2026-10-21). So when a model of two
-or more words gets nothing, the card asks again for the model family (the first word) and keeps
-the campaigns whose summary names the model.
+name exactly: for a 2024 "RX 350" (make LEXUS) it returns no campaign at all, while "RX"
+returns four, three of which name the 2024 RX 350 in their summary (live, 2026-10-21). So
+when a model of two or more words gets nothing, the card asks again for the model family (the
+first word) and keeps the campaigns whose summary names the model.
 """
 
 from __future__ import annotations
