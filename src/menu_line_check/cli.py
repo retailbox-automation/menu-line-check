@@ -172,7 +172,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument(
         "--max-usd",
         type=_non_negative_float,
-        help="hard cap on Bedrock spend for this run, checked before each call "
+        help="hard cap on AWS spend (Bedrock + Textract) for this run, checked before each call "
         "(default env N2_MAX_USD or 1.0)",
     )
     p.add_argument(
