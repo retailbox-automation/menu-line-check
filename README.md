@@ -7,6 +7,20 @@
 > `decider_kit` is the concept-agnostic toolkit, `menu_line_check` is the agent, and
 > `patterns/menu_line_tool_selection/` is the reusable decision pattern.
 
+## Check it in 90 seconds
+
+The product is Decider plus a fallback: Decider 2B decides each line it is sure about, and Amazon Nova on Bedrock picks the tool for the rest, behind a Decider safety check. Accuracy, latency and cost below come from 103 labelled lines on 10 synthetic menus; the real sheet is one example. Decider runs on our Mac mini (our AWS GPU quota was 0); the agent runs on Amazon EC2 next to Bedrock.
+
+| Claim | Proof | What you will see |
+|---|---|---|
+| Decider 2B picks one of five tools for every line before anything runs | `patterns/menu_line_tool_selection/handler.py` (`decide_line`), `questions.yaml` | the typed questions, the five options and the per-tool thresholds |
+| On 103 labelled lines Decider alone picks the right tool 88% of the time; with per-tool thresholds it acts on 90 of them at 0.89 and sends the other 13 to Nova, with no safety line missed | `menu-race --replay-recorded` (no network, no keys) | the accuracy table and the policy table from recorded answers |
+| Nova Lite on Amazon Bedrock picking the tool alone: 0.81, 1,478 ms per line, 2 of 20 safety lines missed | `menu-race --allow-bedrock` (paid, capped); results in "Measurements" below | Decider vs Nova Lite vs Nova Micro vs keyword rules |
+| A line Decider calls a safety item is never declined automatically | `build_safety_gate` in the pattern, `tests/test_gate.py` | `DENIED: this line is a safety item; the owner decides` |
+| It ran on a real $801.05 service sheet and agreed with 3 of the owner's 4 declines | `docs/REAL-SHEET-RUN-2026-10-21.md` | every line with its verdict, both totals |
+| 321 tests, no network needed | `uv pip install -e ".[dev]" && pytest` | `321 passed` |
+| The agent and its decision on video | https://youtu.be/C_a6AQ0HK98 (1:51) | the result screen filling in line by line |
+
 ## What it does
 
 A car owner stands at a dealer's service counter with a printed service sheet. The agent reads it line by line
